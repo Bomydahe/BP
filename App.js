@@ -1,81 +1,65 @@
-import { useState } from "react";
-import { StyleSheet, View, FlatList, Button } from "react-native";
-import { StatusBar } from "expo-status-bar";
+import React from "react";
+import {
+  StyleSheet,
+  StatusBar,
+  Button,
+  SafeAreaView,
+  View,
+  Text,
+} from "react-native";
+import { NavigationContainer } from "@react-navigation/native";
+import { createMaterialTopTabNavigator } from "@react-navigation/material-top-tabs";
+import MyVideos from "./components/MyVideos";
+import ComparedVideos from "./components/ComparedVideos";
+import SharedVideos from "./components/SharedVideos";
+import Category from "./components/Category";
+import { createNativeStackNavigator } from "@react-navigation/native-stack";
 
-import GoalItem from "./components/GoalItem";
-import GoalInput from "./components/GoalInput";
+const Stack = createNativeStackNavigator();
+const Tab = createMaterialTopTabNavigator();
+
+const CategoryScreen = ({ navigation }) => {
+  return (
+    <View style={styles.container}>
+      <Category />
+    </View>
+  );
+};
+
+function Home() {
+  return (
+    <Tab.Navigator>
+      <Tab.Screen name="My videos" component={MyVideos} />
+      <Tab.Screen name="Compared" component={ComparedVideos} />
+      <Tab.Screen name="Shared" component={SharedVideos} />
+    </Tab.Navigator>
+  );
+}
 
 export default function App() {
-  const [modalIsVisible, setModalIsVisible] = useState(false);
-  const [courseGoals, setCourseGoals] = useState([]);
-
-  function startAddGoalHandler() {
-    setModalIsVisible(true);
-  }
-
-  function endAddGoalHandler() {
-    setModalIsVisible(false);
-  }
-
-  function addGoalHandler(enteredGoalText) {
-    setCourseGoals((currentCourseGoals) => [
-      ...currentCourseGoals,
-      { text: enteredGoalText, id: Math.random().toString() },
-    ]);
-    endAddGoalHandler();
-  }
-
-  function deleteGoalHandler(id) {
-    setCourseGoals((currentCourseGoals) => {
-      return currentCourseGoals.filter((goal) => goal.id !== id);
-    });
-  }
-
   return (
-    <>
-      <StatusBar style="light" />
-      <View style={styles.appContainer}>
-        <Button
-          title="Add New Goal"
-          color="#a065ec"
-          onPress={startAddGoalHandler}
+    <NavigationContainer>
+      <Stack.Navigator>
+        <Stack.Screen
+          name="Home"
+          component={Home}
+          options={{ headerShown: false }}
         />
-        <GoalInput
-          visible={modalIsVisible}
-          onAddGoal={addGoalHandler}
-          onCancel={endAddGoalHandler}
-        />
-        <View style={styles.goalsContainer}>
-          <FlatList
-            data={courseGoals}
-            renderItem={(itemData) => {
-              return (
-                <GoalItem
-                  text={itemData.item.text}
-                  id={itemData.item.id}
-                  onDeleteItem={deleteGoalHandler}
-                />
-              );
-            }}
-            keyExtractor={(item, index) => {
-              return item.id;
-            }}
-            alwaysBounceVertical={false}
-          />
-        </View>
-      </View>
-    </>
+        <Stack.Screen name="Category" component={CategoryScreen} />
+      </Stack.Navigator>
+      <StatusBar />
+    </NavigationContainer>
   );
 }
 
 const styles = StyleSheet.create({
-  appContainer: {
+  container: {
     flex: 1,
-    paddingTop: 50,
-    paddingHorizontal: 16,
-    backgroundColor: "#1e085a",
+    justifyContent: "center",
+    alignItems: "center",
   },
-  goalsContainer: {
-    flex: 5,
+
+  text: {
+    fontSize: 20,
   },
 });
