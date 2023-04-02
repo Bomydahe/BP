@@ -10,7 +10,7 @@ import {
   Pressable,
   SafeAreaView,
 } from "react-native";
-import { FAB } from "@rneui/themed";
+import { FAB } from "react-native-paper";
 import Modal from "react-native-modal";
 import { useNavigation } from "@react-navigation/native";
 
@@ -21,7 +21,7 @@ const allVideos = [
       "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/images/ForBiggerBlazes.jpg",
     key: 1,
   },
-  {
+  /* {
     url: "https://d23dyxeqlo5psv.cloudfront.net/big_buck_bunny.mp4",
     poster:
       "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/images/BigBuckBunny.jpg",
@@ -45,12 +45,13 @@ const allVideos = [
     poster:
       "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/images/ForBiggerMeltdowns.jpg",
     key: 5,
-  },
+  }, */
 ];
 
 export default function MyVideos(props) {
   const [status, setStatus] = React.useState({});
   const { navigate } = useNavigation();
+  const [open, setOpen] = useState(false);
 
   const renderItem = ({ item }) => (
     <Video
@@ -150,13 +151,24 @@ export default function MyVideos(props) {
           {/********************************************************/}
         </View>
       </ScrollView>
-      <FAB
-        visible
-        icon={{ name: "add", color: "white" }}
-        color="blue"
-        size="large"
-        placement="right"
-        //onPress={() => func()}
+      <FAB.Group
+        open={open}
+        icon={open ? "close" : "plus"}
+        actions={[
+          {
+            icon: "plus",
+            onPress: () => console.log("Pressed star"),
+            label: "Add video",
+            labelStyle: styles.actionLabel,
+          },
+          {
+            icon: "square",
+            onPress: () => navigate("Compare"),
+            label: "Compare video",
+            labelStyle: styles.actionLabel,
+          },
+        ]}
+        onStateChange={({ open }) => setOpen(open)}
       />
     </SafeAreaView>
   );
@@ -214,5 +226,9 @@ const styles = StyleSheet.create({
     width: 180,
     height: 200,
     marginRight: 10,
+  },
+
+  labelStyle: {
+    bottom: 0,
   },
 });

@@ -1,4 +1,5 @@
-import React, { useRef } from "react";
+import React from "react";
+import { useState } from "react";
 import { Video } from "expo-av";
 import {
   View,
@@ -7,7 +8,9 @@ import {
   StyleSheet,
   Text,
   Dimensions,
+  Button,
 } from "react-native";
+import Modal from "react-native-modal";
 
 const allVideos = [
   {
@@ -16,7 +19,7 @@ const allVideos = [
       "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/images/ForBiggerBlazes.jpg",
     key: 1,
   },
-  {
+  /* {
     url: "https://d23dyxeqlo5psv.cloudfront.net/big_buck_bunny.mp4",
     poster:
       "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/images/BigBuckBunny.jpg",
@@ -40,7 +43,7 @@ const allVideos = [
     poster:
       "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/images/ForBiggerMeltdowns.jpg",
     key: 5,
-  },
+  }, */
 ];
 
 const { width } = Dimensions.get("window");
@@ -49,34 +52,19 @@ const videoWidth = (width - 20 * (numColumns + 1)) / numColumns;
 
 export default function Category(props) {
   const [status, setStatus] = React.useState({});
-  const videoRefs = useRef([]);
-
-  const onVideoRef = (ref, index) => {
-    videoRefs.current[index] = ref;
-  };
 
   const renderItem = ({ item, index }) => (
-    <View style={styles.videoContainer}>
-      <Video
-        ref={(ref) => onVideoRef(ref, index)}
-        source={{ uri: item.url }}
-        style={styles.video}
-        resizeMode="contain"
-        isLooping
-        useNativeControls
-        backgroundColor="black"
-        autoPlay={false}
-        posterSource={{ uri: item.poster }}
-        onPlaybackStatusUpdate={(status) => {
-          if (!status.isLoaded) {
-            return;
-          }
-          if (status.isPlaying && videoRefs.current[index]) {
-            videoRefs.current[index].pauseAsync();
-          }
-        }}
-      />
-    </View>
+    <Video
+      source={{ uri: item.url }}
+      style={styles.video}
+      resizeMode="contain"
+      isLooping
+      useNativeControls
+      backgroundColor="black"
+      autoPlay={false}
+      posterSource={{ uri: item.poster }}
+      //onPlaybackStatusUpdate={(status) => setStatus(() => status)}
+    />
   );
 
   return (
@@ -85,6 +73,7 @@ export default function Category(props) {
         data={allVideos}
         renderItem={renderItem}
         keyExtractor={(item) => item.key.toString()}
+        numColumns={numColumns}
         horizontal={false}
         style={styles.flatlist}
         columnWrapperStyle={{ justifyContent: "space-between" }}
@@ -105,16 +94,11 @@ const styles = StyleSheet.create({
     paddingHorizontal: 10,
   },
 
-  videoContainer: {
+  video: {
     width: videoWidth,
     height: 200,
     backgroundColor: "black",
     margin: 10,
     overflow: "hidden",
-  },
-
-  video: {
-    width: "100%",
-    height: "100%",
   },
 });

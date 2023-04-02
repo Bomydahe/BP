@@ -13,6 +13,7 @@ import MyVideos from "./components/MyVideos";
 import ComparedVideos from "./components/ComparedVideos";
 import SharedVideos from "./components/SharedVideos";
 import Category from "./components/Category";
+import Compare from "./components/Compare";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 
 const Stack = createNativeStackNavigator();
@@ -22,6 +23,14 @@ const CategoryScreen = ({ navigation }) => {
   return (
     <View style={styles.container}>
       <Category />
+    </View>
+  );
+};
+
+const CompareScreen = ({ navigation }) => {
+  return (
+    <View style={styles.container}>
+      <Compare />
     </View>
   );
 };
@@ -46,6 +55,7 @@ export default function App() {
           options={{ headerShown: false }}
         />
         <Stack.Screen name="Category" component={CategoryScreen} />
+        <Stack.Screen name="Compare" component={CompareScreen} />
       </Stack.Navigator>
       <StatusBar />
     </NavigationContainer>
