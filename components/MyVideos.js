@@ -26,6 +26,7 @@ export default function MyVideos(props) {
   const [open, setOpen] = useState(false);
   const [selectedVideoUri, setSelectedVideoUri] = useState(null);
   const [modalVisible, setModalVisible] = useState(false);
+  const [videoCounter, setVideoCounter] = useState(1);
   const [categories, setCategories] = useStoredData("@categories", [
     { id: 0, name: "All Videos", videos: [] },
   ]);
@@ -44,8 +45,10 @@ export default function MyVideos(props) {
   function handleAddVideo(videoUri, categoryId) {
     const videoObj = {
       url: videoUri,
-      key: categories[0].videos.length + 1,
+      key: videoCounter,
     };
+
+    setVideoCounter(videoCounter + 1);
 
     setCategories(
       categories.map((category) => {
@@ -128,7 +131,12 @@ export default function MyVideos(props) {
                 <View style={styles.labels}>
                   <Text style={styles.text}>{category.name}</Text>
                   <Pressable
-                    onPress={() => navigate("Category")}
+                    onPress={() =>
+                      navigate("Category", {
+                        categoryName: category.name,
+                        videos: category.videos,
+                      })
+                    }
                     android_ripple={{ color: "#210644" }}
                   >
                     <Text style={styles.pressableLabel}>SHOW ALL</Text>
