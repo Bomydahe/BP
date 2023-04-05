@@ -11,45 +11,103 @@ import {
   Pressable,
   TouchableOpacity,
   SafeAreaView,
-  Modal,
 } from "react-native";
+import { FAB } from "react-native-paper";
 import { useNavigation } from "@react-navigation/native";
 import { AntDesign } from "@expo/vector-icons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import useStoredData from "../hooks/useStoredData";
-import VideoAddModal from "./VideoAddModal";
-import FAB from "./FAB";
 
 export default function MyVideos(props) {
   const [status, setStatus] = React.useState({});
   const { navigate } = useNavigation();
   const [open, setOpen] = useState(false);
-  const [selectedVideoUri, setSelectedVideoUri] = useState(null);
-  const [modalVisible, setModalVisible] = useState(false);
-  const [categories, setCategories] = useStoredData("@categories", [
+  const [allVideos, setAllVideos] = useState([]);
+  const [categories, setCategories] = useState([
     { id: 0, name: "All Videos", videos: [] },
   ]);
 
-  /* adding category */
-  function addCategory() {
-    const newCategory = {
-      id: categories.length,
-      name: `Section ${categories.length}`,
-      videos: [],
-    };
-    setCategories([...categories, newCategory]);
+  useEffect(() => {
+    loadVideos();
+    loadCategories();
+  }, []);
+
+  useEffect(() => {
+    storeVideos(allVideos);
+  }, [allVideos]);
+
+  useEffect(() => {
+    storeCategories(categories);
+  }, [categories]);
+
+  const storeVideos = async (videos) => {
+    try {
+      const jsonValue = JSON.stringify(videos);
+      await AsyncStorage.setItem("@allVideos", jsonValue);
+    } catch (error) {
+      console.log(error);
+    }
+  };
+
+  const loadVideos = async () => {
+    try {
+      const jsonValue = await AsyncStorage.getItem("@allVideos");
+      if (jsonValue !== null) {
+        setAllVideos(JSON.parse(jsonValue));
+      }
+    } catch (error) {
+      console.log(error);
+    }
+  };
+
+  const storeCategories = async (categories) => {
+    try {
+      const jsonValue = JSON.stringify(categories);
+      await AsyncStorage.setItem("@categories", jsonValue);
+    } catch (error) {
+      console.log(error);
+    }
+  };
+
+  const loadCategories = async () => {
+    try {
+      const jsonValue = await AsyncStorage.getItem("@categories");
+      if (jsonValue !== null) {
+        setCategories(JSON.parse(jsonValue));
+      }
+    } catch (error) {
+      console.log(error);
+    }
+  };
+
+  async function pickVideo() {
+    const { status } = await MediaLibrary.requestPermissionsAsync();
+
+    if (status === "granted") {
+      let result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ImagePicker.MediaTypeOptions.Videos,
+        allowsEditing: true,
+        quality: 1,
+      });
+
+      if (!result.canceled) {
+        const selectedVideo = result.assets[0];
+        addVideo(selectedVideo.uri);
+      }
+    } else {
+      console.log("Permission not granted");
+    }
   }
 
-  /* adding videos in categories */
-  function handleAddVideo(videoUri, categoryId) {
+  function addVideo(videoUri) {
     const videoObj = {
       url: videoUri,
-      key: categories[0].videos.length + 1,
+      key: allVideos.length + 1,
     };
 
+    setAllVideos([...allVideos, videoObj]);
     setCategories(
       categories.map((category) => {
-        if (category.id === 0 || category.id === categoryId) {
+        if (category.id === 0) {
           return {
             ...category,
             videos: [...category.videos, videoObj],
@@ -58,36 +116,11 @@ export default function MyVideos(props) {
         return category;
       })
     );
-    setModalVisible(false);
   }
 
-  /* picking video from native phone memory */
-  async function pickVideo() {
-    const { status } = await MediaLibrary.requestPermissionsAsync();
-
-    if (status === "granted") {
-      let chosenVideo = await ImagePicker.launchImageLibraryAsync({
-        mediaTypes: ImagePicker.MediaTypeOptions.Videos,
-        //allowsEditing: true,
-        quality: 1,
-      });
-
-      if (!chosenVideo.canceled) {
-        const selectedVideo = chosenVideo.assets[0];
-        showModal(selectedVideo.uri);
-      }
-    } else {
-      console.log("Permission not granted");
-    }
-  }
-
-  function showModal(videoUri) {
-    setModalVisible(true);
-    setSelectedVideoUri(videoUri);
-  }
-
-  /* removing video */
   function handleRemoveVideo(videoKey) {
+    const updatedVideos = allVideos.filter((video) => video.key !== videoKey);
+    setAllVideos(updatedVideos);
     setCategories(
       categories.map((category) => {
         return {
@@ -98,12 +131,21 @@ export default function MyVideos(props) {
     );
   }
 
+  function addCategory() {
+    const newCategory = {
+      id: categories.length,
+      name: `Section ${categories.length}`,
+      videos: [],
+    };
+    setCategories([...categories, newCategory]);
+  }
+
   const renderItem = ({ item }) => (
     <>
       <Video
         source={{ uri: item.url }}
         style={styles.video}
-        resizeMode="cover"
+        resizeMode="contain"
         isLooping
         useNativeControls
         backgroundColor="black"
@@ -147,19 +189,30 @@ export default function MyVideos(props) {
           </View>
         </ScrollView>
       </SafeAreaView>
-      <VideoAddModal
-        modalVisible={modalVisible}
-        setModalVisible={setModalVisible}
-        categories={categories}
-        handleAddVideo={handleAddVideo}
-        selectedVideoUri={selectedVideoUri}
-      />
-      <FAB
+      <FAB.Group
         open={open}
-        setOpen={setOpen}
-        pickVideo={pickVideo}
-        navigate={navigate}
-        addCategory={addCategory}
+        icon={open ? "close" : "plus"}
+        actions={[
+          {
+            icon: "plus",
+            onPress: () => pickVideo(),
+            label: "Add video",
+            labelStyle: styles.actionLabel,
+          },
+          {
+            icon: "square",
+            onPress: () => navigate("Compare"),
+            label: "Compare video",
+            labelStyle: styles.actionLabel,
+          },
+          {
+            icon: "plus",
+            onPress: () => addCategory(),
+            label: "Add category section",
+            labelStyle: styles.actionLabel,
+          },
+        ]}
+        onStateChange={({ open }) => setOpen(open)}
       />
     </>
   );

@@ -147,7 +147,7 @@ export default function Compare(props) {
           keyExtractor={(item) => item.key.toString()}
           contentContainerStyle={styles.videoList}
           numColumns={2}
-          showsVerticalScrollIndicator={false} // Add this prop
+          showsVerticalScrollIndicator={false}
         />
       )}
     </View>
@@ -189,7 +189,7 @@ const styles = StyleSheet.create({
     flexGrow: 1,
     justifyContent: "center",
     alignItems: "center",
-    paddingHorizontal: 10, // Add some padding for better appearance
+    paddingHorizontal: 10,
   },
   video: {
     width: width * 0.95,

@@ -1,0 +1,31 @@
+import React from "react";
+import { FAB } from "react-native-paper";
+
+const MyVideosFAB = ({ open, setOpen, pickVideo, navigate, addCategory }) => {
+  return (
+    <FAB.Group
+      open={open}
+      icon={open ? "close" : "plus"}
+      actions={[
+        {
+          icon: "plus",
+          onPress: () => pickVideo(),
+          label: "Add video",
+        },
+        {
+          icon: "square",
+          onPress: () => navigate("Compare"),
+          label: "Compare video",
+        },
+        {
+          icon: "plus",
+          onPress: () => addCategory(),
+          label: "Add category section",
+        },
+      ]}
+      onStateChange={({ open }) => setOpen(open)}
+    />
+  );
+};
+
+export default MyVideosFAB;
