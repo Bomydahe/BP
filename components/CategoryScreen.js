@@ -8,22 +8,14 @@ import {
   MenuOption,
   MenuTrigger,
 } from "react-native-popup-menu";
+import { EventRegister } from "react-native-event-listeners";
 
 const CategoryScreen = ({ route, navigation }) => {
-  const { categoryName } = route.params;
-
-  const handleEditCategory = () => {
-    console.log("Edit category");
-    // Handle editing the category name here
-  };
-
-  const handleDeleteCategory = () => {
-    console.log("Delete category");
-    // Handle deleting the category here
-  };
+  const { categoryName, categoryId } = route.params;
 
   useLayoutEffect(() => {
     navigation.setOptions({
+      headerTitle: categoryName,
       headerRight: () => (
         <Menu>
           <MenuTrigger>
@@ -35,17 +27,21 @@ const CategoryScreen = ({ route, navigation }) => {
             />
           </MenuTrigger>
           <MenuOptions>
-            <MenuOption onSelect={handleEditCategory}>
+            <MenuOption
+              onSelect={() => EventRegister.emit("editCategory", categoryId)}
+            >
               <Text style={styles.menuOptionText}>Edit Category</Text>
             </MenuOption>
-            <MenuOption onSelect={handleDeleteCategory}>
+            <MenuOption
+              onSelect={() => EventRegister.emit("deleteCategory", categoryId)}
+            >
               <Text style={styles.menuOptionText}>Delete Category</Text>
             </MenuOption>
           </MenuOptions>
         </Menu>
       ),
     });
-  }, [navigation]);
+  }, [navigation, categoryName]);
 
   return (
     <View style={styles.container}>

@@ -19,6 +19,8 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import useStoredData from "../hooks/useStoredData";
 import VideoAddModal from "./VideoAddModal";
 import FAB from "./FAB";
+import { EventRegister } from "react-native-event-listeners";
+import CategoryEditModal from "./CategoryEditModal";
 
 export default function MyVideos(props) {
   const [status, setStatus] = React.useState({});
@@ -26,26 +28,76 @@ export default function MyVideos(props) {
   const [open, setOpen] = useState(false);
   const [selectedVideoUri, setSelectedVideoUri] = useState(null);
   const [modalVisible, setModalVisible] = useState(false);
+  const [categoryEditModalVisible, setCategoryEditModalVisible] =
+    useState(false);
   const [videoCounter, setVideoCounter] = useState(1);
+  const [editingCategoryId, setEditingCategoryId] = useState(null);
+  const [action, setAction] = useState(null);
   const [categories, setCategories] = useStoredData("@categories", [
     { id: 0, name: "All Videos", videos: [] },
   ]);
 
   /* adding category */
-  function addCategory() {
+  function addCategory(name) {
     const newCategory = {
-      id: categories.length,
-      name: `Section ${categories.length}`,
+      id: generateUniqueId(),
+      name: name,
       videos: [],
     };
     setCategories([...categories, newCategory]);
   }
 
+  /* deleting category */
+  function handleDeleteCategory(categoryId) {
+    setCategories((prevCategories) =>
+      prevCategories.filter((category) => category.id !== categoryId)
+    );
+  }
+
+  /* editing category */
+  function handleEditCategory(categoryId, categoryName) {
+    setCategories((prevCategories) =>
+      prevCategories.map((category) =>
+        category.id === categoryId
+          ? { ...category, name: categoryName }
+          : category
+      )
+    );
+  }
+
+  function showAddCategoryModal() {
+    setAction("add");
+    setEditingCategoryId(null);
+  }
+
+  useEffect(() => {
+    const deleteListener = EventRegister.addEventListener(
+      "deleteCategory",
+      (categoryId) => {
+        handleDeleteCategory(categoryId);
+        navigate("Home");
+      }
+    );
+
+    const editListener = EventRegister.addEventListener(
+      "editCategory",
+      (categoryId) => {
+        setEditingCategoryId(categoryId);
+        setCategoryEditModalVisible(true);
+      }
+    );
+
+    return () => {
+      EventRegister.removeEventListener(deleteListener);
+      EventRegister.removeEventListener(editListener);
+    };
+  }, []);
+
   /* adding videos in categories */
   function handleAddVideo(videoUri, categoryId) {
     const videoObj = {
       url: videoUri,
-      key: videoCounter,
+      id: generateUniqueId(),
     };
 
     setVideoCounter(videoCounter + 1);
@@ -89,13 +141,19 @@ export default function MyVideos(props) {
     setSelectedVideoUri(videoUri);
   }
 
+  function generateUniqueId() {
+    return (
+      Date.now().toString(36) + Math.random().toString(36).substr(2, 5)
+    ).toUpperCase();
+  }
+
   /* removing video */
-  function handleRemoveVideo(videoKey) {
+  function handleRemoveVideo(videoId) {
     setCategories(
       categories.map((category) => {
         return {
           ...category,
-          videos: category.videos.filter((video) => video.key !== videoKey),
+          videos: category.videos.filter((video) => video.id !== videoId),
         };
       })
     );
@@ -114,7 +172,7 @@ export default function MyVideos(props) {
       />
       <TouchableOpacity
         style={styles.removeVideoButton}
-        onPress={() => handleRemoveVideo(item.key)}
+        onPress={() => handleRemoveVideo(item.id)}
       >
         <AntDesign name="close" size={24} color="white" />
       </TouchableOpacity>
@@ -135,6 +193,7 @@ export default function MyVideos(props) {
                       navigate("Category", {
                         categoryName: category.name,
                         videos: category.videos,
+                        categoryId: category.id,
                       })
                     }
                     android_ripple={{ color: "#210644" }}
@@ -145,7 +204,7 @@ export default function MyVideos(props) {
                 <FlatList
                   data={category.videos}
                   renderItem={renderItem}
-                  keyExtractor={(item) => item.key}
+                  keyExtractor={(item) => item.id.toString()}
                   horizontal={true}
                   style={styles.flatlist}
                   showsHorizontalScrollIndicator={false}
@@ -162,12 +221,24 @@ export default function MyVideos(props) {
         handleAddVideo={handleAddVideo}
         selectedVideoUri={selectedVideoUri}
       />
+      <CategoryEditModal
+        modalVisible={editingCategoryId !== null || action === "add"}
+        setModalVisible={() => {
+          setEditingCategoryId(null);
+          setAction(null);
+        }}
+        categories={categories}
+        handleEditCategory={handleEditCategory}
+        editingCategoryId={editingCategoryId}
+        action={action}
+        addCategory={addCategory}
+      />
       <FAB
         open={open}
         setOpen={setOpen}
         pickVideo={pickVideo}
         navigate={navigate}
-        addCategory={addCategory}
+        addCategory={showAddCategoryModal}
       />
     </>
   );

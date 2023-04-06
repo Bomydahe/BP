@@ -25,6 +25,7 @@
     "react": "18.2.0",
     "react-native": "0.71.6",
     "react-native-elements": "^3.4.3",
+    "react-native-event-listeners": "^1.0.7",
     "react-native-modal": "^13.0.1",
     "react-native-navigation": "^7.32.1",
     "react-native-pager-view": "6.1.2",

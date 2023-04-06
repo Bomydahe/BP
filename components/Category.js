@@ -37,7 +37,7 @@ export default function Category({ route }) {
       <FlatList
         data={videos}
         renderItem={renderItem}
-        keyExtractor={(item) => item.key.toString()}
+        keyExtractor={(item) => item.id.toString()}
         numColumns={numColumns}
         horizontal={false}
         style={styles.flatlist}

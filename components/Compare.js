@@ -118,7 +118,7 @@ export default function Compare(props) {
                 <Video
                   source={{ uri: video2 }}
                   style={styles.video}
-                  resizeMode="contain"
+                  resizeMode="cover"
                   isLooping
                   useNativeControls
                   backgroundColor="black"
