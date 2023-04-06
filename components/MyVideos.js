@@ -233,8 +233,8 @@ const styles = StyleSheet.create({
 
   removeVideoButton: {
     position: "absolute",
-    top: 10,
-    right: 10,
+    top: 5,
+    right: 15,
     backgroundColor: "rgba(0, 0, 0, 0.5)",
     borderRadius: 50,
     width: 30,
