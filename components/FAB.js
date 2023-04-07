@@ -1,7 +1,14 @@
 import React from "react";
 import { FAB } from "react-native-paper";
 
-const MyVideosFAB = ({ open, setOpen, pickVideo, navigate, addCategory }) => {
+const MyVideosFAB = ({
+  open,
+  setOpen,
+  pickVideo,
+  navigate,
+  addCategory,
+  categories,
+}) => {
   return (
     <FAB.Group
       open={open}
@@ -14,7 +21,9 @@ const MyVideosFAB = ({ open, setOpen, pickVideo, navigate, addCategory }) => {
         },
         {
           icon: "square",
-          onPress: () => navigate("Compare"),
+          onPress: () => {
+            navigate("Compare", { categories });
+          },
           label: "Compare video",
         },
         {

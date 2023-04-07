@@ -21,6 +21,7 @@ import VideoAddModal from "./VideoAddModal";
 import FAB from "./FAB";
 import { EventRegister } from "react-native-event-listeners";
 import CategoryEditModal from "./CategoryEditModal";
+import * as VideoThumbnails from "expo-video-thumbnails";
 
 export default function MyVideos(props) {
   const [status, setStatus] = React.useState({});
@@ -94,10 +95,13 @@ export default function MyVideos(props) {
   }, []);
 
   /* adding videos in categories */
-  function handleAddVideo(videoUri, categoryId) {
+  async function handleAddVideo(videoUri, categoryId) {
+    const thumbnailUri = await generateThumbnail(videoUri);
+
     const videoObj = {
       url: videoUri,
       id: generateUniqueId(),
+      thumbnail: thumbnailUri,
     };
 
     setVideoCounter(videoCounter + 1);
@@ -114,6 +118,18 @@ export default function MyVideos(props) {
       })
     );
     setModalVisible(false);
+  }
+
+  async function generateThumbnail(videoUri) {
+    try {
+      const { uri } = await VideoThumbnails.getThumbnailAsync(videoUri, {
+        time: 0,
+      });
+      return uri;
+    } catch (e) {
+      console.warn(e);
+      return null;
+    }
   }
 
   /* picking video from native phone memory */
@@ -239,6 +255,7 @@ export default function MyVideos(props) {
         pickVideo={pickVideo}
         navigate={navigate}
         addCategory={showAddCategoryModal}
+        categories={categories}
       />
     </>
   );

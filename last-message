@@ -1,0 +1,374 @@
+this is my compare.js code: import React, { useState } from "react";
+import { Video } from "expo-av";
+import { AntDesign } from "@expo/vector-icons";
+import {
+  View,
+  Text,
+  TouchableOpacity,
+  StyleSheet,
+  Dimensions,
+  FlatList,
+  Image,
+  Modal,
+} from "react-native";
+import * as MediaLibrary from "expo-media-library";
+import * as ImagePicker from "expo-image-picker";
+
+const { width, height } = Dimensions.get("window");
+
+export default function Compare(props) {
+  const [video1, setVideo1] = useState(null);
+  const [video2, setVideo2] = useState(null);
+  const [showVideoList, setShowVideoList] = useState(false);
+  const [selectedVideoIndex, setSelectedVideoIndex] = useState(null);
+  const [modalVisible, setModalVisible] = useState(false);
+  const [step, setStep] = useState("idle");
+  const categories = props.route.params.categories;
+
+  const renderCategoryItem = ({ item }) => (
+    <TouchableOpacity onPress={() => handleCategorySelection(item)}>
+      <Text style={styles.categoryItem}>{item.title}</Text>
+    </TouchableOpacity>
+  );
+
+  const handleCategorySelection = (category) => {
+    setSelectedCategory(category);
+    setStep("selectVideo");
+  };
+
+  async function pickVideoFromStorage() {
+    const { status } = await MediaLibrary.requestPermissionsAsync();
+
+    if (status === "granted") {
+      let chosenVideo = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ImagePicker.MediaTypeOptions.Videos,
+        quality: 1,
+      });
+
+      if (!chosenVideo.canceled) {
+        const selectedVideo = chosenVideo.assets[0].uri;
+        if (selectedVideoIndex === 1) {
+          setVideo1(selectedVideo);
+        } else {
+          setVideo2(selectedVideo);
+        }
+        setModalVisible(false);
+      }
+    } else {
+      console.log("Permission not granted");
+    }
+  }
+
+  const handleRemoveVideo = (videoIndex) => {
+    if (videoIndex === 1) {
+      setVideo1(null);
+    } else {
+      setVideo2(null);
+    }
+  };
+
+  const renderVideoItem = ({ item }) => (
+    <TouchableOpacity onPress={() => handleVideoSelection(item.url)}>
+      <Image source={{ uri: item.poster }} style={styles.thumbnail} />
+    </TouchableOpacity>
+  );
+
+  const handleSelectCategory = () => {
+    setStep("selectCategory");
+  };
+
+  const renderView = () => {
+    switch (step) {
+      case "idle":
+        return (
+          <View style={styles.container}>
+            {!showVideoList ? (
+              <>
+                <View style={styles.videoWrapper}>
+                  {video1 ? (
+                    <>
+                      <Video
+                        source={{ uri: video1 }}
+                        style={styles.video}
+                        resizeMode="cover"
+                        isLooping
+                        useNativeControls
+                        backgroundColor="black"
+                      />
+                      <TouchableOpacity
+                        style={styles.removeVideoButton}
+                        onPress={() => handleRemoveVideo(1)}
+                      >
+                        <AntDesign name="close" size={24} color="white" />
+                      </TouchableOpacity>
+                    </>
+                  ) : (
+                    <TouchableOpacity
+                      style={styles.videoPlaceholder}
+                      onPress={() => {
+                        setSelectedVideoIndex(1);
+                        setModalVisible(true);
+                      }}
+                    >
+                      <Text style={styles.addVideoText}>
+                        Add video to compare
+                      </Text>
+                    </TouchableOpacity>
+                  )}
+                </View>
+                <View style={styles.videoWrapper}>
+                  {video2 ? (
+                    <>
+                      <Video
+                        source={{ uri: video2 }}
+                        style={styles.video}
+                        resizeMode="cover"
+                        isLooping
+                        useNativeControls
+                        backgroundColor="black"
+                      />
+                      <TouchableOpacity
+                        style={styles.removeVideoButton}
+                        onPress={() => handleRemoveVideo(2)}
+                      >
+                        <AntDesign name="close" size={24} color="white" />
+                      </TouchableOpacity>
+                    </>
+                  ) : (
+                    <TouchableOpacity
+                      style={styles.videoPlaceholder}
+                      onPress={() => {
+                        setSelectedVideoIndex(2);
+                        setModalVisible(true);
+                      }}
+                    >
+                      <Text style={styles.addVideoText}>
+                        Add video to compare
+                      </Text>
+                    </TouchableOpacity>
+                  )}
+                </View>
+              </>
+            ) : (
+              <FlatList
+                data={allVideos}
+                renderItem={renderVideoItem}
+                keyExtractor={(item) => item.key.toString()}
+                contentContainerStyle={styles.videoList}
+                numColumns={2}
+                showsVerticalScrollIndicator={false}
+              />
+            )}
+            <Modal
+              animationType="slide"
+              transparent={true}
+              visible={modalVisible}
+              onRequestClose={() => {
+                setModalVisible(false);
+              }}
+            >
+              <View
+                style={{
+                  flex: 1,
+                  justifyContent: "center",
+                  alignItems: "center",
+                }}
+              >
+                <View
+                  style={{
+                    backgroundColor: "white",
+                    padding: 20,
+                    borderRadius: 10,
+                  }}
+                >
+                  <TouchableOpacity
+                    onPress={pickVideoFromStorage}
+                    style={{ marginBottom: 20 }}
+                  >
+                    <Text>Choose video from phone storage</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity>
+                    <Text>Choose video from categories</Text>
+                  </TouchableOpacity>
+                </View>
+              </View>
+            </Modal>
+          </View>
+        );
+      case "selectCategory":
+        return (
+          <FlatList
+            data={categories}
+            renderItem={renderCategoryItem}
+            keyExtractor={(item) => item.key.toString()}
+            contentContainerStyle={styles.categoryList}
+            showsVerticalScrollIndicator={false}
+          />
+        );
+      case "selectVideo":
+        return (
+          <FlatList
+            data={selectedCategory.videos}
+            renderItem={renderVideoItem}
+            keyExtractor={(item) => item.key.toString()}
+            contentContainerStyle={styles.videoList}
+            numColumns={2}
+            showsVerticalScrollIndicator={false}
+          />
+        );
+      default:
+        return null;
+    }
+  };
+
+  return (
+    <View style={styles.container}>
+      {renderView()}
+      <Modal
+        animationType="slide"
+        transparent={true}
+        visible={modalVisible}
+        onRequestClose={() => {
+          setModalVisible(false);
+        }}
+      >
+        <View
+          style={{ flex: 1, justifyContent: "center", alignItems: "center" }}
+        >
+          <View
+            style={{ backgroundColor: "white", padding: 20, borderRadius: 10 }}
+          >
+            <TouchableOpacity
+              onPress={pickVideoFromStorage}
+              style={{ marginBottom: 20 }}
+            >
+              <Text>Choose video from phone storage</Text>
+            </TouchableOpacity>
+            <TouchableOpacity onPress={handleSelectCategory}>
+              <Text>Choose video from categories</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
+    </View>
+  );
+}
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    justifyContent: "space-around",
+    alignItems: "center",
+  },
+  videoWrapper: {
+    width: width * 0.95,
+    height: height * 0.45,
+    backgroundColor: "transparent",
+  },
+  videoPlaceholder: {
+    flex: 1,
+    borderWidth: 2,
+    borderColor: "black",
+    borderStyle: "dotted",
+    borderRadius: 1,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  addVideoText: {
+    fontSize: 18,
+    color: "black",
+  },
+
+  thumbnail: {
+    width: (width - 40) / 2, // Adjust width to fit two thumbnails per row
+    height: 200,
+    marginRight: 10,
+    marginBottom: 10,
+  },
+  videoList: {
+    flexGrow: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    paddingHorizontal: 10,
+  },
+  video: {
+    width: width * 0.95,
+    height: height * 0.45,
+    backgroundColor: "black",
+  },
+
+  removeVideoButton: {
+    position: "absolute",
+    top: 10,
+    right: 10,
+    backgroundColor: "rgba(0, 0, 0, 0.5)",
+    borderRadius: 50,
+    width: 30,
+    height: 30,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+});
+ 
+
+check code i sent inprvious message aswell but im still getting this error: TypeError: Cannot read property 'params' of undefined
+
+This error is located at:
+    in Compare (created by CompareScreen)
+    in RCTView (created by View)
+    in View (created by CompareScreen)
+    in CompareScreen (created by SceneView)
+    in StaticContainer
+    in EnsureSingleNavigator (created by SceneView)
+    in SceneView (created by SceneView)
+    in RCTView (created by View)
+    in View (created by DebugContainer)
+    in DebugContainer (created by MaybeNestedStack)
+    in MaybeNestedStack (created by SceneView)
+    in RCTView (created by View)
+    in View (created by SceneView)
+    in RNSScreen (created by AnimatedComponent)
+    in AnimatedComponent
+    in AnimatedComponentWrapper (created by InnerScreen)
+    in Suspender (created by Freeze)
+    in Suspense (created by Freeze)
+    in Freeze (created by DelayedFreeze)
+    in DelayedFreeze (created by InnerScreen)
+    in InnerScreen (created by Screen)
+    in Screen (created by SceneView)
+    in SceneView (created by NativeStackViewInner)
+    in Suspender (created by Freeze)
+    in Suspense (created by Freeze)
+    in Freeze (created by DelayedFreeze)
+    in DelayedFreeze (created by ScreenStack)
+    in RNSScreenStack (created by ScreenStack)
+    in ScreenStack (created by NativeStackViewInner)
+    in NativeStackViewInner (created by NativeStackView)
+    in RNCSafeAreaProvider (created by SafeAreaProvider)
+    in SafeAreaProvider (created by SafeAreaInsetsContext)
+    in SafeAreaProviderCompat (created by NativeStackView)
+    in NativeStackView (created by NativeStackNavigator)
+    in PreventRemoveProvider (created by NavigationContent)
+    in NavigationContent
+    in Unknown (created by NativeStackNavigator)
+    in NativeStackNavigator (created by App)
+    in EnsureSingleNavigator
+    in BaseNavigationContainer
+    in ThemeProvider
+    in NavigationContainerInner (created by App)
+    in RCTView (created by View)
+    in View (created by MenuProvider)
+    in RCTView (created by View)
+    in View (created by MenuProvider)
+    in MenuProvider (created by App)
+    in App (created by withDevTools(App))
+    in withDevTools(App)
+    in RCTView (created by View)
+    in View (created by AppContainer)
+    in RCTView (created by View)
+    in View (created by AppContainer)
+    in AppContainer
+    in main(RootComponent), js engine: hermes
+
+
+any idea why?

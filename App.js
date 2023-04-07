@@ -13,10 +13,10 @@ import CategoryScreen from "./components/CategoryScreen";
 const Stack = createNativeStackNavigator();
 const Tab = createMaterialTopTabNavigator();
 
-const CompareScreen = ({ navigation }) => {
+const CompareScreen = ({ navigation, route }) => {
   return (
     <View style={styles.container}>
-      <Compare />
+      <Compare route={route} />
     </View>
   );
 };
