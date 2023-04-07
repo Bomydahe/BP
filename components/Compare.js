@@ -84,6 +84,7 @@ export default function Compare(props) {
       setVideo2(url);
     }
     setModalVisible(false);
+    setModalStep("initial");
   };
 
   const renderModalContent = () => {
@@ -271,7 +272,6 @@ const styles = StyleSheet.create({
     position: "absolute",
     top: 10,
     right: 10,
-    backgroundColor: "rgba(0, 0, 0, 0.5)",
     borderRadius: 50,
     width: 30,
     height: 30,
