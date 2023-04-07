@@ -5,10 +5,11 @@ import {
   FlatList,
   SafeAreaView,
   StyleSheet,
-  Text,
+  Image,
   Dimensions,
-  Button,
+  TouchableOpacity,
 } from "react-native";
+import { useNavigation } from "@react-navigation/native";
 
 const { width } = Dimensions.get("window");
 const numColumns = 2;
@@ -17,20 +18,25 @@ const videoWidth = (width - 20 * (numColumns + 1)) / numColumns;
 export default function Category({ route }) {
   const [status, setStatus] = React.useState({});
   const videos = route.params.videos || [];
+  const navigation = useNavigation();
 
-  const renderItem = ({ item, index }) => (
-    <Video
-      source={{ uri: item.url }}
-      style={styles.video}
-      resizeMode="cover"
-      isLooping
-      useNativeControls
-      backgroundColor="black"
-      autoPlay={false}
-      posterSource={{ uri: item.poster }}
-      //onPlaybackStatusUpdate={(status) => setStatus(() => status)}
-    />
-  );
+  const renderItem = ({ item, index }) => {
+    return (
+      <TouchableOpacity
+        onPress={() =>
+          navigation.navigate("VideoPlayer", {
+            videoUri: item.url,
+          })
+        }
+      >
+        <Image
+          source={{ uri: item.thumbnail }}
+          style={styles.video}
+          resizeMode="cover"
+        />
+      </TouchableOpacity>
+    );
+  };
 
   return (
     <SafeAreaView style={styles.container}>

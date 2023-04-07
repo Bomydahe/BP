@@ -9,6 +9,7 @@ import Compare from "./components/Compare";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import { MenuProvider } from "react-native-popup-menu";
 import CategoryScreen from "./components/CategoryScreen";
+import VideoPlayerScreen from "./components/VideoPlayerScreen";
 
 const Stack = createNativeStackNavigator();
 const Tab = createMaterialTopTabNavigator();
@@ -43,6 +44,7 @@ export default function App() {
           />
           <Stack.Screen name="Category" component={CategoryScreen} />
           <Stack.Screen name="Compare" component={CompareScreen} />
+          <Stack.Screen name="VideoPlayer" component={VideoPlayerScreen} />
         </Stack.Navigator>
         <StatusBar />
       </NavigationContainer>

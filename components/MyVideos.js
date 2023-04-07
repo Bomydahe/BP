@@ -11,7 +11,7 @@ import {
   Pressable,
   TouchableOpacity,
   SafeAreaView,
-  Modal,
+  Image,
 } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import { AntDesign } from "@expo/vector-icons";
@@ -177,15 +177,20 @@ export default function MyVideos(props) {
 
   const renderItem = ({ item }) => (
     <>
-      <Video
-        source={{ uri: item.url }}
-        style={styles.video}
-        resizeMode="cover"
-        isLooping
-        useNativeControls
-        backgroundColor="black"
-        onPlaybackStatusUpdate={(status) => setStatus(() => status)}
-      />
+      <TouchableOpacity
+        onPress={() =>
+          navigate("VideoPlayer", {
+            videoUri: item.url,
+            videoId: item.id,
+          })
+        }
+      >
+        <Image
+          source={{ uri: item.thumbnail }}
+          style={styles.video}
+          resizeMode="cover"
+        />
+      </TouchableOpacity>
       <TouchableOpacity
         style={styles.removeVideoButton}
         onPress={() => handleRemoveVideo(item.id)}
@@ -272,7 +277,7 @@ const styles = StyleSheet.create({
 
   sectionContainer: {
     width: "100%",
-    height: 260,
+    height: 210,
     justifyContent: "flex-start",
     alignItems: "flex-start",
     margin: 0,
@@ -310,8 +315,8 @@ const styles = StyleSheet.create({
   },
 
   video: {
-    width: 180,
-    height: 200,
+    width: 130,
+    height: 160,
     marginRight: 10,
   },
 
