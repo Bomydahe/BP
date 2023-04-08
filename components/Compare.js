@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useLayoutEffect, useCallback, useRef } from "react";
 import { Video } from "expo-av";
 import { AntDesign } from "@expo/vector-icons";
 import {
@@ -10,9 +10,11 @@ import {
   FlatList,
   Image,
   Modal,
+  Button,
 } from "react-native";
 import * as MediaLibrary from "expo-media-library";
 import * as ImagePicker from "expo-image-picker";
+import { useNavigation } from "@react-navigation/native";
 
 const { width, height } = Dimensions.get("window");
 
@@ -24,6 +26,36 @@ export default function Compare(props) {
   const categories = props.route.params.categories;
   const [selectedCategory, setSelectedCategory] = useState(null);
   const [modalStep, setModalStep] = useState("initial");
+  const [video1Time, setVideo1Time] = useState(0);
+  const [video2Time, setVideo2Time] = useState(0);
+  const video1Ref = useRef(null);
+  const video2Ref = useRef(null);
+  const navigation = useNavigation();
+
+  const updateNavigationOptions = useCallback(() => {
+    navigation.setOptions({
+      headerRight: () =>
+        video1 && video2 ? (
+          <Button onPress={handleCompare} title="Compare" />
+        ) : null,
+    });
+  }, [navigation, handleCompare, video1, video2]);
+
+  const handleCompare = useCallback(async () => {
+    const video1Status = await video1Ref.current.getStatusAsync();
+    const video2Status = await video2Ref.current.getStatusAsync();
+
+    navigation.navigate("Compared", {
+      video1: video1,
+      video2: video2,
+      video1Time: video1Status.positionMillis / 1000,
+      video2Time: video2Status.positionMillis / 1000,
+    });
+  }, [navigation, video1, video2]);
+
+  useLayoutEffect(() => {
+    updateNavigationOptions();
+  }, [updateNavigationOptions, video1, video2]);
 
   const renderCategoryItem = ({ item }) => (
     <TouchableOpacity onPress={() => handleCategorySelection(item)}>
@@ -137,9 +169,10 @@ export default function Compare(props) {
         {video1 ? (
           <>
             <Video
+              ref={video1Ref}
               source={{ uri: video1 }}
               style={styles.video}
-              resizeMode="cover"
+              resizeMode="contain"
               isLooping
               useNativeControls
               backgroundColor="black"
@@ -167,9 +200,10 @@ export default function Compare(props) {
         {video2 ? (
           <>
             <Video
+              ref={video2Ref}
               source={{ uri: video2 }}
               style={styles.video}
-              resizeMode="cover"
+              resizeMode="contain"
               isLooping
               useNativeControls
               backgroundColor="black"

@@ -1,9 +1,28 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { View, StyleSheet } from "react-native";
 import { Video } from "expo-av";
+import * as ScreenOrientation from "expo-screen-orientation";
 
 export default function VideoPlayerScreen({ route }) {
   const { videoUri } = route.params;
+
+  useEffect(() => {
+    const lockOrientation = async () => {
+      await ScreenOrientation.unlockAsync();
+    };
+
+    lockOrientation();
+
+    return () => {
+      const resetOrientation = async () => {
+        await ScreenOrientation.lockAsync(
+          ScreenOrientation.OrientationLock.PORTRAIT
+        );
+      };
+
+      resetOrientation();
+    };
+  }, []);
 
   return (
     <View style={styles.container}>

@@ -1,11 +1,167 @@
-import React from "react";
-import { Video, AVPlaybackStatus } from "expo-av";
-import { View, Text, StyleSheet } from "react-native";
+import React, { useEffect, useState } from "react";
+import {
+  View,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  Dimensions,
+  FlatList,
+  Image,
+} from "react-native";
+import { useNavigation } from "@react-navigation/native";
+import * as VideoThumbnails from "expo-video-thumbnails";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { AntDesign } from "@expo/vector-icons";
 
-export default function ComparedVideos(props) {
+const { width } = Dimensions.get("window");
+const numColumns = 2;
+const videoWidth = (width - 20 * (numColumns + 1)) / numColumns;
+
+export default function ComparedVideos({ route }) {
+  const { video1, video2 } = { ...route.params };
+  const [video1Thumbnail, setVideo1Thumbnail] = useState(null);
+  const [video2Thumbnail, setVideo2Thumbnail] = useState(null);
+  const [videoComparisons, setVideoComparisons] = useState([]);
+
+  useEffect(() => {
+    (async () => {
+      const loadedComparisons = await loadVideoComparisons();
+      setVideoComparisons(loadedComparisons);
+
+      if (video1 && video2) {
+        const thumbnail1 = await generateThumbnail(video1);
+        const thumbnail2 = await generateThumbnail(video2);
+
+        const newComparison = {
+          id: Date.now(),
+          video1: { uri: video1, thumbnail: thumbnail1 },
+          video2: { uri: video2, thumbnail: thumbnail2 },
+        };
+
+        const updatedComparisons = [...loadedComparisons, newComparison];
+        setVideoComparisons(updatedComparisons);
+        saveVideoComparisons(updatedComparisons);
+
+        // Set the thumbnails after they have been used in the newComparison object
+        setVideo1Thumbnail(thumbnail1);
+        setVideo2Thumbnail(thumbnail2);
+      }
+    })();
+  }, [video1, video2]);
+
+  const saveVideoComparisons = async (videoComparisons) => {
+    try {
+      const jsonString = JSON.stringify(videoComparisons);
+      await AsyncStorage.setItem("@videoComparisons", jsonString);
+    } catch (error) {
+      console.error("Error saving video comparisons:", error);
+    }
+  };
+
+  const handleRemoveVideo = async (videoId) => {
+    // Remove the comparison from the state
+    setVideoComparisons((prevComparisons) =>
+      prevComparisons.filter((comparison) => comparison.id !== videoId)
+    );
+
+    // Update the stored data
+    const updatedComparisons = videoComparisons.filter(
+      (comparison) => comparison.id !== videoId
+    );
+    await AsyncStorage.setItem(
+      "@videoComparisons",
+      JSON.stringify(updatedComparisons)
+    );
+  };
+
+  const loadVideoComparisons = async () => {
+    try {
+      const jsonString = await AsyncStorage.getItem("@videoComparisons");
+      if (jsonString !== null) {
+        return JSON.parse(jsonString);
+      } else {
+        return []; // Return an empty array if there's no data
+      }
+    } catch (error) {
+      console.error("Error loading video comparisons:", error);
+      return [];
+    }
+  };
+
+  const navigation = useNavigation();
+
+  async function generateThumbnail(videoUri) {
+    try {
+      const { uri } = await VideoThumbnails.getThumbnailAsync(videoUri, {
+        time: 0,
+      });
+      return uri;
+    } catch (e) {
+      console.warn(e);
+      return null;
+    }
+  }
+
+  useEffect(() => {
+    (async () => {
+      if (video1 && video2) {
+        const thumbnail1 = await generateThumbnail(video1);
+        const thumbnail2 = await generateThumbnail(video2);
+        setVideo1Thumbnail(thumbnail1);
+        setVideo2Thumbnail(thumbnail2);
+      }
+    })();
+  }, [video1, video2]);
+
+  const renderItem = ({ item, index }) => {
+    return (
+      <View>
+        <TouchableOpacity
+          style={styles.video}
+          onPress={() => {
+            // Implement your onPress functionality here
+          }}
+        >
+          <View style={styles.timestampContainer}>
+            <Image
+              source={{ uri: item.video1.thumbnail }}
+              style={styles.thumbnail}
+              resizeMode="cover"
+            />
+          </View>
+          <View style={styles.timestampContainer}>
+            <Image
+              source={{ uri: item.video2.thumbnail }}
+              style={styles.thumbnail}
+              resizeMode="cover"
+            />
+          </View>
+          <View style={styles.overlayContainer}>
+            <Text style={styles.overlayText}>vs</Text>
+          </View>
+        </TouchableOpacity>
+        {/* Add the remove video button */}
+        <TouchableOpacity
+          style={styles.removeVideoButton}
+          onPress={() => handleRemoveVideo(item.id)}
+        >
+          <AntDesign name="close" size={24} color="white" />
+        </TouchableOpacity>
+      </View>
+    );
+  };
+
   return (
     <View style={styles.container}>
-      <Text style={styles.text}>StatutScreen</Text>
+      <FlatList
+        data={videoComparisons}
+        renderItem={renderItem}
+        keyExtractor={(item) => item.id.toString()}
+        numColumns={numColumns}
+        horizontal={false}
+        style={styles.flatlist}
+        columnWrapperStyle={{ justifyContent: "space-between" }}
+      />
     </View>
   );
 }
@@ -13,11 +169,58 @@ export default function ComparedVideos(props) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    flexDirection: "column",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  video: {
+    width: videoWidth,
+    height: 200,
+    backgroundColor: "black",
+    margin: 10,
+  },
+  timestampContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  thumbnail: {
+    width: "100%",
+    height: "100%",
+  },
+  flatlist: {
+    width: "100%",
+    paddingHorizontal: 10,
+  },
+
+  overlayText: {
+    position: "absolute",
+    color: "white",
+    fontSize: 24,
+    fontWeight: "bold",
+    alignSelf: "center",
+    justifyContent: "center",
+    top: "40%",
+    textShadowColor: "rgba(0, 0, 0, 0.75)",
+    textShadowOffset: { width: -2, height: 2 },
+    textShadowRadius: 15,
+  },
+
+  overlayContainer: {
+    position: "absolute",
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
     justifyContent: "center",
     alignItems: "center",
   },
 
-  text: {
-    fontSize: 20,
+  removeVideoButton: {
+    position: "absolute",
+    top: 15,
+    right: 15,
+    justifyContent: "center",
+    alignItems: "center",
   },
 });
