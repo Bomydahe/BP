@@ -129,6 +129,7 @@ export default function ComparedVideos({ route }) {
               resizeMode="cover"
             />
           </View>
+          <View style={styles.whiteLine} />
           <View style={styles.timestampContainer}>
             <Image
               source={{ uri: item.video2.thumbnail }}
@@ -196,11 +197,11 @@ const styles = StyleSheet.create({
   overlayText: {
     position: "absolute",
     color: "white",
-    fontSize: 24,
+    fontSize: 26,
     fontWeight: "bold",
     alignSelf: "center",
     justifyContent: "center",
-    top: "40%",
+    top: "39%",
     textShadowColor: "rgba(0, 0, 0, 0.75)",
     textShadowOffset: { width: -2, height: 2 },
     textShadowRadius: 15,
@@ -222,5 +223,11 @@ const styles = StyleSheet.create({
     right: 15,
     justifyContent: "center",
     alignItems: "center",
+  },
+
+  whiteLine: {
+    width: "100%", // adjust the width of the white line as desired
+    height: 3,
+    backgroundColor: "white",
   },
 });
