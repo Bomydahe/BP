@@ -44,7 +44,17 @@ export default function App() {
           />
           <Stack.Screen name="Category" component={CategoryScreen} />
           <Stack.Screen name="Compare" component={CompareScreen} />
-          <Stack.Screen name="VideoPlayer" component={VideoPlayerScreen} />
+          <Stack.Screen
+            name="VideoPlayer"
+            component={VideoPlayerScreen}
+            options={{
+              title: "Video Player",
+              headerStyle: {
+                backgroundColor: "black",
+              },
+              headerTintColor: "white",
+            }}
+          />
         </Stack.Navigator>
         <StatusBar />
       </NavigationContainer>
