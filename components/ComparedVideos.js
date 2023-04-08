@@ -22,6 +22,7 @@ export default function ComparedVideos({ route }) {
   const [video1Thumbnail, setVideo1Thumbnail] = useState(null);
   const [video2Thumbnail, setVideo2Thumbnail] = useState(null);
   const [videoComparisons, setVideoComparisons] = useState([]);
+  const navigation = useNavigation();
 
   useEffect(() => {
     (async () => {
@@ -34,8 +35,16 @@ export default function ComparedVideos({ route }) {
 
         const newComparison = {
           id: Date.now(),
-          video1: { uri: video1, thumbnail: thumbnail1 },
-          video2: { uri: video2, thumbnail: thumbnail2 },
+          video1: {
+            uri: video1,
+            thumbnail: thumbnail1,
+            time: route.params.video1Time,
+          },
+          video2: {
+            uri: video2,
+            thumbnail: thumbnail2,
+            time: route.params.video2Time,
+          },
         };
 
         const updatedComparisons = [...loadedComparisons, newComparison];
@@ -88,8 +97,6 @@ export default function ComparedVideos({ route }) {
     }
   };
 
-  const navigation = useNavigation();
-
   async function generateThumbnail(videoUri) {
     try {
       const { uri } = await VideoThumbnails.getThumbnailAsync(videoUri, {
@@ -119,7 +126,12 @@ export default function ComparedVideos({ route }) {
         <TouchableOpacity
           style={styles.video}
           onPress={() => {
-            // Implement your onPress functionality here
+            navigation.navigate("ComparedVideoPlayer", {
+              video1Uri: item.video1.uri,
+              video1Time: item.video1.time,
+              video2Uri: item.video2.uri,
+              video2Time: item.video2.time,
+            });
           }}
         >
           <View style={styles.timestampContainer}>

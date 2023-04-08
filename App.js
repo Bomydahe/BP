@@ -10,6 +10,7 @@ import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import { MenuProvider } from "react-native-popup-menu";
 import CategoryScreen from "./components/CategoryScreen";
 import VideoPlayerScreen from "./components/VideoPlayerScreen";
+import ComparedVideoPlayer from "./components/ComparedVideoPlayer";
 
 const Stack = createNativeStackNavigator();
 const Tab = createMaterialTopTabNavigator();
@@ -47,6 +48,17 @@ export default function App() {
           <Stack.Screen
             name="VideoPlayer"
             component={VideoPlayerScreen}
+            options={{
+              title: "Video Player",
+              headerStyle: {
+                backgroundColor: "black",
+              },
+              headerTintColor: "white",
+            }}
+          />
+          <Stack.Screen
+            name="ComparedVideoPlayer"
+            component={ComparedVideoPlayer}
             options={{
               title: "Video Player",
               headerStyle: {
