@@ -14,6 +14,7 @@ import ComparedVideoPlayer from "./components/ComparedVideoPlayer";
 import LoginScreen from "./components/LoginScreen";
 import TrainerHomeScreen from "./components/TrainerHomeScreen";
 import ClientsSharedScreen from "./components/ClientsSharedScreen";
+import SharedCategory from "./components/SharedCategory";
 
 const Stack = createNativeStackNavigator();
 const Tab = createMaterialTopTabNavigator();
@@ -84,6 +85,7 @@ export default function App() {
             name="ClientsSharedScreen"
             component={ClientsSharedScreen}
           />
+          <Stack.Screen name="SharedCategory" component={SharedCategory} />
         </Stack.Navigator>
         <StatusBar />
       </NavigationContainer>

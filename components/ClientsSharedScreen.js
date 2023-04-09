@@ -74,7 +74,7 @@ export default function ClientsSharedScreen(props) {
                 <Text style={styles.text}>{category.name}</Text>
                 <Pressable
                   onPress={() =>
-                    navigate("Category", {
+                    navigate("SharedCategory", {
                       categoryName: category.name,
                       videos: category.videos,
                       categoryId: category.id,
