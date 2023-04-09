@@ -12,6 +12,8 @@ import CategoryScreen from "./components/CategoryScreen";
 import VideoPlayerScreen from "./components/VideoPlayerScreen";
 import ComparedVideoPlayer from "./components/ComparedVideoPlayer";
 import LoginScreen from "./components/LoginScreen";
+import TrainerHomeScreen from "./components/TrainerHomeScreen";
+import ClientsSharedScreen from "./components/ClientsSharedScreen";
 
 const Stack = createNativeStackNavigator();
 const Tab = createMaterialTopTabNavigator();
@@ -73,6 +75,14 @@ export default function App() {
               },
               headerTintColor: "white",
             }}
+          />
+          <Stack.Screen
+            name="TrainerHomeScreen"
+            component={TrainerHomeScreen}
+          />
+          <Stack.Screen
+            name="ClientsSharedScreen"
+            component={ClientsSharedScreen}
           />
         </Stack.Navigator>
         <StatusBar />

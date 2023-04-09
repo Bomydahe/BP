@@ -7,6 +7,7 @@ import {
   TouchableOpacity,
 } from "react-native";
 import { useNavigation } from "@react-navigation/native";
+import { CommonActions } from "@react-navigation/native";
 
 export default function LoginScreen() {
   const [username, setUsername] = useState("");
@@ -15,9 +16,19 @@ export default function LoginScreen() {
 
   const handleLogin = () => {
     if (username === "user" && password === "user") {
-      navigation.navigate("Home");
+      navigation.dispatch(
+        CommonActions.reset({
+          index: 0,
+          routes: [{ name: "TrainerHomeScreen" }],
+        })
+      );
     } else if (username === "admin" && password === "admin") {
-      navigation.navigate("TeacherHome");
+      navigation.dispatch(
+        CommonActions.reset({
+          index: 0,
+          routes: [{ name: "TrainerHomeScreen" }],
+        })
+      );
     } else {
       alert("Invalid username or password");
     }
