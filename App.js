@@ -11,6 +11,7 @@ import { MenuProvider } from "react-native-popup-menu";
 import CategoryScreen from "./components/CategoryScreen";
 import VideoPlayerScreen from "./components/VideoPlayerScreen";
 import ComparedVideoPlayer from "./components/ComparedVideoPlayer";
+import LoginScreen from "./components/LoginScreen";
 
 const Stack = createNativeStackNavigator();
 const Tab = createMaterialTopTabNavigator();
@@ -38,6 +39,12 @@ export default function App() {
     <MenuProvider>
       <NavigationContainer>
         <Stack.Navigator>
+          <Stack.Screen
+            name="LoginScreen"
+            component={LoginScreen}
+            options={{ headerShown: false }}
+          />
+
           <Stack.Screen
             name="Home"
             component={Home}

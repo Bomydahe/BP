@@ -214,8 +214,8 @@ const styles = StyleSheet.create({
     alignSelf: "center",
     justifyContent: "center",
     top: "39%",
-    textShadowColor: "rgba(0, 0, 0, 0.75)",
-    textShadowOffset: { width: -2, height: 2 },
+    textShadowColor: "rgba(0, 0, 0, 0.35)",
+    textShadowOffset: { width: -1, height: 1 },
     textShadowRadius: 15,
   },
 

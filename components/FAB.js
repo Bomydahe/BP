@@ -33,6 +33,8 @@ const MyVideosFAB = ({
         },
       ]}
       onStateChange={({ open }) => setOpen(open)}
+      fabStyle={{ backgroundColor: "blue" }}
+      color="white"
     />
   );
 };
