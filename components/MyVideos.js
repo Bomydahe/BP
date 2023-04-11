@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from "react";
-import { Video } from "expo-av";
 import * as MediaLibrary from "expo-media-library";
 import * as ImagePicker from "expo-image-picker";
 import {
@@ -10,8 +9,10 @@ import {
   Text,
   Pressable,
   TouchableOpacity,
+  TouchableHighlight,
   SafeAreaView,
   Image,
+  Modal,
 } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import { AntDesign } from "@expo/vector-icons";
@@ -22,6 +23,7 @@ import FAB from "./FAB";
 import { EventRegister } from "react-native-event-listeners";
 import CategoryEditModal from "./CategoryEditModal";
 import * as VideoThumbnails from "expo-video-thumbnails";
+import { firebase } from "../firebaseConfig";
 
 export default function MyVideos(props) {
   const [status, setStatus] = React.useState({});
@@ -34,9 +36,57 @@ export default function MyVideos(props) {
   const [videoCounter, setVideoCounter] = useState(1);
   const [editingCategoryId, setEditingCategoryId] = useState(null);
   const [action, setAction] = useState(null);
+  const [uploadPromptVisible, setUploadPromptVisible] = useState(false);
+  const [currentVideoId, setCurrentVideoId] = useState(null);
   const [categories, setCategories] = useStoredData("@categories", [
     { id: 0, name: "All Videos", videos: [] },
   ]);
+
+  /* metadata to save/upload along with videos */
+  async function saveVideoMetadata(videoName, videoUrl, booleanVar) {
+    const videoRef = firebase.firestore().collection("videos").doc(videoName);
+    await videoRef.set({
+      url: videoUrl,
+      booleanVar: booleanVar,
+    });
+  }
+
+  /* upload video to firebase */
+  async function uploadVideo(videoUrl) {
+    console.log("Uploading video with URL:", videoUrl);
+
+    const response = await fetch(videoUrl);
+    const blob = await response.blob();
+    const videoName = videoUrl.substring(videoUrl.lastIndexOf("/") + 1);
+    const storageRef = firebase.storage().ref().child(videoName).put(blob);
+
+    try {
+      await storageRef;
+      console.log("Video uploaded successfully");
+
+      // Save video metadata to Firestore with an initial boolean value (e.g., true)
+      await saveVideoMetadata(videoName, videoUrl, false);
+    } catch (error) {
+      console.error("Error uploading video:", error);
+    }
+  }
+
+  /* retrieving video from firebase */
+  async function getVideoDownloadUrl(videoName) {
+    try {
+      const storageRef = firebase.storage().ref().child(videoName);
+      const url = await storageRef.getDownloadURL();
+      console.log("Download URL:", url);
+      return url;
+    } catch (error) {
+      console.error("Error getting download URL:", error);
+    }
+  }
+
+  function showModalForUploadPrompt(videoId) {
+    setUploadPromptVisible(true);
+    setCurrentVideoId(videoId); // Add this line
+  }
 
   /* adding category */
   function addCategory(name) {
@@ -177,20 +227,23 @@ export default function MyVideos(props) {
 
   const renderItem = ({ item }) => (
     <>
-      <TouchableOpacity
+      <TouchableHighlight
+        onLongPress={() => showModalForUploadPrompt(item.id)}
         onPress={() =>
           navigate("VideoPlayer", {
             videoUri: item.url,
             videoId: item.id,
           })
         }
+        underlayColor="transparent"
       >
         <Image
           source={{ uri: item.thumbnail }}
           style={styles.video}
           resizeMode="cover"
         />
-      </TouchableOpacity>
+      </TouchableHighlight>
+
       <TouchableOpacity
         style={styles.removeVideoButton}
         onPress={() => handleRemoveVideo(item.id)}
@@ -254,6 +307,43 @@ export default function MyVideos(props) {
         action={action}
         addCategory={addCategory}
       />
+      <Modal
+        animationType="slide"
+        transparent={true}
+        visible={uploadPromptVisible}
+        onRequestClose={() => {
+          setUploadPromptVisible(false);
+        }}
+      >
+        <View style={styles.centeredView}>
+          <View style={styles.modalView}>
+            <Text style={styles.modalText}>
+              Do you want to upload this video?
+            </Text>
+            <View style={styles.modalButtons}>
+              <TouchableOpacity
+                style={{ ...styles.button, backgroundColor: "green" }}
+                onPress={() => {
+                  const videoObj = categories
+                    .flatMap((category) => category.videos)
+                    .find((video) => video.id === currentVideoId);
+                  uploadVideo(videoObj.url);
+                  setUploadPromptVisible(false);
+                }}
+              >
+                <Text style={styles.textStyle}>Yes</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={{ ...styles.button, backgroundColor: "red" }}
+                onPress={() => setUploadPromptVisible(false)}
+              >
+                <Text style={styles.textStyle}>No</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
+
       <FAB
         open={open}
         setOpen={setOpen}
@@ -330,5 +420,46 @@ const styles = StyleSheet.create({
     right: 15,
     justifyContent: "center",
     alignItems: "center",
+  },
+
+  centeredView: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    marginTop: 22,
+  },
+  modalView: {
+    margin: 20,
+    backgroundColor: "white",
+    borderRadius: 20,
+    padding: 35,
+    alignItems: "center",
+    shadowColor: "#000",
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.25,
+    shadowRadius: 4,
+    elevation: 5,
+  },
+  modalText: {
+    marginBottom: 15,
+    textAlign: "center",
+  },
+  modalButtons: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+  },
+  button: {
+    borderRadius: 20,
+    padding: 10,
+    elevation: 2,
+    marginHorizontal: 10,
+  },
+  textStyle: {
+    color: "white",
+    fontWeight: "bold",
+    textAlign: "center",
   },
 });

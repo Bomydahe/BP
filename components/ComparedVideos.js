@@ -185,6 +185,7 @@ const styles = StyleSheet.create({
     flexDirection: "column",
     alignItems: "center",
     justifyContent: "center",
+    paddingTop: 10,
   },
   video: {
     width: videoWidth,

@@ -19,7 +19,7 @@ export default function LoginScreen() {
       navigation.dispatch(
         CommonActions.reset({
           index: 0,
-          routes: [{ name: "TrainerHomeScreen" }],
+          routes: [{ name: "Home" }],
         })
       );
     } else if (username === "admin" && password === "admin") {

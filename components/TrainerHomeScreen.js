@@ -13,6 +13,8 @@ import { AntDesign } from "@expo/vector-icons";
 import { useNavigation, useFocusEffect } from "@react-navigation/native";
 import { Ionicons } from "@expo/vector-icons";
 import { Entypo } from "@expo/vector-icons";
+import { firebase } from "../firebaseConfig";
+import * as VideoThumbnails from "expo-video-thumbnails";
 
 const { width } = Dimensions.get("window");
 const numColumns = 2;
@@ -29,9 +31,61 @@ const randomImages = [
 
 const randomNames = ["Alice", "Bob", "Charlie"];
 
+async function generateThumbnail(videoUri) {
+  try {
+    const { uri } = await VideoThumbnails.getThumbnailAsync(videoUri, {
+      time: 0,
+    });
+    return uri;
+  } catch (e) {
+    console.warn(e);
+    return null;
+  }
+}
+
 export default function TeacherHome() {
   const [clients, setClients] = useState([]);
   const navigation = useNavigation();
+  const [videos, setVideos] = React.useState([]);
+
+  React.useEffect(() => {
+    async function fetchVideos() {
+      const videoUrls = await getAllVideos();
+      const videoData = await Promise.all(
+        videoUrls.map(async (url, index) => {
+          const thumbnail = await generateThumbnail(url);
+          return {
+            id: index,
+            url,
+            thumbnail,
+          };
+        })
+      );
+      setVideos(videoData);
+    }
+
+    fetchVideos();
+  }, []);
+
+  /* retrieving all videos from firebase */
+  async function getAllVideos() {
+    try {
+      const storageRef = firebase.storage().ref();
+      const listResult = await storageRef.listAll();
+
+      const urls = await Promise.all(
+        listResult.items.map(async (item) => {
+          const url = await item.getDownloadURL();
+          return url;
+        })
+      );
+
+      console.log("Download URLs:", urls);
+      return urls;
+    } catch (error) {
+      console.error("Error getting download URLs:", error);
+    }
+  }
 
   useFocusEffect(
     React.useCallback(() => {
@@ -147,6 +201,7 @@ export default function TeacherHome() {
         onPress={() => {
           navigation.navigate("ClientsSharedScreen", {
             clientName: item.name,
+            videos: videos,
           });
         }}
       >

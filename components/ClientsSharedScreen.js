@@ -17,7 +17,7 @@ export default function ClientsSharedScreen(props) {
   const [status, setStatus] = React.useState({});
   const { navigate } = useNavigation();
   const categories = [
-    { id: 0, name: "New videos", videos: [] },
+    { id: 0, name: "New videos", videos: props.route.params.videos },
     { id: 1, name: "Handled videos", videos: [] },
   ];
 
