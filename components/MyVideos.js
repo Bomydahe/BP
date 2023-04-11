@@ -43,10 +43,17 @@ export default function MyVideos(props) {
   ]);
 
   /* metadata to save/upload along with videos */
-  async function saveVideoMetadata(videoName, videoUrl, booleanVar) {
+  async function saveVideoMetadata(
+    videoName,
+    videoUrl,
+    thumbnailUrl,
+    booleanVar
+  ) {
     const videoRef = firebase.firestore().collection("videos").doc(videoName);
     await videoRef.set({
+      id: generateUniqueId(),
       url: videoUrl,
+      thumbnail: thumbnailUrl,
       booleanVar: booleanVar,
     });
   }
@@ -54,6 +61,7 @@ export default function MyVideos(props) {
   /* upload video to firebase */
   async function uploadVideo(videoUrl) {
     console.log("Uploading video with URL:", videoUrl);
+    const thumbnailUrl = await generateThumbnail(videoUrl);
 
     const response = await fetch(videoUrl);
     const blob = await response.blob();
@@ -65,21 +73,9 @@ export default function MyVideos(props) {
       console.log("Video uploaded successfully");
 
       // Save video metadata to Firestore with an initial boolean value (e.g., true)
-      await saveVideoMetadata(videoName, videoUrl, false);
+      await saveVideoMetadata(videoName, videoUrl, thumbnailUrl, false);
     } catch (error) {
       console.error("Error uploading video:", error);
-    }
-  }
-
-  /* retrieving video from firebase */
-  async function getVideoDownloadUrl(videoName) {
-    try {
-      const storageRef = firebase.storage().ref().child(videoName);
-      const url = await storageRef.getDownloadURL();
-      console.log("Download URL:", url);
-      return url;
-    } catch (error) {
-      console.error("Error getting download URL:", error);
     }
   }
 

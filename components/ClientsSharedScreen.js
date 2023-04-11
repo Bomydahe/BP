@@ -12,14 +12,32 @@ import {
 } from "react-native";
 import { useNavigation, useFocusEffect } from "@react-navigation/native";
 import { AntDesign } from "@expo/vector-icons";
+import { firebase } from "../firebaseConfig";
 
 export default function ClientsSharedScreen(props) {
-  const [status, setStatus] = React.useState({});
+  const [status, setStatus] = useState({});
   const { navigate } = useNavigation();
-  const categories = [
-    { id: 0, name: "New videos", videos: props.route.params.videos },
-    { id: 1, name: "Handled videos", videos: [] },
-  ];
+  const [allVideos, setAllVideos] = useState(props.route.params.videos);
+  const newVideos = allVideos.filter((video) => video.booleanVar === false);
+  const handledVideos = allVideos.filter((video) => video.booleanVar === true);
+  console.log("+++++++++", allVideos);
+  const [categories, setCategories] = useState([]);
+
+  const fetchVideos = () => {
+    const newVideos = allVideos.filter((video) => video.booleanVar === false);
+    const handledVideos = allVideos.filter(
+      (video) => video.booleanVar === true
+    );
+
+    setCategories([
+      { id: 0, name: "New videos", videos: newVideos },
+      { id: 1, name: "Handled videos", videos: handledVideos },
+    ]);
+  };
+
+  useEffect(() => {
+    fetchVideos();
+  }, [allVideos]);
 
   useFocusEffect(
     React.useCallback(() => {
@@ -31,23 +49,54 @@ export default function ClientsSharedScreen(props) {
 
   /* removing video */
   function handleRemoveVideo(videoId) {
-    categories.map((category) => {
-      return {
+    setCategories((prevCategories) =>
+      prevCategories.map((category) => ({
         ...category,
         videos: category.videos.filter((video) => video.id !== videoId),
-      };
-    });
+      }))
+    );
+  }
+
+  async function updateVideoBooleanValue(videoName, newValue) {
+    console.log(
+      `Trying to update video ${videoName} booleanVar to ${newValue}`
+    );
+
+    try {
+      const firestore = firebase.firestore();
+      const videoRef = firestore.collection("videos").doc(videoName);
+
+      // Update the booleanVar value in Firestore
+      await videoRef.update({ booleanVar: newValue });
+
+      console.log(`Video ${videoName} booleanVar updated to ${newValue}`);
+
+      // Update the video in allVideos
+      const updatedAllVideos = allVideos.map((video) =>
+        video.videoName === videoName
+          ? { ...video, booleanVar: newValue }
+          : video
+      );
+
+      // Set the updated allVideos array into the state
+      setAllVideos(updatedAllVideos);
+    } catch (error) {
+      console.error("Error updating video booleanVar:", error);
+    }
   }
 
   const renderItem = ({ item }) => (
     <>
       <TouchableOpacity
-        onPress={() =>
+        onPress={async () => {
+          // Update the video's booleanVar to true before navigating to the video player
+          await updateVideoBooleanValue(item.videoName, true);
+
           navigate("VideoPlayer", {
             videoUri: item.url,
             videoId: item.id,
-          })
-        }
+          });
+        }}
       >
         <Image
           source={{ uri: item.thumbnail }}
@@ -57,7 +106,7 @@ export default function ClientsSharedScreen(props) {
       </TouchableOpacity>
       <TouchableOpacity
         style={styles.removeVideoButton}
-        onPress={() => handleRemoveVideo(item.id)}
+        onPress={() => handleRemoveVideo(item.videoName)}
       >
         <AntDesign name="close" size={24} color="white" />
       </TouchableOpacity>
@@ -88,7 +137,7 @@ export default function ClientsSharedScreen(props) {
               <FlatList
                 data={category.videos}
                 renderItem={renderItem}
-                keyExtractor={(item) => item.id.toString()}
+                keyExtractor={(item) => item.id}
                 horizontal={true}
                 style={styles.flatlist}
                 showsHorizontalScrollIndicator={false}

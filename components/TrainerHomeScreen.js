@@ -31,18 +31,6 @@ const randomImages = [
 
 const randomNames = ["Alice", "Bob", "Charlie"];
 
-async function generateThumbnail(videoUri) {
-  try {
-    const { uri } = await VideoThumbnails.getThumbnailAsync(videoUri, {
-      time: 0,
-    });
-    return uri;
-  } catch (e) {
-    console.warn(e);
-    return null;
-  }
-}
-
 export default function TeacherHome() {
   const [clients, setClients] = useState([]);
   const navigation = useNavigation();
@@ -50,14 +38,15 @@ export default function TeacherHome() {
 
   React.useEffect(() => {
     async function fetchVideos() {
-      const videoUrls = await getAllVideos();
+      const videoList = await getAllVideos();
       const videoData = await Promise.all(
-        videoUrls.map(async (url, index) => {
-          const thumbnail = await generateThumbnail(url);
+        videoList.map(async (video) => {
           return {
-            id: index,
-            url,
-            thumbnail,
+            id: video.id,
+            url: video.url,
+            thumbnail: video.thumbnail,
+            booleanVar: video.booleanVar,
+            videoName: video.videoName,
           };
         })
       );
@@ -73,17 +62,55 @@ export default function TeacherHome() {
       const storageRef = firebase.storage().ref();
       const listResult = await storageRef.listAll();
 
-      const urls = await Promise.all(
+      const videoData = await Promise.all(
         listResult.items.map(async (item) => {
           const url = await item.getDownloadURL();
-          return url;
+          const videoName = item.name;
+
+          // Get video metadata from Firestore
+          const { booleanVar, id, thumbnail } = await getVideoBooleanValue(
+            videoName
+          );
+
+          return {
+            url,
+            id,
+            booleanVar,
+            thumbnail,
+            videoName,
+          };
         })
       );
 
-      console.log("Download URLs:", urls);
-      return urls;
+      console.log("Video Data:", videoData);
+      return videoData;
     } catch (error) {
-      console.error("Error getting download URLs:", error);
+      console.error("Error getting video data:", error);
+      return []; // Return an empty array in case of an error
+    }
+  }
+
+  /* retrieve bool value of each video */
+  async function getVideoBooleanValue(videoName) {
+    try {
+      const firestore = firebase.firestore();
+      const videoRef = firestore.collection("videos").doc(videoName);
+      const doc = await videoRef.get();
+
+      if (!doc.exists) {
+        console.log("No document with the given video name");
+        return { booleanVar: false }; // Return an object with a default value for booleanVar
+      }
+
+      const data = doc.data();
+      return {
+        booleanVar: data.booleanVar,
+        id: data.id,
+        thumbnail: data.thumbnail,
+      };
+    } catch (error) {
+      console.error("Error fetching video metadata:", error);
+      return null;
     }
   }
 
