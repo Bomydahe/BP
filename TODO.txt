@@ -1,7 +1,5 @@
-video player - desing (low prio)
-navigate to compare from video player with compare button 
+video player - desing (low prio) 1/2
 adding slow motion in video player (low prio)
-adding messages in video (high prio) +
 editing video by trainer (high prio)
 edting video in compare (low prio)
 desing overall (low prio)

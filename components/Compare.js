@@ -1,4 +1,10 @@
-import React, { useState, useLayoutEffect, useCallback, useRef } from "react";
+import React, {
+  useState,
+  useLayoutEffect,
+  useCallback,
+  useRef,
+  useEffect,
+} from "react";
 import { Video } from "expo-av";
 import { AntDesign } from "@expo/vector-icons";
 import {
@@ -31,6 +37,17 @@ export default function Compare(props) {
   const video1Ref = useRef(null);
   const video2Ref = useRef(null);
   const navigation = useNavigation();
+
+  useEffect(() => {
+    checkFirstVideo();
+  }, []);
+
+  const checkFirstVideo = () => {
+    const firstVideo = props.route.params?.firstVideo;
+    if (firstVideo) {
+      setVideo1(firstVideo);
+    }
+  };
 
   const updateNavigationOptions = useCallback(() => {
     navigation.setOptions({

@@ -1,10 +1,37 @@
-import React, { useEffect } from "react";
-import { View, StyleSheet, TouchableOpacity } from "react-native";
+import React, { useEffect, useCallback, useRef } from "react";
+import { View, StyleSheet, TouchableOpacity, Button } from "react-native";
 import { Video } from "expo-av";
 import * as ScreenOrientation from "expo-screen-orientation";
+import { useNavigation } from "@react-navigation/native";
 
 export default function VideoPlayerScreen({ route }) {
   const { videoUri } = route.params;
+  const navigation = useNavigation();
+  const videoRef = useRef(null);
+
+  const stopVideo = async () => {
+    if (videoRef.current) {
+      await videoRef.current.stopAsync();
+    }
+  };
+
+  const updateNavigationOptions = useCallback(() => {
+    navigation.setOptions({
+      headerRight: () => (
+        <Button
+          onPress={async () => {
+            await stopVideo();
+            navigation.navigate("Compare", { firstVideo: videoUri });
+          }}
+          title="Compare"
+        />
+      ),
+    });
+  }, [navigation, videoUri]);
+
+  useEffect(() => {
+    updateNavigationOptions();
+  }, [updateNavigationOptions]);
 
   useEffect(() => {
     const lockOrientation = async () => {
@@ -27,6 +54,7 @@ export default function VideoPlayerScreen({ route }) {
   return (
     <View style={styles.container}>
       <Video
+        ref={videoRef}
         source={{ uri: videoUri }}
         rate={1.0}
         volume={1.0}
