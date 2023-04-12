@@ -13,6 +13,39 @@ export default function SharedVideoPlayer({ route }) {
   const [isPlaying, setIsPlaying] = useState(true);
   const [lastPlaybackStatus, setLastPlaybackStatus] = useState(null);
   const [sliderThumbColor, setSliderThumbColor] = useState("transparent");
+  const [showSliderThumb, setShowSliderThumb] = useState(false);
+  const [showMessageModal, setShowMessageModal] = useState(false);
+  const [selectedMessage, setSelectedMessage] = useState(null);
+
+  const displayMessage = async (message) => {
+    if (videoRef.current) {
+      const status = await videoRef.current.getStatusAsync();
+      if (status.isPlaying) {
+        setIsPlaying(false);
+        await videoRef.current.pauseAsync();
+      }
+    }
+    setSelectedMessage(message);
+    setShowMessageModal(true);
+  };
+
+  const hideMessageModal = () => {
+    setShowMessageModal(false);
+  };
+
+  const formatTime = (millis) => {
+    const totalSeconds = Math.floor(millis / 1000);
+    const minutes = Math.floor(totalSeconds / 60);
+    const seconds = totalSeconds % 60;
+    return `${minutes}:${seconds.toString().padStart(2, "0")}`;
+  };
+
+  const showSliderThumbTemporarily = () => {
+    setShowSliderThumb(true);
+    setTimeout(() => {
+      setShowSliderThumb(false);
+    }, 1000);
+  };
 
   const handlePlaybackStatus = (status) => {
     if (status.isPlaying) {
@@ -42,6 +75,7 @@ export default function SharedVideoPlayer({ route }) {
   const videoRef = React.useRef(null);
 
   const togglePlayback = async () => {
+    showSliderThumbTemporarily();
     if (videoRef.current) {
       const status = await videoRef.current.getStatusAsync();
       if (status.isPlaying) {
@@ -62,7 +96,10 @@ export default function SharedVideoPlayer({ route }) {
   const handleSliderValueChange = async (value) => {
     if (videoRef.current && lastPlaybackStatus) {
       const newPosition = value * lastPlaybackStatus.durationMillis;
-      await videoRef.current.setPositionAsync(newPosition);
+      await videoRef.current.setPositionAsync(newPosition, {
+        toleranceMillisBefore: 10,
+        toleranceMillisAfter: 10,
+      });
     }
   };
 
@@ -80,7 +117,6 @@ export default function SharedVideoPlayer({ route }) {
         style={styles.video}
         onPlaybackStatusUpdate={(status) => handlePlaybackStatus(status)}
       />
-
       <TouchableOpacity
         style={styles.videoOverlay}
         onPress={togglePlayback}
@@ -89,27 +125,62 @@ export default function SharedVideoPlayer({ route }) {
         {showControls && (
           <MaterialIcons
             name={isPlaying ? "play-circle-outline" : "pause-circle-outline"}
-            size={50}
+            size={70}
             color="white"
           />
         )}
       </TouchableOpacity>
-
       <View style={styles.sliderContainer}>
+        <Text style={styles.timeText}>
+          {lastPlaybackStatus && formatTime(lastPlaybackStatus.positionMillis)}
+        </Text>
         <Slider
           style={styles.slider}
           value={sliderValue}
           minimumValue={0}
           maximumValue={1}
           minimumTrackTintColor="white"
-          thumbTintColor={sliderThumbColor}
+          thumbTintColor={showSliderThumb ? "white" : "transparent"}
           onSlidingStart={() => setSliderThumbColor("white")}
-          onSlidingComplete={(value) => {
-            setSliderThumbColor("transparent");
+          onValueChange={(value) => {
             handleSliderValueChange(value);
           }}
+          onSlidingComplete={() => {
+            setSliderThumbColor("transparent");
+          }}
         />
+        <Text style={styles.timeText}>
+          {lastPlaybackStatus && formatTime(lastPlaybackStatus.durationMillis)}
+        </Text>
       </View>
+      {lastPlaybackStatus &&
+        comments.map((comment, index) => {
+          const messagePosition =
+            (comment.time / lastPlaybackStatus.durationMillis) * 100;
+          return (
+            <TouchableOpacity
+              key={index}
+              style={[
+                styles.messageIconContainer,
+                { left: `${messagePosition}%` },
+              ]}
+              onPress={() => displayMessage(comment)}
+            >
+              <MaterialIcons name="message" size={24} color="white" />
+            </TouchableOpacity>
+          );
+        })}
+      {showMessageModal && (
+        <View style={styles.messageModal}>
+          <Text style={styles.messageText}>{selectedMessage?.text}</Text>
+          <TouchableOpacity
+            style={styles.closeButton}
+            onPress={hideMessageModal}
+          >
+            <MaterialIcons name="close" size={30} color="white" />
+          </TouchableOpacity>
+        </View>
+      )}
     </View>
   );
 }
@@ -139,5 +210,50 @@ const styles = StyleSheet.create({
   slider: {
     width: "90%",
     alignSelf: "center",
+  },
+
+  sliderContainer: {
+    position: "absolute",
+    left: 0,
+    right: 0,
+    bottom: 20,
+    justifyContent: "center",
+    flexDirection: "row",
+    alignItems: "center",
+  },
+  timeText: {
+    color: "white",
+    fontSize: 14,
+  },
+  slider: {
+    width: "70%",
+    alignSelf: "center",
+  },
+
+  messageIconContainer: {
+    position: "absolute",
+    bottom: 50,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  messageModal: {
+    ...StyleSheet.absoluteFillObject,
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "rgba(0, 0, 0, 0.8)",
+  },
+  messageText: {
+    color: "black",
+    fontSize: 18,
+    textAlign: "center",
+    paddingHorizontal: 20,
+    paddingVertical: 30,
+    backgroundColor: "rgba(255, 255, 255, 0.8)",
+    borderRadius: 10,
+  },
+  closeButton: {
+    position: "absolute",
+    top: 20,
+    right: 20,
   },
 });
