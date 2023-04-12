@@ -42,6 +42,12 @@ export default function Compare(props) {
     checkFirstVideo();
   }, []);
 
+  useEffect(() => {
+    if (!modalVisible) {
+      setModalStep("initial");
+    }
+  }, [modalVisible]);
+
   const checkFirstVideo = () => {
     const firstVideo = props.route.params?.firstVideo;
     if (firstVideo) {

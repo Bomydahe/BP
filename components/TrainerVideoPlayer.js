@@ -10,7 +10,7 @@ import {
 import { Video } from "expo-av";
 import * as ScreenOrientation from "expo-screen-orientation";
 import { useNavigation, useFocusEffect } from "@react-navigation/native";
-import { MaterialIcons } from "@expo/vector-icons";
+import { MaterialIcons, FontAwesome } from "@expo/vector-icons";
 import { firebase } from "../firebaseConfig";
 
 export default function TrainerVideoPlayer({ route }) {
@@ -53,12 +53,22 @@ export default function TrainerVideoPlayer({ route }) {
     React.useCallback(() => {
       navigation.setOptions({
         headerRight: () => (
-          <TouchableOpacity
-            onPress={handleAddComment}
-            style={{ marginRight: 10 }}
-          >
-            <MaterialIcons name="message" size={24} color="white" />
-          </TouchableOpacity>
+          <View style={styles.headerRightContainer}>
+            <TouchableOpacity
+              onPress={handleAddComment}
+              style={styles.headerRightButton}
+            >
+              <MaterialIcons name="message" size={24} color="white" />
+            </TouchableOpacity>
+            <TouchableOpacity
+              onPress={() => {
+                // Implement the edit functionality here
+              }}
+              style={styles.headerRightButton}
+            >
+              <FontAwesome name="pencil" size={24} color="white" />
+            </TouchableOpacity>
+          </View>
         ),
       });
     }, [navigation, route.params.categoryName, handleAddComment])
@@ -194,5 +204,13 @@ const styles = StyleSheet.create({
   modalText: {
     marginBottom: 15,
     textAlign: "center",
+  },
+
+  headerRightContainer: {
+    flexDirection: "row",
+    marginRight: 10,
+  },
+  headerRightButton: {
+    marginLeft: 15,
   },
 });

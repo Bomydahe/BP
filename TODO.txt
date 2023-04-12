@@ -1,9 +1,8 @@
-video player - desing (low prio) 1/2
-adding slow motion in video player (low prio)
 editing video by trainer (high prio)
-edting video in compare (low prio)
-desing overall (low prio)
-backend login authentication (low prio)
 selecting video(potentially videos) to share (low pio)
-category edit - instant update (low prio) (hard)
 cross-platform thumbnails (upload actuall thumbnail instead of url)
+backend login authentication (low prio)
+desing overall (low prio) || video player - desing (low prio) 1/2
+adding slow motion in video player (low prio)
+sharing compared videos?? (HARD)
+category edit - instant update (lowest prio) (difficulty - impossible)
