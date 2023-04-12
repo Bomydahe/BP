@@ -10,39 +10,28 @@ import {
 } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import { firebase } from "../firebaseConfig";
-import * as VideoThumbnails from "expo-video-thumbnails";
 
 const { width } = Dimensions.get("window");
 const numColumns = 2;
 const videoWidth = (width - 20) / numColumns;
 
-async function generateThumbnail(videoUri) {
-  try {
-    const { uri } = await VideoThumbnails.getThumbnailAsync(videoUri, {
-      time: 0,
-    });
-    return uri;
-  } catch (e) {
-    console.warn(e);
-    return null;
-  }
-}
-
 export default function SharedVideos({ route }) {
   const [status, setStatus] = React.useState({});
   const [videos, setVideos] = React.useState([]);
   const navigation = useNavigation();
+  console.log("----------------", videos);
 
   React.useEffect(() => {
     async function fetchVideos() {
-      const videoUrls = await getAllVideos();
+      const videoList = await getAllVideos();
       const videoData = await Promise.all(
-        videoUrls.map(async (url, index) => {
-          const thumbnail = await generateThumbnail(url);
+        videoList.map(async (video) => {
           return {
-            id: index,
-            url,
-            thumbnail,
+            id: video.id,
+            url: video.url,
+            thumbnail: video.thumbnail,
+            videoName: video.videoName,
+            comments: video.comments,
           };
         })
       );
@@ -58,17 +47,38 @@ export default function SharedVideos({ route }) {
       const storageRef = firebase.storage().ref();
       const listResult = await storageRef.listAll();
 
-      const urls = await Promise.all(
+      const firestore = firebase.firestore();
+
+      const videoData = await Promise.all(
         listResult.items.map(async (item) => {
           const url = await item.getDownloadURL();
-          return url;
+          const videoName = item.name;
+
+          // Get video metadata from Firestore
+          const videoRef = firestore.collection("videos").doc(videoName);
+          const doc = await videoRef.get();
+
+          if (!doc.exists) {
+            console.log("No document with the given video name");
+            return null;
+          }
+
+          const data = doc.data();
+          return {
+            url,
+            id: data.id,
+            thumbnail: data.thumbnail,
+            videoName,
+            comments: data.comments || [],
+          };
         })
       );
 
-      console.log("Download URLs:", urls);
-      return urls;
+      console.log("Video Data:", videoData);
+      return videoData.filter((video) => video !== null);
     } catch (error) {
-      console.error("Error getting download URLs:", error);
+      console.error("Error getting video data:", error);
+      return []; // Return an empty array in case of an error
     }
   }
 
@@ -82,16 +92,19 @@ export default function SharedVideos({ route }) {
       >
         <TouchableOpacity
           onPress={() =>
-            navigation.navigate("VideoPlayer", {
+            navigation.navigate("SharedVideoPlayer", {
               videoUri: item.url,
+              comments: item.comments,
             })
           }
         >
-          <Image
-            source={{ uri: item.thumbnail }}
-            style={styles.video}
-            resizeMode="cover"
-          />
+          <View style={styles.imageContainer}>
+            <Image
+              source={{ uri: item.thumbnail }}
+              style={styles.video}
+              resizeMode="cover"
+            />
+          </View>
         </TouchableOpacity>
       </View>
     );
@@ -128,7 +141,7 @@ const styles = StyleSheet.create({
   },
 
   video: {
-    width: videoWidth - 10,
+    width: videoWidth - 30,
     height: 200,
     backgroundColor: "black",
     marginBottom: 10,

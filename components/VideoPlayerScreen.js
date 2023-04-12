@@ -1,5 +1,5 @@
 import React, { useEffect } from "react";
-import { View, StyleSheet } from "react-native";
+import { View, StyleSheet, TouchableOpacity } from "react-native";
 import { Video } from "expo-av";
 import * as ScreenOrientation from "expo-screen-orientation";
 

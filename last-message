@@ -1,372 +1,323 @@
-So this is my code: import React, { useState, useEffect } from "react";
+okay now i have this problem: in right corner of navigation of my video player there is message icon, even tho it shoudnt be there and i didnt implement it there. Now this is my code: import React, { useEffect } from "react";
+import { View, StyleSheet, TouchableOpacity } from "react-native";
 import { Video } from "expo-av";
-import * as MediaLibrary from "expo-media-library";
-import * as ImagePicker from "expo-image-picker";
-import {
-  View,
-  FlatList,
-  ScrollView,
-  StyleSheet,
-  Text,
-  Pressable,
-  TouchableOpacity,
-  SafeAreaView,
-  Image,
-} from "react-native";
-import { useNavigation } from "@react-navigation/native";
-import { AntDesign } from "@expo/vector-icons";
-import AsyncStorage from "@react-native-async-storage/async-storage";
-import useStoredData from "../hooks/useStoredData";
-import VideoAddModal from "./VideoAddModal";
-import FAB from "./FAB";
-import { EventRegister } from "react-native-event-listeners";
-import CategoryEditModal from "./CategoryEditModal";
-import * as VideoThumbnails from "expo-video-thumbnails";
-import firebase from "../firebase";
+import * as ScreenOrientation from "expo-screen-orientation";
 
-export default function MyVideos(props) {
-  const [status, setStatus] = React.useState({});
-  const { navigate } = useNavigation();
-  const [open, setOpen] = useState(false);
-  const [selectedVideoUri, setSelectedVideoUri] = useState(null);
-  const [modalVisible, setModalVisible] = useState(false);
-  const [categoryEditModalVisible, setCategoryEditModalVisible] =
-    useState(false);
-  const [videoCounter, setVideoCounter] = useState(1);
-  const [editingCategoryId, setEditingCategoryId] = useState(null);
-  const [action, setAction] = useState(null);
-  const [categories, setCategories] = useStoredData("@categories", [
-    { id: 0, name: "All Videos", videos: [] },
-  ]);
-
-  /* uploading video to firebase */
-  async function uploadVideo(localVideoUri) {
-    const response = await fetch(localVideoUri);
-    const blob = await response.blob();
-    const videoName = `videos/${Date.now()}-${Math.random()
-      .toString(36)
-      .substr(2, 5)}.mp4`;
-    const storageRef = firebase.storage().ref().child(videoName);
-    const task = storageRef.put(blob);
-
-    task.on("state_changed", (snapshot) => {
-      const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
-      console.log("Upload progress:", progress);
-    });
-
-    try {
-      await task;
-      console.log("Video uploaded successfully");
-    } catch (error) {
-      console.error("Error uploading video:", error);
-    }
-  }
-
-  /* retrieving video from firebase */
-  async function getVideoDownloadUrl(videoName) {
-    try {
-      const storageRef = firebase.storage().ref().child(videoName);
-      const url = await storageRef.getDownloadURL();
-      console.log("Download URL:", url);
-      return url;
-    } catch (error) {
-      console.error("Error getting download URL:", error);
-    }
-  }
-
-  /* adding category */
-  function addCategory(name) {
-    const newCategory = {
-      id: generateUniqueId(),
-      name: name,
-      videos: [],
-    };
-    setCategories([...categories, newCategory]);
-  }
-
-  /* deleting category */
-  function handleDeleteCategory(categoryId) {
-    setCategories((prevCategories) =>
-      prevCategories.filter((category) => category.id !== categoryId)
-    );
-  }
-
-  /* editing category */
-  function handleEditCategory(categoryId, categoryName) {
-    setCategories((prevCategories) =>
-      prevCategories.map((category) =>
-        category.id === categoryId
-          ? { ...category, name: categoryName }
-          : category
-      )
-    );
-  }
-
-  function showAddCategoryModal() {
-    setAction("add");
-    setEditingCategoryId(null);
-  }
+export default function SharedVideoPlayer({ route }) {
+  const { videoUri } = route.params;
 
   useEffect(() => {
-    const deleteListener = EventRegister.addEventListener(
-      "deleteCategory",
-      (categoryId) => {
-        handleDeleteCategory(categoryId);
-        navigate("Home");
-      }
-    );
+    const lockOrientation = async () => {
+      await ScreenOrientation.unlockAsync();
+    };
 
-    const editListener = EventRegister.addEventListener(
-      "editCategory",
-      (categoryId) => {
-        setEditingCategoryId(categoryId);
-        setCategoryEditModalVisible(true);
-      }
-    );
+    lockOrientation();
 
     return () => {
-      EventRegister.removeEventListener(deleteListener);
-      EventRegister.removeEventListener(editListener);
+      const resetOrientation = async () => {
+        await ScreenOrientation.lockAsync(
+          ScreenOrientation.OrientationLock.PORTRAIT
+        );
+      };
+
+      resetOrientation();
     };
   }, []);
 
-  /* adding videos in categories */
-  async function handleAddVideo(videoUri, categoryId) {
-    const thumbnailUri = await generateThumbnail(videoUri);
-
-    const videoObj = {
-      url: videoUri,
-      id: generateUniqueId(),
-      thumbnail: thumbnailUri,
-    };
-
-    setVideoCounter(videoCounter + 1);
-
-    setCategories(
-      categories.map((category) => {
-        if (category.id === 0 || category.id === categoryId) {
-          return {
-            ...category,
-            videos: [...category.videos, videoObj],
-          };
-        }
-        return category;
-      })
-    );
-    setModalVisible(false);
-  }
-
-  async function generateThumbnail(videoUri) {
-    try {
-      const { uri } = await VideoThumbnails.getThumbnailAsync(videoUri, {
-        time: 0,
-      });
-      return uri;
-    } catch (e) {
-      console.warn(e);
-      return null;
-    }
-  }
-
-  /* picking video from native phone memory */
-  async function pickVideo() {
-    const { status } = await MediaLibrary.requestPermissionsAsync();
-
-    if (status === "granted") {
-      let chosenVideo = await ImagePicker.launchImageLibraryAsync({
-        mediaTypes: ImagePicker.MediaTypeOptions.Videos,
-        //allowsEditing: true,
-        quality: 1,
-      });
-
-      if (!chosenVideo.canceled) {
-        const selectedVideo = chosenVideo.assets[0];
-        showModal(selectedVideo.uri);
-      }
-    } else {
-      console.log("Permission not granted");
-    }
-  }
-
-  function showModal(videoUri) {
-    setModalVisible(true);
-    setSelectedVideoUri(videoUri);
-  }
-
-  function generateUniqueId() {
-    return (
-      Date.now().toString(36) + Math.random().toString(36).substr(2, 5)
-    ).toUpperCase();
-  }
-
-  /* removing video */
-  function handleRemoveVideo(videoId) {
-    setCategories(
-      categories.map((category) => {
-        return {
-          ...category,
-          videos: category.videos.filter((video) => video.id !== videoId),
-        };
-      })
-    );
-  }
-
-  const renderItem = ({ item }) => (
-    <>
-      <TouchableOpacity
-        onPress={() =>
-          navigate("VideoPlayer", {
-            videoUri: item.url,
-            videoId: item.id,
-          })
-        }
-      >
-        <Image
-          source={{ uri: item.thumbnail }}
-          style={styles.video}
-          resizeMode="cover"
-        />
-      </TouchableOpacity>
-      <TouchableOpacity
-        style={styles.removeVideoButton}
-        onPress={() => handleRemoveVideo(item.id)}
-      >
-        <AntDesign name="close" size={24} color="white" />
-      </TouchableOpacity>
-    </>
-  );
-
   return (
-    <>
-      <SafeAreaView>
-        <ScrollView>
-          <View style={styles.myVideosTabContainer}>
-            {categories.map((category) => (
-              <View key={category.id} style={styles.sectionContainer}>
-                <View style={styles.labels}>
-                  <Text style={styles.text}>{category.name}</Text>
-                  <Pressable
-                    onPress={() =>
-                      navigate("Category", {
-                        categoryName: category.name,
-                        videos: category.videos,
-                        categoryId: category.id,
-                      })
-                    }
-                    android_ripple={{ color: "#210644" }}
-                  >
-                    <Text style={styles.pressableLabel}>SHOW ALL</Text>
-                  </Pressable>
-                </View>
-                <FlatList
-                  data={category.videos}
-                  renderItem={renderItem}
-                  keyExtractor={(item) => item.id.toString()}
-                  horizontal={true}
-                  style={styles.flatlist}
-                  showsHorizontalScrollIndicator={false}
-                />
-              </View>
-            ))}
-          </View>
-        </ScrollView>
-      </SafeAreaView>
-      <VideoAddModal
-        modalVisible={modalVisible}
-        setModalVisible={setModalVisible}
-        categories={categories}
-        handleAddVideo={handleAddVideo}
-        selectedVideoUri={selectedVideoUri}
+    <View style={styles.container}>
+      <Video
+        source={{ uri: videoUri }}
+        rate={1.0}
+        volume={1.0}
+        isMuted={false}
+        resizeMode="contain"
+        shouldPlay
+        isLooping
+        useNativeControls
+        style={styles.video}
       />
-      <CategoryEditModal
-        modalVisible={editingCategoryId !== null || action === "add"}
-        setModalVisible={() => {
-          setEditingCategoryId(null);
-          setAction(null);
-        }}
-        categories={categories}
-        handleEditCategory={handleEditCategory}
-        editingCategoryId={editingCategoryId}
-        action={action}
-        addCategory={addCategory}
-      />
-      <FAB
-        open={open}
-        setOpen={setOpen}
-        pickVideo={pickVideo}
-        navigate={navigate}
-        addCategory={showAddCategoryModal}
-        categories={categories}
-      />
-    </>
+    </View>
+  );
+}
+
+
+this is my navigation component code: import React from "react";
+import { StyleSheet, StatusBar, View } from "react-native";
+import { NavigationContainer } from "@react-navigation/native";
+import { createMaterialTopTabNavigator } from "@react-navigation/material-top-tabs";
+import MyVideos from "./components/MyVideos";
+import ComparedVideos from "./components/ComparedVideos";
+import SharedVideos from "./components/SharedVideos";
+import Compare from "./components/Compare";
+import { createNativeStackNavigator } from "@react-navigation/native-stack";
+import { MenuProvider } from "react-native-popup-menu";
+import CategoryScreen from "./components/CategoryScreen";
+import VideoPlayerScreen from "./components/VideoPlayerScreen";
+import ComparedVideoPlayer from "./components/ComparedVideoPlayer";
+import LoginScreen from "./components/LoginScreen";
+import TrainerHomeScreen from "./components/TrainerHomeScreen";
+import ClientsSharedScreen from "./components/ClientsSharedScreen";
+import SharedCategory from "./components/SharedCategory";
+import TrainerVideoPlayer from "./components/TrainerVideoPlayer";
+import SharedVideoPlayer from "./components/SharedVideoPlayer";
+
+const Stack = createNativeStackNavigator();
+const Tab = createMaterialTopTabNavigator();
+
+const CompareScreen = ({ navigation, route }) => {
+  return (
+    <View style={styles.container}>
+      <Compare route={route} />
+    </View>
+  );
+};
+
+function Home() {
+  return (
+    <Tab.Navigator>
+      <Tab.Screen name="My videos" component={MyVideos} />
+      <Tab.Screen name="Compared" component={ComparedVideos} />
+      <Tab.Screen name="Shared" component={SharedVideos} />
+    </Tab.Navigator>
+  );
+}
+
+export default function App() {
+  return (
+    <MenuProvider>
+      <NavigationContainer>
+        <Stack.Navigator>
+          <Stack.Screen
+            name="LoginScreen"
+            component={LoginScreen}
+            options={{ headerShown: false }}
+          />
+
+          <Stack.Screen
+            name="Home"
+            component={Home}
+            options={{ headerShown: false }}
+          />
+          <Stack.Screen name="Category" component={CategoryScreen} />
+          <Stack.Screen name="Compare" component={CompareScreen} />
+          <Stack.Screen
+            name="VideoPlayer"
+            component={VideoPlayerScreen}
+            options={{
+              title: "Video Player",
+              headerStyle: {
+                backgroundColor: "black",
+              },
+              headerTintColor: "white",
+            }}
+          />
+          <Stack.Screen
+            name="ComparedVideoPlayer"
+            component={ComparedVideoPlayer}
+            options={{
+              title: "Video Player",
+              headerStyle: {
+                backgroundColor: "black",
+              },
+              headerTintColor: "white",
+            }}
+          />
+          <Stack.Screen
+            name="TrainerHomeScreen"
+            component={TrainerHomeScreen}
+          />
+          <Stack.Screen
+            name="ClientsSharedScreen"
+            component={ClientsSharedScreen}
+          />
+          <Stack.Screen name="SharedCategory" component={SharedCategory} />
+          <Stack.Screen
+            name="TrainerVideoPlayer"
+            component={TrainerVideoPlayer}
+            options={{
+              title: "Video Player",
+              headerStyle: {
+                backgroundColor: "black",
+              },
+              headerTintColor: "white",
+            }}
+          />
+          <Stack.Screen
+            name="SharedVideoPlayer"
+            component={TrainerVideoPlayer}
+            options={{
+              title: "Video Player",
+              headerStyle: {
+                backgroundColor: "black",
+              },
+              headerTintColor: "white",
+            }}
+          />
+        </Stack.Navigator>
+        <StatusBar />
+      </NavigationContainer>
+    </MenuProvider>
   );
 }
 
 const styles = StyleSheet.create({
-  myVideosTabContainer: {
+  container: {
     flex: 1,
-    justifyContent: "flex-start",
-    alignItems: "flex-start",
-    margin: 0,
-    padding: 10,
-  },
-
-  sectionContainer: {
-    width: "100%",
-    height: 210,
-    justifyContent: "flex-start",
-    alignItems: "flex-start",
-    margin: 0,
-    padding: 0,
-  },
-
-  flatlist: {
-    marginTop: 0,
-    padding: 0,
-    marginBottom: 0,
+    justifyContent: "center",
+    alignItems: "center",
   },
 
   text: {
-    fontSize: 17,
-    lineHeight: 22,
-    fontStyle: "italic",
-    fontWeight: "300",
-    color: "grey",
+    fontSize: 20,
   },
 
-  labels: {
-    width: "100%",
-    flexDirection: "row",
-    justifyContent: "space-between",
-    marginBottom: 10,
-    paddingBottom: 0,
-    borderBottomWidth: 0.3,
-    borderBottomColor: "grey",
-  },
-
-  pressableLabel: {
-    color: "blue",
+  menuOptionText: {
     fontSize: 16,
-    lineHeight: 22,
-  },
-
-  video: {
-    width: 130,
-    height: 160,
-    marginRight: 10,
-  },
-
-  labelStyle: {
-    bottom: 0,
-  },
-
-  removeVideoButton: {
-    position: "absolute",
-    top: 5,
-    right: 15,
-    justifyContent: "center",
-    alignItems: "center",
+    paddingHorizontal: 15,
+    paddingVertical: 10,
   },
 });
 
 
+and this is code of component where i implemented this icon: import React, { useState, useEffect, useCallback } from "react";
+import {
+  View,
+  StyleSheet,
+  TouchableOpacity,
+  Modal,
+  TextInput,
+  Text,
+} from "react-native";
+import { Video } from "expo-av";
+import * as ScreenOrientation from "expo-screen-orientation";
+import { useNavigation, useFocusEffect } from "@react-navigation/native";
+import { MaterialIcons } from "@expo/vector-icons";
+import { firebase } from "../firebaseConfig";
+
+export default function TrainerVideoPlayer({ route }) {
+  const { videoUri } = route.params;
+  const navigation = useNavigation();
+  const videoName = route.params.videoName;
+  const [modalVisible, setModalVisible] = useState(false);
+  const [inputValue, setInputValue] = useState("");
+  const videoPlayerRef = React.useRef(null);
+
+  const handleAddComment = useCallback(async () => {
+    setModalVisible(true);
+  }, [videoName, inputValue]);
+
+  async function addComment(videoName, commentText, time) {
+    try {
+      const firestore = firebase.firestore();
+      const videoRef = firestore.collection("videos").doc(videoName);
+
+      // Get the current comments array from the video document
+      const videoDoc = await videoRef.get();
+      const comments = videoDoc.data().comments || [];
+
+      // Create a new comment object with the provided text and time
+      const newComment = { text: commentText, time: time };
+
+      // Add the new comment to the existing comments array
+      comments.push(newComment);
+
+      // Update the comments field in the video document with the new comments array
+      await videoRef.update({ comments: comments });
+
+      console.log(`Comment added to video ${videoName}:`, newComment);
+    } catch (error) {
+      console.error("Error adding comment:", error);
+    }
+  }
+
+  useFocusEffect(
+    React.useCallback(() => {
+      navigation.setOptions({
+        headerRight: () => (
+          <TouchableOpacity
+            onPress={handleAddComment}
+            style={{ marginRight: 10 }}
+          >
+            <MaterialIcons name="message" size={24} color="white" />
+          </TouchableOpacity>
+        ),
+      });
+    }, [navigation, route.params.categoryName, handleAddComment])
+  );
+
+  useEffect(() => {
+    const lockOrientation = async () => {
+      await ScreenOrientation.unlockAsync();
+    };
+
+    lockOrientation();
+
+    return () => {
+      const resetOrientation = async () => {
+        await ScreenOrientation.lockAsync(
+          ScreenOrientation.OrientationLock.PORTRAIT
+        );
+      };
+
+      resetOrientation();
+    };
+  }, []);
+
+  return (
+    <View style={styles.container}>
+      <Modal
+        animationType="slide"
+        transparent={true}
+        visible={modalVisible}
+        onRequestClose={() => {
+          setModalVisible(false);
+        }}
+      >
+        <View style={styles.centeredView}>
+          <View style={styles.modalView}>
+            <Text style={styles.modalText}>Add a comment:</Text>
+            <TextInput
+              style={styles.input}
+              onChangeText={(text) => setInputValue(text)}
+              value={inputValue}
+              placeholder="Write your comment"
+            />
+            <TouchableOpacity
+              style={styles.button}
+              onPress={async () => {
+                const currentTime =
+                  await videoPlayerRef.current.getStatusAsync();
+                const position = currentTime.positionMillis;
+                addComment(videoName, inputValue, position);
+                setModalVisible(false);
+              }}
+            >
+              <Text style={styles.buttonText}>Submit</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={styles.button}
+              onPress={() => setModalVisible(false)}
+            >
+              <Text style={styles.buttonText}>Cancel</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
+      <Video
+        ref={videoPlayerRef}
+        source={{ uri: videoUri }}
+        rate={1.0}
+        volume={1.0}
+        isMuted={false}
+        resizeMode="contain"
+        shouldPlay
+        isLooping
+        useNativeControls
+        style={styles.video}
+      />
+    </View>
+  );
+}
+
+any idea why it would render this message icon in component where i didnt even implement it?

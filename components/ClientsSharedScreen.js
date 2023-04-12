@@ -92,9 +92,9 @@ export default function ClientsSharedScreen(props) {
           // Update the video's booleanVar to true before navigating to the video player
           await updateVideoBooleanValue(item.videoName, true);
 
-          navigate("VideoPlayer", {
+          navigate("TrainerVideoPlayer", {
             videoUri: item.url,
-            videoId: item.id,
+            videoName: item.videoName,
           });
         }}
       >
