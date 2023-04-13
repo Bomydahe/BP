@@ -8,7 +8,7 @@ import {
   Dimensions,
   TouchableOpacity,
 } from "react-native";
-import { useNavigation } from "@react-navigation/native";
+import { useNavigation, useFocusEffect } from "@react-navigation/native";
 import { firebase } from "../firebaseConfig";
 
 const { width } = Dimensions.get("window");
@@ -19,27 +19,30 @@ export default function SharedVideos({ route }) {
   const [status, setStatus] = React.useState({});
   const [videos, setVideos] = React.useState([]);
   const navigation = useNavigation();
-  console.log("----------------", videos);
 
-  React.useEffect(() => {
-    async function fetchVideos() {
-      const videoList = await getAllVideos();
-      const videoData = await Promise.all(
-        videoList.map(async (video) => {
-          return {
-            id: video.id,
-            url: video.url,
-            thumbnail: video.thumbnail,
-            videoName: video.videoName,
-            comments: video.comments,
-          };
-        })
-      );
-      setVideos(videoData);
-    }
+  useFocusEffect(
+    React.useCallback(() => {
+      async function fetchVideos() {
+        const videoList = await getAllVideos();
+        const videoData = await Promise.all(
+          videoList.map(async (video) => {
+            return {
+              id: video.id,
+              url: video.url,
+              thumbnail: video.thumbnail,
+              videoName: video.videoName,
+              comments: video.comments,
+            };
+          })
+        );
+        setVideos(videoData);
+      }
 
-    fetchVideos();
-  }, []);
+      fetchVideos();
+      // Cleanup function
+      return () => {};
+    }, [])
+  );
 
   /* retrieving all videos from firebase */
   async function getAllVideos() {

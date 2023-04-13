@@ -1,8 +1,15 @@
 editing video by trainer (high prio)
-selecting video(potentially videos) to share (low pio)
+
+deletion of video data collection n firstore when video is removed
+
 cross-platform thumbnails (upload actuall thumbnail instead of url)
+
 backend login authentication (low prio)
-desing overall (low prio) || video player - desing (low prio) 1/2
-adding slow motion in video player (low prio)
+
+desing overall (low prio) 
+  > video player - desing (low prio) 1/2
+  > selecting video(potentially videos) to share (low pio)
+  > adding slow motion in video player (low prio)
+
 sharing compared videos?? (HARD)
 category edit - instant update (lowest prio) (difficulty - impossible)

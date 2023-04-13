@@ -140,6 +140,7 @@ export default function SharedVideoPlayer({ route }) {
           minimumValue={0}
           maximumValue={1}
           minimumTrackTintColor="white"
+          maximumTrackTintColor="lightgrey"
           thumbTintColor={showSliderThumb ? "white" : "transparent"}
           onSlidingStart={() => setSliderThumbColor("white")}
           onValueChange={(value) => {
@@ -232,7 +233,7 @@ const styles = StyleSheet.create({
 
   messageIconContainer: {
     position: "absolute",
-    bottom: 50,
+    bottom: 40,
     justifyContent: "center",
     alignItems: "center",
   },

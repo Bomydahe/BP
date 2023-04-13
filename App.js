@@ -17,6 +17,7 @@ import ClientsSharedScreen from "./components/ClientsSharedScreen";
 import SharedCategory from "./components/SharedCategory";
 import TrainerVideoPlayer from "./components/TrainerVideoPlayer";
 import SharedVideoPlayer from "./components/SharedVideoPlayer";
+import VideoEditScreen from "./components/VideoEditScreen";
 
 const Stack = createNativeStackNavigator();
 const Tab = createMaterialTopTabNavigator();
@@ -104,6 +105,17 @@ export default function App() {
             component={SharedVideoPlayer}
             options={{
               title: "Video Player",
+              headerStyle: {
+                backgroundColor: "black",
+              },
+              headerTintColor: "white",
+            }}
+          />
+          <Stack.Screen
+            name="VideoEditScreen"
+            component={VideoEditScreen}
+            options={{
+              title: "Video Edit Tool",
               headerStyle: {
                 backgroundColor: "black",
               },
