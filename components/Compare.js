@@ -146,7 +146,7 @@ export default function Compare(props) {
     switch (modalStep) {
       case "initial":
         return (
-          <>
+          <View style={styles.categoryList}>
             <TouchableOpacity
               onPress={pickVideoFromStorage}
               style={{ marginBottom: 20 }}
@@ -156,7 +156,7 @@ export default function Compare(props) {
             <TouchableOpacity onPress={() => setModalStep("selectCategory")}>
               <Text>Choose video from categories</Text>
             </TouchableOpacity>
-          </>
+          </View>
         );
       case "selectCategory":
         return (
@@ -251,7 +251,7 @@ export default function Compare(props) {
         )}
       </View>
       <Modal
-        animationType="slide"
+        animationType="fade"
         transparent={true}
         visible={modalVisible}
         onRequestClose={() => {
@@ -269,9 +269,11 @@ export default function Compare(props) {
           <View
             style={{
               backgroundColor: "white",
+              //justifyContent: "center",
+              //alignItems: "center",
               padding: 20,
               borderRadius: 10,
-              width: width * 0.9,
+              width: width * 0.8,
               maxHeight: height * 0.8,
             }}
           >
@@ -298,7 +300,7 @@ const styles = StyleSheet.create({
     flex: 1,
     borderWidth: 2,
     borderColor: "black",
-    borderStyle: "dotted",
+    borderStyle: "dashed",
     borderRadius: 1,
     justifyContent: "center",
     alignItems: "center",

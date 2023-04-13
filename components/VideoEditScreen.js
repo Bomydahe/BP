@@ -1,50 +1,52 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { View, TouchableOpacity, Text, StyleSheet } from "react-native";
-import { Video } from "expo-av";
-import { SketchCanvas } from "react-native-sketch-canvas";
-import { firebase } from "../firebaseConfig";
+import { PanResponder } from "react-native";
+import Svg, { Path } from "react-native-svg";
 
-export default function VideoEditScreen({ route }) {
-  const { videoUri, videoName, drawings } = route.params;
+export default function DrawingComponent() {
+  const [paths, setPaths] = useState([]);
+  const [currentPath, setCurrentPath] = useState("");
   const [color, setColor] = useState("red");
   const [lineWidth, setLineWidth] = useState(5);
-  const sketchCanvasRef = React.useRef(null);
 
-  useEffect(() => {
-    if (drawings && sketchCanvasRef.current) {
-      drawings.forEach((path) => {
-        sketchCanvasRef.current.addPath(path);
-      });
-    }
-  }, [drawings]);
-
-  const saveDrawing = async () => {
-    try {
-      const paths = sketchCanvasRef.current.getPaths();
-      const firestore = firebase.firestore();
-      const videoRef = firestore.collection("videos").doc(videoName);
-
-      await videoRef.update({ drawings: paths });
-
-      console.log(`Drawing data saved for video ${videoName}`);
-    } catch (error) {
-      console.error("Error saving drawing data:", error);
-    }
-  };
+  const panResponder = PanResponder.create({
+    onStartShouldSetPanResponder: () => true,
+    onMoveShouldSetPanResponder: () => true,
+    onPanResponderGrant: () => {
+      setCurrentPath("");
+    },
+    onPanResponderMove: (event, gestureState) => {
+      const { dx, dy } = gestureState;
+      const newPoint = `${dx},${dy}`;
+      setCurrentPath((prevPath) =>
+        prevPath ? `${prevPath} L${newPoint}` : `M${newPoint}`
+      );
+    },
+    onPanResponderRelease: () => {
+      setPaths((prevPaths) => [
+        ...prevPaths,
+        { d: currentPath, stroke: color, strokeWidth: lineWidth },
+      ]);
+    },
+  });
 
   return (
     <View style={styles.container}>
-      <Video
-        source={{ uri: videoUri }}
-        resizeMode="contain"
-        style={styles.video}
-      />
-      <SketchCanvas
-        ref={sketchCanvasRef}
-        style={styles.canvas}
-        strokeColor={color}
-        strokeWidth={lineWidth}
-      />
+      <Svg
+        {...panResponder.panHandlers}
+        style={{ flex: 1 }}
+        viewBox="0 0 100 100"
+      >
+        {paths.map((path, index) => (
+          <Path key={index} {...path} fill="none" />
+        ))}
+        <Path
+          d={currentPath}
+          stroke={color}
+          strokeWidth={lineWidth}
+          fill="none"
+        />
+      </Svg>
       <View style={styles.buttonContainer}>
         <TouchableOpacity
           style={[styles.button, { backgroundColor: "red" }]}
@@ -70,9 +72,7 @@ export default function VideoEditScreen({ route }) {
         >
           <Text style={styles.buttonText}>Eraser</Text>
         </TouchableOpacity>
-        <TouchableOpacity style={styles.button} onPress={saveDrawing}>
-          <Text style={styles.buttonText}>Save</Text>
-        </TouchableOpacity>
+        {/* You can add a save button here, similar to the one in the provided code */}
       </View>
     </View>
   );
@@ -83,15 +83,6 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
-  },
-  video: {
-    width: "100%",
-    height: "60%",
-  },
-  canvas: {
-    position: "absolute",
-    width: "100%",
-    height: "60%",
   },
   buttonContainer: {
     flexDirection: "row",

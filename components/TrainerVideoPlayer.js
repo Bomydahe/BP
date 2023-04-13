@@ -62,6 +62,7 @@ export default function TrainerVideoPlayer({ route }) {
             </TouchableOpacity>
             <TouchableOpacity
               onPress={() => {
+                //console.log("not yet");
                 navigation.navigate("VideoEditScreen", { videoUri });
               }}
               style={styles.headerRightButton}
