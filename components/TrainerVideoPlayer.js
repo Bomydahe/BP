@@ -6,12 +6,14 @@ import {
   Modal,
   TextInput,
   Text,
+  Alert,
 } from "react-native";
 import { Video } from "expo-av";
 import * as ScreenOrientation from "expo-screen-orientation";
 import { useNavigation, useFocusEffect } from "@react-navigation/native";
 import { MaterialIcons, FontAwesome } from "@expo/vector-icons";
 import { firebase } from "../firebaseConfig";
+import { captureRef } from "react-native-view-shot";
 
 export default function TrainerVideoPlayer({ route }) {
   const { videoUri } = route.params;
@@ -19,11 +21,43 @@ export default function TrainerVideoPlayer({ route }) {
   const videoName = route.params.videoName;
   const [modalVisible, setModalVisible] = useState(false);
   const [inputValue, setInputValue] = useState("");
+  const [playbackStatus, setPlaybackStatus] = useState({});
   const videoPlayerRef = React.useRef(null);
+  const [isPlaying, setIsPlaying] = useState(false);
 
   const handleAddComment = useCallback(async () => {
+    const currentStatus = await videoPlayerRef.current.getStatusAsync();
+
+    if (currentStatus.isPlaying) {
+      Alert.alert("Please pause the video where you want to add a comment.");
+      return;
+    }
+
     setModalVisible(true);
   }, [videoName, inputValue]);
+
+  const handleEdit = useCallback(async () => {
+    const currentStatus = await videoPlayerRef.current.getStatusAsync();
+
+    if (currentStatus.isPlaying) {
+      Alert.alert("Please pause the video where you want to edit it.");
+      return;
+    }
+
+    const snapshot = await captureRef(videoPlayerRef, {
+      format: "jpg",
+      quality: 1.0,
+    });
+
+    const currentTime = await videoPlayerRef.current.getStatusAsync();
+    const position = currentTime.positionMillis;
+
+    navigation.navigate("VideoEditScreen", {
+      videoName,
+      position,
+      snapshotUri: snapshot,
+    });
+  }, [navigation]);
 
   async function addComment(videoName, commentText, time) {
     try {
@@ -61,10 +95,7 @@ export default function TrainerVideoPlayer({ route }) {
               <MaterialIcons name="message" size={24} color="white" />
             </TouchableOpacity>
             <TouchableOpacity
-              onPress={() => {
-                //console.log("not yet");
-                navigation.navigate("VideoEditScreen", { videoUri });
-              }}
+              onPress={handleEdit}
               style={styles.headerRightButton}
             >
               <FontAwesome name="pencil" size={24} color="white" />
@@ -144,6 +175,11 @@ export default function TrainerVideoPlayer({ route }) {
         isLooping
         useNativeControls
         style={styles.video}
+        onPlaybackStatusUpdate={(status) => {
+          if (status.didJustFinish && !status.isLooping) {
+            videoPlayerRef.current.pauseAsync();
+          }
+        }}
       />
     </View>
   );
