@@ -32,6 +32,7 @@ export default function SharedVideos({ route }) {
               thumbnail: video.thumbnail,
               videoName: video.videoName,
               comments: video.comments,
+              overlays: video.overlays,
             };
           })
         );
@@ -73,11 +74,13 @@ export default function SharedVideos({ route }) {
             thumbnail: data.thumbnail,
             videoName,
             comments: data.comments || [],
+            overlays: data.overlays || [],
           };
         })
       );
 
-      console.log("Video Data:", videoData);
+      console.log("Video Data:", JSON.stringify(videoData, null, 2));
+
       return videoData.filter((video) => video !== null);
     } catch (error) {
       console.error("Error getting video data:", error);
@@ -98,6 +101,7 @@ export default function SharedVideos({ route }) {
             navigation.navigate("SharedVideoPlayer", {
               videoUri: item.url,
               comments: item.comments,
+              overlays: item.overlays,
             })
           }
         >

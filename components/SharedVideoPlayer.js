@@ -4,9 +4,10 @@ import { Video } from "expo-av";
 import * as ScreenOrientation from "expo-screen-orientation";
 import Slider from "@react-native-community/slider";
 import { MaterialIcons } from "@expo/vector-icons";
+import Svg, { Path } from "react-native-svg";
 
 export default function SharedVideoPlayer({ route }) {
-  const { videoUri, comments } = route.params;
+  const { videoUri, comments, overlays } = route.params;
   const [playbackStatus, setPlaybackStatus] = useState(Video.RESUME_PLAYBACK);
   const [showControls, setShowControls] = useState(false);
   const [sliderValue, setSliderValue] = useState(0);
@@ -16,6 +17,9 @@ export default function SharedVideoPlayer({ route }) {
   const [showSliderThumb, setShowSliderThumb] = useState(false);
   const [showMessageModal, setShowMessageModal] = useState(false);
   const [selectedMessage, setSelectedMessage] = useState(null);
+  const [currentOverlay, setCurrentOverlay] = useState(null);
+  const [videoWidth, setVideoWidth] = useState(0);
+  const [videoHeight, setVideoHeight] = useState(0);
 
   const displayMessage = async (message) => {
     if (videoRef.current) {
@@ -51,6 +55,15 @@ export default function SharedVideoPlayer({ route }) {
     if (status.isPlaying) {
       setSliderValue(status.positionMillis / status.durationMillis);
     }
+
+    // Update the current overlay based on video playback position
+    const currentTime = status.positionMillis;
+    const matchingOverlay = overlays.find(
+      (overlay) =>
+        currentTime >= overlay.time - 1000 && currentTime <= overlay.time + 1000
+    );
+    setCurrentOverlay(matchingOverlay);
+
     setLastPlaybackStatus(status);
   };
 
@@ -116,6 +129,10 @@ export default function SharedVideoPlayer({ route }) {
         isLooping
         style={styles.video}
         onPlaybackStatusUpdate={(status) => handlePlaybackStatus(status)}
+        onReadyForDisplay={(event) => {
+          setVideoWidth(event.naturalSize.width);
+          setVideoHeight(event.naturalSize.height);
+        }}
       />
       <TouchableOpacity
         style={styles.videoOverlay}
@@ -182,6 +199,25 @@ export default function SharedVideoPlayer({ route }) {
           </TouchableOpacity>
         </View>
       )}
+      {currentOverlay && (
+        <Svg
+          style={styles.overlaySvg}
+          width="100%"
+          height="100%"
+          viewBox={`0 0 ${videoWidth} ${videoHeight}`}
+          pointerEvents="none"
+        >
+          {currentOverlay.overlayData.map((pathData, index) => (
+            <Path
+              key={index}
+              d={pathData.d}
+              stroke={pathData.stroke}
+              strokeWidth={pathData.strokeWidth}
+              fill="none"
+            />
+          ))}
+        </Svg>
+      )}
     </View>
   );
 }
@@ -234,6 +270,7 @@ const styles = StyleSheet.create({
   messageIconContainer: {
     position: "absolute",
     bottom: 40,
+    marginLeft: -10,
     justifyContent: "center",
     alignItems: "center",
   },
@@ -256,5 +293,14 @@ const styles = StyleSheet.create({
     position: "absolute",
     top: 20,
     right: 20,
+  },
+
+  overlaySvg: {
+    position: "absolute",
+    top: 0,
+    left: 0,
+    zIndex: 2,
+    width: "100%",
+    height: "100%",
   },
 });

@@ -13,3 +13,5 @@ desing overall (low prio)
 
 sharing compared videos?? (HARD)
 category edit - instant update (lowest prio) (difficulty - impossible)
+
+cleanup of components&code | commenting

@@ -12,10 +12,11 @@ import Svg, { Path } from "react-native-svg";
 import { BackHandler } from "react-native";
 import * as FileSystem from "expo-file-system";
 import { FontAwesome, Ionicons } from "@expo/vector-icons";
+import { firebase } from "../firebaseConfig";
 
 const { width, height } = Dimensions.get("window");
 
-export default function DrawingComponent({ route, navigation }) {
+export default function VideoEditScreen({ route, navigation }) {
   const { videoUri, videoName, position, snapshotUri } = route.params;
   const [paths, setPaths] = useState([]);
   const [currentPath, setCurrentPath] = useState("");
@@ -46,12 +47,18 @@ export default function DrawingComponent({ route, navigation }) {
       setCurrentPath((prevPath) =>
         prevPath ? `${prevPath} L${newPoint}` : `M${newPoint}`
       );
+      console.log("Current path:", currentPath);
     },
+
     onPanResponderRelease: () => {
-      setPaths((prevPaths) => [
-        ...prevPaths,
-        { d: currentPath, stroke: color, strokeWidth: lineWidth },
-      ]);
+      setPaths((prevPaths) => {
+        const newPaths = [
+          ...prevPaths,
+          { d: currentPath, stroke: color, strokeWidth: lineWidth },
+        ];
+        console.log("Paths:", newPaths);
+        return newPaths;
+      });
       setCurrentPath("");
     },
   });
@@ -59,12 +66,68 @@ export default function DrawingComponent({ route, navigation }) {
   useLayoutEffect(() => {
     navigation.setOptions({
       headerLeft: () => (
-        <TouchableOpacity onPress={handleGoBack} style={{ marginRight: 35 }}>
+        <TouchableOpacity onPress={handleGoBack} style={{ marginLeft: 10 }}>
           <Ionicons name="arrow-back" size={24} color="white" />
+        </TouchableOpacity>
+      ),
+      headerRight: () => (
+        <TouchableOpacity onPress={handleSave} style={{ marginRight: 10 }}>
+          <Ionicons name="save" size={24} color="white" />
         </TouchableOpacity>
       ),
     });
   }, [navigation]);
+
+  async function addOverlay(videoName, overlayData, time) {
+    try {
+      const firestore = firebase.firestore();
+      const videoRef = firestore.collection("videos").doc(videoName);
+
+      // Get the current overlays array from the video document
+      const videoDoc = await videoRef.get();
+      const overlays = videoDoc.data().overlays || [];
+
+      // Create a new overlay object with the provided overlay data and time
+      const newOverlay = { overlayData: overlayData, time: time };
+
+      // Add the new overlay to the existing overlays array
+      overlays.push(newOverlay);
+
+      // Update the overlays field in the video document with the new overlays array
+      await videoRef.update({ overlays: overlays });
+
+      console.log(`Overlay added to video ${videoName}:`, newOverlay);
+    } catch (error) {
+      console.error("Error adding overlay:", error);
+    }
+  }
+
+  const handleSave = async () => {
+    setPaths((currentPaths) => {
+      console.log("paths:", currentPaths);
+      (async () => {
+        try {
+          // Create a new array with all necessary data
+          const pathsData = currentPaths.map((path) => ({
+            d: path.d,
+            stroke: path.stroke,
+            strokeWidth: (path.strokeWidth / width) * 100, // store strokeWidth as a percentage
+          }));
+
+          console.log("pathsdata:", pathsData);
+
+          // Add the path data to Firestore
+          await addOverlay(videoName, pathsData, position);
+
+          // Navigate back to the previous component
+          navigation.goBack();
+        } catch (error) {
+          console.error("Error saving overlay:", error);
+        }
+      })();
+      return currentPaths;
+    });
+  };
 
   return (
     <View style={styles.container}>
@@ -73,23 +136,22 @@ export default function DrawingComponent({ route, navigation }) {
         style={styles.snapshot}
         resizeMode="cover"
       />
-      <Svg
-        {...panResponder.panHandlers}
-        style={styles.overlay}
-        viewBox={`0 0 ${width} ${height}`}
-      >
-        {paths.map((path, index) => (
-          <Path key={index} {...path} fill="none" />
-        ))}
-        {currentPath !== paths[paths.length - 1]?.d && (
-          <Path
-            d={currentPath}
-            stroke={color}
-            strokeWidth={lineWidth}
-            fill="none"
-          />
-        )}
-      </Svg>
+      <View {...panResponder.panHandlers} style={styles.overlay}>
+        <Svg viewBox={`0 0 ${width} ${height}`} style={styles.overlay}>
+          {Array.isArray(paths) &&
+            paths.map((path, index) => (
+              <Path key={index} {...path} fill="none" />
+            ))}
+          {currentPath !== paths[paths.length - 1]?.d && (
+            <Path
+              d={currentPath}
+              stroke={color}
+              strokeWidth={lineWidth}
+              fill="none"
+            />
+          )}
+        </Svg>
+      </View>
       <View style={styles.toolbar}>
         <TouchableOpacity onPress={() => setColor("red")}>
           <FontAwesome name="circle" size={24} color="red" />
