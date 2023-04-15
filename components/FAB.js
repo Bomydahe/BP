@@ -29,7 +29,7 @@ const MyVideosFAB = ({
         {
           icon: "plus",
           onPress: () => addCategory(),
-          label: "Add category section",
+          label: "Add category",
         },
       ]}
       onStateChange={({ open }) => setOpen(open)}

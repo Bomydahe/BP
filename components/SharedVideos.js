@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import {
   View,
   FlatList,
@@ -7,9 +7,14 @@ import {
   Image,
   Dimensions,
   TouchableOpacity,
+  Text,
+  Modal,
+  TextInput,
+  Alert,
 } from "react-native";
 import { useNavigation, useFocusEffect } from "@react-navigation/native";
 import { firebase } from "../firebaseConfig";
+import { AntDesign } from "@expo/vector-icons";
 
 const { width } = Dimensions.get("window");
 const numColumns = 2;
@@ -19,6 +24,11 @@ export default function SharedVideos({ route }) {
   const [status, setStatus] = React.useState({});
   const [videos, setVideos] = React.useState([]);
   const navigation = useNavigation();
+  const userId = firebase.auth().currentUser.uid;
+  const [modalVisible, setModalVisible] = useState(false);
+  const [trainers, setTrainers] = useState([]);
+  const [filteredTrainers, setFilteredTrainers] = useState([]);
+  const [searchText, setSearchText] = useState("");
 
   useFocusEffect(
     React.useCallback(() => {
@@ -45,9 +55,85 @@ export default function SharedVideos({ route }) {
     }, [])
   );
 
+  const toggleModal = () => {
+    setModalVisible(!modalVisible);
+  };
+
+  const fetchTrainers = async () => {
+    try {
+      const trainersRef = firebase
+        .firestore()
+        .collection("users")
+        .where("role", "==", "trainer");
+
+      const snapshot = await trainersRef.get();
+
+      const trainerList = snapshot.docs.map((doc) => ({
+        uid: doc.id,
+        email: doc.data().email,
+      }));
+
+      setTrainers(trainerList);
+      setFilteredTrainers(trainerList);
+    } catch (error) {
+      console.error("Error fetching trainers:", error);
+    }
+  };
+
+  const filterTrainers = () => {
+    if (searchText === "") {
+      setFilteredTrainers(trainers);
+    } else {
+      const filtered = trainers.filter((trainer) =>
+        trainer.email.toLowerCase().includes(searchText.toLowerCase())
+      );
+      setFilteredTrainers(filtered);
+    }
+  };
+
+  async function handleTrainerSelect(trainerEmail, trainerId) {
+    try {
+      await firebase.firestore().collection("users").doc(userId).update({
+        trainerId: trainerId,
+      });
+      toggleModal();
+      Alert.alert(
+        "Success",
+        `Trainer ${trainerEmail} was selected successfully.`
+      );
+    } catch (error) {
+      console.error("Error selecting trainer:", error);
+      Alert.alert("Error", "An error occurred while selecting the trainer.");
+    }
+  }
+
+  async function deleteVideo(item) {
+    try {
+      // Delete video from Firebase Storage
+      const storageRef = firebase.storage().ref();
+      const videoRef = storageRef.child(item.videoName);
+      await videoRef.delete();
+
+      // Delete video metadata from Firestore
+      const firestore = firebase.firestore();
+      const videoMetadataRef = firestore
+        .collection("videos")
+        .doc(item.videoName);
+      await videoMetadataRef.delete();
+
+      // Update local state to remove the deleted video
+      setVideos((prevVideos) =>
+        prevVideos.filter((video) => video.id !== item.id)
+      );
+    } catch (error) {
+      console.error("Error deleting video:", error);
+    }
+  }
+
   /* retrieving all videos from firebase */
   async function getAllVideos() {
     try {
+      const userId = firebase.auth().currentUser.uid;
       const storageRef = firebase.storage().ref();
       const listResult = await storageRef.listAll();
 
@@ -68,6 +154,12 @@ export default function SharedVideos({ route }) {
           }
 
           const data = doc.data();
+
+          // Filter videos based on user ID
+          if (data.userId !== userId) {
+            return null;
+          }
+
           return {
             url,
             id: data.id,
@@ -113,6 +205,12 @@ export default function SharedVideos({ route }) {
             />
           </View>
         </TouchableOpacity>
+        <TouchableOpacity
+          style={styles.removeVideoButton}
+          onPress={() => deleteVideo(item)}
+        >
+          <AntDesign name="close" size={24} color="white" />
+        </TouchableOpacity>
       </View>
     );
   };
@@ -129,8 +227,59 @@ export default function SharedVideos({ route }) {
         columnWrapperStyle={{
           justifyContent: "flex-start",
           alignItems: "flex-start",
-        }} // Update this line
+        }}
       />
+      <TouchableOpacity
+        style={styles.selectTrainerButton}
+        onPress={() => {
+          toggleModal();
+          fetchTrainers();
+        }}
+      >
+        <Text style={styles.selectTrainerButtonText}>Select Trainer</Text>
+      </TouchableOpacity>
+
+      <Modal
+        animationType="slide"
+        transparent={true}
+        visible={modalVisible}
+        onRequestClose={toggleModal}
+      >
+        <View style={styles.modalView}>
+          <TextInput
+            style={styles.searchInput}
+            onChangeText={setSearchText}
+            value={searchText}
+            placeholder="Search trainers"
+            autoCapitalize="none"
+          />
+          <TouchableOpacity
+            style={styles.searchButton}
+            onPress={filterTrainers}
+          >
+            <Text style={styles.searchButtonText}>Search</Text>
+          </TouchableOpacity>
+          <FlatList
+            data={filteredTrainers}
+            renderItem={({ item }) => (
+              <TouchableOpacity
+                onPress={() => handleTrainerSelect(item.email, item.uid)}
+                style={styles.trainerListItem}
+              >
+                <Text style={styles.trainerListItemText}>{item.email}</Text>
+              </TouchableOpacity>
+            )}
+            keyExtractor={(item) => item.uid}
+            style={styles.trainerList}
+          />
+          <TouchableOpacity
+            style={styles.closeModalButton}
+            onPress={toggleModal}
+          >
+            <Text style={styles.closeModalButtonText}>Close</Text>
+          </TouchableOpacity>
+        </View>
+      </Modal>
     </SafeAreaView>
   );
 }
@@ -143,8 +292,10 @@ const styles = StyleSheet.create({
   },
 
   flatlist: {
+    flex: 1,
     marginTop: 20,
     paddingHorizontal: 10,
+    marginBottom: 70,
   },
 
   video: {
@@ -163,5 +314,85 @@ const styles = StyleSheet.create({
 
   videoWrapperRight: {
     marginLeft: 10,
+  },
+
+  removeVideoButton: {
+    position: "absolute",
+    top: 8,
+    right: 37,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  selectTrainerButton: {
+    position: "absolute",
+    bottom: 20,
+    backgroundColor: "blue",
+    padding: 10,
+    alignItems: "center",
+    justifyContent: "center",
+    alignSelf: "center",
+    borderRadius: 10,
+    zIndex: 1000,
+  },
+  selectTrainerButtonText: {
+    color: "white",
+    fontSize: 16,
+  },
+  modalView: {
+    backgroundColor: "white",
+    borderColor: "black",
+    borderWidth: 0.3,
+    borderRadius: 12,
+    padding: 20,
+    alignItems: "center",
+    justifyContent: "center",
+    alignSelf: "center",
+    marginTop: "30%",
+    width: "90%",
+    maxHeight: "80%",
+  },
+  searchInput: {
+    borderWidth: 1,
+    borderColor: "gray",
+    borderRadius: 5,
+    padding: 10,
+    width: "80%",
+    marginBottom: 10,
+  },
+  searchButton: {
+    backgroundColor: "blue",
+    padding: 10,
+    alignItems: "center",
+    justifyContent: "center",
+    borderRadius: 5,
+    marginBottom: 10,
+  },
+  searchButtonText: {
+    color: "white",
+    fontSize: 16,
+  },
+  trainerList: {
+    width: "100%",
+  },
+  trainerListItem: {
+    padding: 15,
+    borderBottomWidth: 1,
+    borderBottomColor: "lightgray",
+  },
+  trainerListItemText: {
+    fontSize: 16,
+  },
+  closeModalButton: {
+    backgroundColor: "red",
+    padding: 10,
+    alignItems: "center",
+    justifyContent: "center",
+    borderRadius: 5,
+    marginTop: 20,
+    width: "100%",
+  },
+  closeModalButtonText: {
+    color: "white",
+    fontSize: 16,
   },
 });

@@ -6,12 +6,22 @@ const useStoredData = (key, initialValue) => {
 
   /* fetching & storing data(categories, videos) */
   useEffect(() => {
+    //clearData();
     loadData();
   }, []);
 
   useEffect(() => {
     storeData(data);
   }, [data]);
+
+  /* clear asyncstorage data
+  const clearData = async () => {
+    try {
+      await AsyncStorage.clear();
+    } catch (error) {
+      console.log(error);
+    }
+  }; */
 
   const loadData = async () => {
     try {

@@ -35,52 +35,97 @@ export default function TeacherHome() {
   const [clients, setClients] = useState([]);
   const navigation = useNavigation();
   const [videos, setVideos] = React.useState([]);
+  const [currentUserID, setCurrentUserID] = useState("");
+
+  useEffect(() => {
+    async function getCurrentUser() {
+      const user = firebase.auth().currentUser;
+      if (user) {
+        setCurrentUserID(user.uid);
+      }
+    }
+    getCurrentUser();
+  }, []);
 
   React.useEffect(() => {
     async function fetchVideos() {
-      const videoList = await getAllVideos();
-      const videoData = await Promise.all(
-        videoList.map(async (video) => {
-          return {
-            id: video.id,
-            url: video.url,
-            thumbnail: video.thumbnail,
-            booleanVar: video.booleanVar,
-            videoName: video.videoName,
-          };
-        })
-      );
-      setVideos(videoData);
+      if (currentUserID) {
+        const videoList = await getAllVideos();
+        const videoData = await Promise.all(
+          videoList.map(async (video) => {
+            return {
+              id: video.id,
+              url: video.url,
+              thumbnail: video.thumbnail,
+              booleanVar: video.booleanVar,
+              videoName: video.videoName,
+            };
+          })
+        );
+        setVideos(videoData);
+      }
     }
 
     fetchVideos();
-  }, []);
+  }, [currentUserID]);
+
+  async function getUserIDsByTrainer(trainerID) {
+    try {
+      const firestore = firebase.firestore();
+      const usersRef = firestore.collection("users");
+      const querySnapshot = await usersRef
+        .where("trainerId", "==", trainerID)
+        .where("role", "==", "user")
+        .get();
+
+      const userIDs = querySnapshot.docs.map((doc) => doc.id);
+      return userIDs;
+    } catch (error) {
+      console.error("Error fetching user IDs by trainer:", error);
+      return [];
+    }
+  }
 
   /* retrieving all videos from firebase */
   async function getAllVideos() {
     try {
-      const storageRef = firebase.storage().ref();
-      const listResult = await storageRef.listAll();
+      const userIDs = await getUserIDsByTrainer(currentUserID);
 
-      const videoData = await Promise.all(
-        listResult.items.map(async (item) => {
-          const url = await item.getDownloadURL();
-          const videoName = item.name;
+      const videoData = [];
 
-          // Get video metadata from Firestore
-          const { booleanVar, id, thumbnail } = await getVideoBooleanValue(
-            videoName
-          );
+      for (const userID of userIDs) {
+        const userVideosSnapshot = await firebase
+          .firestore()
+          .collection("videos")
+          .where("userId", "==", userID)
+          .get();
+        const userVideos = await Promise.all(
+          userVideosSnapshot.docs.map(async (doc) => {
+            const data = doc.data();
 
-          return {
-            url,
-            id,
-            booleanVar,
-            thumbnail,
-            videoName,
-          };
-        })
-      );
+            // Check if videoName is defined
+            if (!data.videoName) {
+              console.warn("videoName is not defined for video:", data.id);
+              return null;
+            }
+
+            const storageRef = firebase.storage().ref();
+            const item = storageRef.child(data.videoName);
+            const url = await item.getDownloadURL();
+
+            return {
+              url,
+              id: data.id,
+              booleanVar: data.booleanVar,
+              thumbnail: data.thumbnail,
+              videoName: data.videoName,
+            };
+          })
+        );
+
+        // Filter out any null values before pushing userVideos
+        videoData.push(...userVideos.filter((video) => video !== null));
+      }
 
       console.log("Video Data:", videoData);
       return videoData;

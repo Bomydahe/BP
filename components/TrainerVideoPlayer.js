@@ -7,6 +7,8 @@ import {
   TextInput,
   Text,
   Alert,
+  Image,
+  Dimensions,
 } from "react-native";
 import { Video } from "expo-av";
 import * as ScreenOrientation from "expo-screen-orientation";
@@ -24,6 +26,8 @@ export default function TrainerVideoPlayer({ route }) {
   const [playbackStatus, setPlaybackStatus] = useState({});
   const videoPlayerRef = React.useRef(null);
   const [isPlaying, setIsPlaying] = useState(false);
+  const screenWidth = Dimensions.get("window").width;
+  const screenHeight = Dimensions.get("window").height;
 
   const handleAddComment = useCallback(async () => {
     const currentStatus = await videoPlayerRef.current.getStatusAsync();
@@ -49,13 +53,19 @@ export default function TrainerVideoPlayer({ route }) {
       quality: 1.0,
     });
 
-    const currentTime = await videoPlayerRef.current.getStatusAsync();
-    const position = currentTime.positionMillis;
+    Image.getSize(snapshot, async (width, height) => {
+      const currentTime = await videoPlayerRef.current.getStatusAsync();
+      const position = currentTime.positionMillis;
 
-    navigation.navigate("VideoEditScreen", {
-      videoName,
-      position,
-      snapshotUri: snapshot,
+      console.log("+++++++++++", screenWidth, screenHeight);
+
+      navigation.navigate("VideoEditScreen", {
+        videoName,
+        position,
+        snapshotUri: snapshot,
+        snapshotWidth: screenWidth,
+        snapshotHeight: screenHeight,
+      });
     });
   }, [navigation]);
 

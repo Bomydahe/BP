@@ -47,16 +47,6 @@ export default function ClientsSharedScreen(props) {
     }, [props.navigation, props.route.params.clientName])
   );
 
-  /* removing video */
-  function handleRemoveVideo(videoId) {
-    setCategories((prevCategories) =>
-      prevCategories.map((category) => ({
-        ...category,
-        videos: category.videos.filter((video) => video.id !== videoId),
-      }))
-    );
-  }
-
   async function updateVideoBooleanValue(videoName, newValue) {
     console.log(
       `Trying to update video ${videoName} booleanVar to ${newValue}`
@@ -103,12 +93,6 @@ export default function ClientsSharedScreen(props) {
           style={styles.video}
           resizeMode="cover"
         />
-      </TouchableOpacity>
-      <TouchableOpacity
-        style={styles.removeVideoButton}
-        onPress={() => handleRemoveVideo(item.videoName)}
-      >
-        <AntDesign name="close" size={24} color="white" />
       </TouchableOpacity>
     </>
   );
@@ -206,13 +190,5 @@ const styles = StyleSheet.create({
 
   labelStyle: {
     bottom: 0,
-  },
-
-  removeVideoButton: {
-    position: "absolute",
-    top: 5,
-    right: 15,
-    justifyContent: "center",
-    alignItems: "center",
   },
 });

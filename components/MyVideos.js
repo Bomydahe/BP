@@ -42,26 +42,46 @@ export default function MyVideos(props) {
     { id: 0, name: "All Videos", videos: [] },
   ]);
 
+  async function uploadThumbnail(localThumbnailUrl) {
+    const response = await fetch(localThumbnailUrl);
+    const blob = await response.blob();
+    const thumbnailName =
+      "thumbnails/" +
+      localThumbnailUrl.substring(localThumbnailUrl.lastIndexOf("/") + 1);
+    const storageRef = firebase.storage().ref().child(thumbnailName);
+
+    await storageRef.put(blob);
+
+    const downloadUrl = await storageRef.getDownloadURL();
+    return downloadUrl;
+  }
+
   /* metadata to save/upload along with videos */
   async function saveVideoMetadata(
     videoName,
     videoUrl,
     thumbnailUrl,
-    booleanVar
+    booleanVar,
+    userId
   ) {
     const videoRef = firebase.firestore().collection("videos").doc(videoName);
     await videoRef.set({
       id: generateUniqueId(),
       url: videoUrl,
+      videoName: videoName,
       thumbnail: thumbnailUrl,
       booleanVar: booleanVar,
+      userId: userId,
     });
   }
 
   /* upload video to firebase */
   async function uploadVideo(videoUrl) {
     console.log("Uploading video with URL:", videoUrl);
-    const thumbnailUrl = await generateThumbnail(videoUrl);
+    const localThumbnailUrl = await generateThumbnail(videoUrl);
+
+    // Upload the thumbnail to Firebase Storage and get its download URL
+    const thumbnailUrl = await uploadThumbnail(localThumbnailUrl);
 
     const response = await fetch(videoUrl);
     const blob = await response.blob();
@@ -72,8 +92,11 @@ export default function MyVideos(props) {
       await storageRef;
       console.log("Video uploaded successfully");
 
+      // Get the user ID from Firebase Authentication
+      const userId = firebase.auth().currentUser.uid;
+
       // Save video metadata to Firestore with an initial boolean value (e.g., true)
-      await saveVideoMetadata(videoName, videoUrl, thumbnailUrl, false);
+      await saveVideoMetadata(videoName, videoUrl, thumbnailUrl, false, userId);
     } catch (error) {
       console.error("Error uploading video:", error);
     }
@@ -163,7 +186,7 @@ export default function MyVideos(props) {
         return category;
       })
     );
-    setModalVisible(false);
+    if (modalVisible) setModalVisible(false);
   }
 
   async function generateThumbnail(videoUri) {
@@ -191,7 +214,12 @@ export default function MyVideos(props) {
 
       if (!chosenVideo.canceled) {
         const selectedVideo = chosenVideo.assets[0];
-        showModal(selectedVideo.uri);
+        if (categories.length === 1) {
+          const categoryId = categories[0].id;
+          handleAddVideo(selectedVideo.uri, categoryId);
+        } else {
+          showModal(selectedVideo.uri);
+        }
       }
     } else {
       console.log("Permission not granted");

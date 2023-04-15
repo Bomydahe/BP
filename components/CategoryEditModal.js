@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   View,
   Text,
@@ -20,6 +20,15 @@ const CategoryEditModal = ({
   const [categoryName, setCategoryName] = useState(
     categories.find((category) => category.id === editingCategoryId)?.name || ""
   );
+
+  useEffect(() => {
+    if (modalVisible) {
+      setCategoryName(
+        categories.find((category) => category.id === editingCategoryId)
+          ?.name || ""
+      );
+    }
+  }, [modalVisible]);
 
   const handleSubmit = () => {
     if (action === "add") {

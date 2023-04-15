@@ -270,7 +270,7 @@ const styles = StyleSheet.create({
   messageIconContainer: {
     position: "absolute",
     bottom: 40,
-    marginLeft: -10,
+    //marginLeft: -10,
     justifyContent: "center",
     alignItems: "center",
   },

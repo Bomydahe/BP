@@ -17,7 +17,14 @@ import { firebase } from "../firebaseConfig";
 const { width, height } = Dimensions.get("window");
 
 export default function VideoEditScreen({ route, navigation }) {
-  const { videoUri, videoName, position, snapshotUri } = route.params;
+  const {
+    videoUri,
+    videoName,
+    position,
+    snapshotUri,
+    snapshotWidth,
+    snapshotHeight,
+  } = route.params;
   const [paths, setPaths] = useState([]);
   const [currentPath, setCurrentPath] = useState("");
   const [color, setColor] = useState("red");
@@ -133,7 +140,7 @@ export default function VideoEditScreen({ route, navigation }) {
     <View style={styles.container}>
       <Image
         source={{ uri: snapshotUri }}
-        style={styles.snapshot}
+        style={{ width: snapshotWidth, height: snapshotHeight }}
         resizeMode="cover"
       />
       <View {...panResponder.panHandlers} style={styles.overlay}>
@@ -182,10 +189,6 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: "center",
     backgroundColor: "black",
-  },
-  snapshot: {
-    width: "100%",
-    height: "100%",
   },
   overlay: {
     position: "absolute",

@@ -1,17 +1,14 @@
-editing video by trainer (high prio)
-
-deletion of video data collection n firstore when video is removed
-
-cross-platform thumbnails (upload actuall thumbnail instead of url)
-
-backend login authentication (low prio)
+adding trainer to user
+NOTIFICATIONS (high prio)
+modal pri sprave by mal obsahovat aj moment fotky
 
 desing overall (low prio) 
   > video player - desing (low prio) 1/2
+  > pozor na rozmeri obrazku pri edite (ked budem upravovat video player trenera tak screenheigh minus spodne button)
   > selecting video(potentially videos) to share (low pio)
   > adding slow motion in video player (low prio)
 
-sharing compared videos?? (HARD)
-category edit - instant update (lowest prio) (difficulty - impossible)
+zmena kategorie video niekde
 
 cleanup of components&code | commenting
+

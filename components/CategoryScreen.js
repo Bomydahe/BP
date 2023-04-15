@@ -32,11 +32,15 @@ const CategoryScreen = ({ route, navigation }) => {
             >
               <Text style={styles.menuOptionText}>Edit Category</Text>
             </MenuOption>
-            <MenuOption
-              onSelect={() => EventRegister.emit("deleteCategory", categoryId)}
-            >
-              <Text style={styles.menuOptionText}>Delete Category</Text>
-            </MenuOption>
+            {categoryName !== "All Videos" && (
+              <MenuOption
+                onSelect={() =>
+                  EventRegister.emit("deleteCategory", categoryId)
+                }
+              >
+                <Text style={styles.menuOptionText}>Delete Category</Text>
+              </MenuOption>
+            )}
           </MenuOptions>
         </Menu>
       ),
