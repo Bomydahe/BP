@@ -1,4 +1,3 @@
-adding trainer to user
 NOTIFICATIONS (high prio)
 modal pri sprave by mal obsahovat aj moment fotky
 
@@ -8,7 +7,7 @@ desing overall (low prio)
   > selecting video(potentially videos) to share (low pio)
   > adding slow motion in video player (low prio)
 
-zmena kategorie video niekde
+zmena kategorie videa niekde
 
 cleanup of components&code | commenting
 

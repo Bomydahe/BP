@@ -15,6 +15,7 @@ import * as ScreenOrientation from "expo-screen-orientation";
 import { useNavigation, useFocusEffect } from "@react-navigation/native";
 import { MaterialIcons, FontAwesome } from "@expo/vector-icons";
 import { firebase } from "../firebaseConfig";
+import { showMessage } from "react-native-flash-message";
 import { captureRef } from "react-native-view-shot";
 
 export default function TrainerVideoPlayer({ route }) {
@@ -28,6 +29,20 @@ export default function TrainerVideoPlayer({ route }) {
   const [isPlaying, setIsPlaying] = useState(false);
   const screenWidth = Dimensions.get("window").width;
   const screenHeight = Dimensions.get("window").height;
+
+  async function uploadThumbnail(localThumbnailUrl) {
+    const response = await fetch(localThumbnailUrl);
+    const blob = await response.blob();
+    const thumbnailName =
+      "thumbnails/" +
+      localThumbnailUrl.substring(localThumbnailUrl.lastIndexOf("/") + 1);
+    const storageRef = firebase.storage().ref().child(thumbnailName);
+
+    await storageRef.put(blob);
+
+    const downloadUrl = await storageRef.getDownloadURL();
+    return downloadUrl;
+  }
 
   const handleAddComment = useCallback(async () => {
     const currentStatus = await videoPlayerRef.current.getStatusAsync();
@@ -69,8 +84,11 @@ export default function TrainerVideoPlayer({ route }) {
     });
   }, [navigation]);
 
-  async function addComment(videoName, commentText, time) {
+  async function addComment(videoName, commentText, time, snapshot) {
     try {
+      // Upload the snapshot to Firebase Storage and get its download URL
+      const snapshotUrl = await uploadThumbnail(snapshot);
+
       const firestore = firebase.firestore();
       const videoRef = firestore.collection("videos").doc(videoName);
 
@@ -78,8 +96,12 @@ export default function TrainerVideoPlayer({ route }) {
       const videoDoc = await videoRef.get();
       const comments = videoDoc.data().comments || [];
 
-      // Create a new comment object with the provided text and time
-      const newComment = { text: commentText, time: time };
+      // Create a new comment object with the provided text, time, and snapshot URL
+      const newComment = {
+        text: commentText,
+        time: time,
+        snapshot: snapshotUrl,
+      };
 
       // Add the new comment to the existing comments array
       comments.push(newComment);
@@ -88,6 +110,12 @@ export default function TrainerVideoPlayer({ route }) {
       await videoRef.update({ comments: comments });
 
       console.log(`Comment added to video ${videoName}:`, newComment);
+      showMessage({
+        message: "Message uploaded successfully",
+        type: "success",
+        duration: 3000,
+        position: "top",
+      });
     } catch (error) {
       console.error("Error adding comment:", error);
     }
@@ -152,25 +180,41 @@ export default function TrainerVideoPlayer({ route }) {
               onChangeText={(text) => setInputValue(text)}
               value={inputValue}
               placeholder="Write your comment"
+              multiline
+              numberOfLines={8}
             />
-            <TouchableOpacity
-              style={styles.button}
-              onPress={async () => {
-                const currentTime =
-                  await videoPlayerRef.current.getStatusAsync();
-                const position = currentTime.positionMillis;
-                addComment(videoName, inputValue, position);
-                setModalVisible(false);
-              }}
-            >
-              <Text style={styles.buttonText}>Submit</Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={styles.button}
-              onPress={() => setModalVisible(false)}
-            >
-              <Text style={styles.buttonText}>Cancel</Text>
-            </TouchableOpacity>
+            <View style={styles.buttonContainer}>
+              <TouchableOpacity
+                style={[styles.button, { flex: 1, marginRight: 10 }]}
+                onPress={async () => {
+                  const currentTime =
+                    await videoPlayerRef.current.getStatusAsync();
+                  const position = currentTime.positionMillis;
+
+                  // Capture the snapshot
+                  const snapshot = await captureRef(videoPlayerRef, {
+                    format: "jpg",
+                    quality: 1.0,
+                  });
+
+                  // Add the comment with the snapshot included
+                  addComment(videoName, inputValue, position, snapshot);
+                  setModalVisible(false);
+                  setInputValue(""); // Reset the input value
+                }}
+              >
+                <Text style={styles.buttonText}>Submit</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[styles.button, { flex: 1, marginLeft: 10 }]}
+                onPress={() => {
+                  setModalVisible(false);
+                  setInputValue(""); // Reset the input value
+                }}
+              >
+                <Text style={styles.buttonText}>Cancel</Text>
+              </TouchableOpacity>
+            </View>
           </View>
         </View>
       </Modal>
@@ -225,15 +269,19 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.25,
     shadowRadius: 4,
     elevation: 5,
+    maxWidth: "90%",
   },
   input: {
-    height: 40,
+    height: "auto",
+    minHeight: 40,
     width: "100%",
+    maxWidth: "90%",
     borderColor: "gray",
     borderWidth: 1,
     marginTop: 8,
     paddingLeft: 8,
     paddingRight: 8,
+    textAlignVertical: "top",
   },
   button: {
     backgroundColor: "#2196F3",
@@ -249,6 +297,7 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
   },
   modalText: {
+    fontSize: 18,
     marginBottom: 15,
     textAlign: "center",
   },
@@ -259,5 +308,12 @@ const styles = StyleSheet.create({
   },
   headerRightButton: {
     marginLeft: 15,
+  },
+
+  buttonContainer: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    marginTop: 15,
+    width: "80%",
   },
 });

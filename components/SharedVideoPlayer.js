@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useRef } from "react";
-import { View, StyleSheet, TouchableOpacity, Text } from "react-native";
+import { View, StyleSheet, TouchableOpacity, Text, Image } from "react-native";
 import { Video } from "expo-av";
 import * as ScreenOrientation from "expo-screen-orientation";
 import Slider from "@react-native-community/slider";
@@ -20,6 +20,7 @@ export default function SharedVideoPlayer({ route }) {
   const [currentOverlay, setCurrentOverlay] = useState(null);
   const [videoWidth, setVideoWidth] = useState(0);
   const [videoHeight, setVideoHeight] = useState(0);
+  const [videoSnapshotUri, setVideoSnapshotUri] = useState(null); // Add this to your state variables
 
   const displayMessage = async (message) => {
     if (videoRef.current) {
@@ -29,6 +30,8 @@ export default function SharedVideoPlayer({ route }) {
         await videoRef.current.pauseAsync();
       }
     }
+    setVideoSnapshotUri(message.snapshot);
+
     setSelectedMessage(message);
     setShowMessageModal(true);
   };
@@ -189,15 +192,24 @@ export default function SharedVideoPlayer({ route }) {
           );
         })}
       {showMessageModal && (
-        <View style={styles.messageModal}>
-          <Text style={styles.messageText}>{selectedMessage?.text}</Text>
-          <TouchableOpacity
-            style={styles.closeButton}
-            onPress={hideMessageModal}
-          >
-            <MaterialIcons name="close" size={30} color="white" />
-          </TouchableOpacity>
-        </View>
+        <>
+          <View style={styles.modalContainer}>
+            <View style={styles.messageModal}>
+              <Text style={styles.messageText}>{selectedMessage?.text}</Text>
+              <TouchableOpacity
+                style={styles.closeButton}
+                onPress={hideMessageModal}
+              >
+                <MaterialIcons name="close" size={30} color="white" />
+              </TouchableOpacity>
+            </View>
+            <Image
+              style={[styles.videoSnapshot]}
+              source={{ uri: videoSnapshotUri }}
+              resizeMode="contain"
+            />
+          </View>
+        </>
       )}
       {currentOverlay && (
         <Svg
@@ -270,16 +282,17 @@ const styles = StyleSheet.create({
   messageIconContainer: {
     position: "absolute",
     bottom: 40,
-    //marginLeft: -10,
+    marginLeft: 5,
     justifyContent: "center",
     alignItems: "center",
   },
   messageModal: {
-    ...StyleSheet.absoluteFillObject,
     justifyContent: "center",
     alignItems: "center",
-    backgroundColor: "rgba(0, 0, 0, 0.8)",
+    width: "100%",
+    alignSelf: "center",
   },
+
   messageText: {
     color: "black",
     fontSize: 18,
@@ -291,8 +304,8 @@ const styles = StyleSheet.create({
   },
   closeButton: {
     position: "absolute",
-    top: 20,
-    right: 20,
+    top: 5,
+    right: 10,
   },
 
   overlaySvg: {
@@ -302,5 +315,19 @@ const styles = StyleSheet.create({
     zIndex: 2,
     width: "100%",
     height: "100%",
+  },
+  videoSnapshot: {
+    flex: 1,
+    width: "100%",
+  },
+
+  modalContainer: {
+    position: "absolute",
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    justifyContent: "flex-end",
+    backgroundColor: "rgba(0, 0, 0, 0.8)",
   },
 });

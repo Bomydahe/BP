@@ -342,7 +342,7 @@ export default function MyVideos(props) {
         <View style={styles.centeredView}>
           <View style={styles.modalView}>
             <Text style={styles.modalText}>
-              Do you want to upload this video?
+              Do you want to share this video?
             </Text>
             <View style={styles.modalButtons}>
               <TouchableOpacity

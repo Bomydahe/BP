@@ -18,6 +18,7 @@ import SharedCategory from "./components/SharedCategory";
 import TrainerVideoPlayer from "./components/TrainerVideoPlayer";
 import SharedVideoPlayer from "./components/SharedVideoPlayer";
 import VideoEditScreen from "./components/VideoEditScreen";
+import FlashMessage from "react-native-flash-message";
 
 const Stack = createNativeStackNavigator();
 const Tab = createMaterialTopTabNavigator();
@@ -125,6 +126,7 @@ export default function App() {
         </Stack.Navigator>
         <StatusBar />
       </NavigationContainer>
+      <FlashMessage position="top" />
     </MenuProvider>
   );
 }
