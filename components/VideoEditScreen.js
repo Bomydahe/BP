@@ -13,6 +13,7 @@ import { BackHandler } from "react-native";
 import * as FileSystem from "expo-file-system";
 import { FontAwesome, Ionicons } from "@expo/vector-icons";
 import { firebase } from "../firebaseConfig";
+import { showMessage } from "react-native-flash-message";
 
 const { width, height } = Dimensions.get("window");
 
@@ -125,7 +126,12 @@ export default function VideoEditScreen({ route, navigation }) {
 
           // Add the path data to Firestore
           await addOverlay(videoName, pathsData, position);
-
+          showMessage({
+            message: "Message uploaded successfully",
+            type: "success",
+            duration: 3000,
+            position: "top",
+          });
           // Navigate back to the previous component
           navigation.goBack();
         } catch (error) {

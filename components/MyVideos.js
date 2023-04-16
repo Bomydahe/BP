@@ -255,6 +255,7 @@ export default function MyVideos(props) {
         onLongPress={() => showModalForUploadPrompt(item.id)}
         onPress={() =>
           navigate("VideoPlayer", {
+            categories: categories,
             videoUri: item.url,
             videoId: item.id,
           })

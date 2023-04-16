@@ -5,7 +5,7 @@ import * as ScreenOrientation from "expo-screen-orientation";
 import { useNavigation } from "@react-navigation/native";
 
 export default function VideoPlayerScreen({ route }) {
-  const { videoUri } = route.params;
+  const { videoUri, categories } = route.params;
   const navigation = useNavigation();
   const videoRef = useRef(null);
 
@@ -21,7 +21,10 @@ export default function VideoPlayerScreen({ route }) {
         <Button
           onPress={async () => {
             await stopVideo();
-            navigation.navigate("Compare", { firstVideo: videoUri });
+            navigation.navigate("Compare", {
+              firstVideo: videoUri,
+              categories: categories,
+            });
           }}
           title="Compare"
         />

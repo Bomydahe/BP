@@ -52,6 +52,7 @@ export default function Compare(props) {
     const firstVideo = props.route.params?.firstVideo;
     if (firstVideo) {
       setVideo1(firstVideo);
+      //setModalStep("initial");
     }
   };
 

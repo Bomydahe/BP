@@ -1,5 +1,4 @@
 NOTIFICATIONS (high prio)
-modal pri sprave by mal obsahovat aj moment fotky
 
 desing overall (low prio) 
   > video player - desing (low prio) 1/2
@@ -7,7 +6,13 @@ desing overall (low prio)
   > selecting video(potentially videos) to share (low pio)
   > adding slow motion in video player (low prio)
 
+leave modal when you tap out of it
 zmena kategorie videa niekde
 
 cleanup of components&code | commenting
+
+Bugs:
+
+  overlay position off as fuck
+  edit videa u trenera fucked
 

@@ -16,23 +16,23 @@ const CategoryScreen = ({ route, navigation }) => {
   useLayoutEffect(() => {
     navigation.setOptions({
       headerTitle: categoryName,
-      headerRight: () => (
-        <Menu>
-          <MenuTrigger>
-            <Entypo
-              name="dots-three-vertical"
-              size={24}
-              color="black"
-              style={{ marginRight: 10 }}
-            />
-          </MenuTrigger>
-          <MenuOptions>
-            <MenuOption
-              onSelect={() => EventRegister.emit("editCategory", categoryId)}
-            >
-              <Text style={styles.menuOptionText}>Edit Category</Text>
-            </MenuOption>
-            {categoryName !== "All Videos" && (
+      headerRight: () =>
+        categoryName !== "All Videos" ? (
+          <Menu>
+            <MenuTrigger>
+              <Entypo
+                name="dots-three-vertical"
+                size={24}
+                color="black"
+                style={{ marginRight: 10 }}
+              />
+            </MenuTrigger>
+            <MenuOptions>
+              <MenuOption
+                onSelect={() => EventRegister.emit("editCategory", categoryId)}
+              >
+                <Text style={styles.menuOptionText}>Edit Category</Text>
+              </MenuOption>
               <MenuOption
                 onSelect={() =>
                   EventRegister.emit("deleteCategory", categoryId)
@@ -40,10 +40,9 @@ const CategoryScreen = ({ route, navigation }) => {
               >
                 <Text style={styles.menuOptionText}>Delete Category</Text>
               </MenuOption>
-            )}
-          </MenuOptions>
-        </Menu>
-      ),
+            </MenuOptions>
+          </Menu>
+        ) : null,
     });
   }, [navigation, categoryName]);
 
