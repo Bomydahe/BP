@@ -147,7 +147,7 @@ export default function VideoEditScreen({ route, navigation }) {
       <Image
         source={{ uri: snapshotUri }}
         style={{ width: snapshotWidth, height: snapshotHeight }}
-        resizeMode="cover"
+        resizeMode="contain"
       />
       <View {...panResponder.panHandlers} style={styles.overlay}>
         <Svg viewBox={`0 0 ${width} ${height}`} style={styles.overlay}>

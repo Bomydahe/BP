@@ -9,14 +9,14 @@ import Compare from "./components/Compare";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import { MenuProvider } from "react-native-popup-menu";
 import CategoryScreen from "./components/CategoryScreen";
-import VideoPlayerScreen from "./components/VideoPlayerScreen";
+import VideoPlayerScreen from "./components/videoPlayers/VideoPlayerScreen";
 import ComparedVideoPlayer from "./components/ComparedVideoPlayer";
 import LoginScreen from "./components/LoginScreen";
 import TrainerHomeScreen from "./components/TrainerHomeScreen";
 import ClientsSharedScreen from "./components/ClientsSharedScreen";
 import SharedCategory from "./components/SharedCategory";
-import TrainerVideoPlayer from "./components/TrainerVideoPlayer";
-import SharedVideoPlayer from "./components/SharedVideoPlayer";
+import TrainerVideoPlayer from "./components/videoPlayers/TrainerVideoPlayer";
+import SharedVideoPlayer from "./components/videoPlayers/SharedVideoPlayer";
 import VideoEditScreen from "./components/VideoEditScreen";
 import FlashMessage from "react-native-flash-message";
 

@@ -1,8 +1,6 @@
 NOTIFICATIONS (high prio)
 
 desing overall (low prio) 
-  > video player - desing (low prio) 1/2
-  > pozor na rozmeri obrazku pri edite (ked budem upravovat video player trenera tak screenheigh minus spodne button)
   > selecting video(potentially videos) to share (low pio)
   > adding slow motion in video player (low prio)
 
@@ -13,6 +11,7 @@ cleanup of components&code | commenting
 
 Bugs:
 
-  overlay position off as fuck
-  edit videa u trenera fucked
+  trainerhomescreen data loading
+  overlay/message position off as fuck (adjust how overlay data is saved&received)
+  edit videa u trenera fucked (stretch)
 

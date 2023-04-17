@@ -3,15 +3,16 @@ import { View, StyleSheet, TouchableOpacity, Button } from "react-native";
 import { Video } from "expo-av";
 import * as ScreenOrientation from "expo-screen-orientation";
 import { useNavigation } from "@react-navigation/native";
+import CustomVideoPlayer from "./CustomVideoPlayer";
 
 export default function VideoPlayerScreen({ route }) {
   const { videoUri, categories } = route.params;
   const navigation = useNavigation();
-  const videoRef = useRef(null);
+  const videoPlayerRef = useRef(null);
 
   const stopVideo = async () => {
-    if (videoRef.current) {
-      await videoRef.current.stopAsync();
+    if (videoPlayerRef.current) {
+      await videoPlayerRef.current.stopAsync();
     }
   };
 
@@ -56,17 +57,14 @@ export default function VideoPlayerScreen({ route }) {
 
   return (
     <View style={styles.container}>
-      <Video
-        ref={videoRef}
-        source={{ uri: videoUri }}
-        rate={1.0}
-        volume={1.0}
-        isMuted={false}
-        resizeMode="contain"
-        shouldPlay
-        isLooping
-        useNativeControls
-        style={styles.video}
+      <CustomVideoPlayer
+        videoUri={videoUri}
+        onPlaybackStatusUpdate={(status) => {
+          if (status.didJustFinish && !status.isLooping) {
+            videoPlayerRef.current.pauseAsync();
+          }
+        }}
+        videoPlayerRef={videoPlayerRef}
       />
     </View>
   );

@@ -8,28 +8,18 @@ import {
   Dimensions,
   Text,
 } from "react-native";
-import AsyncStorage from "@react-native-async-storage/async-storage";
-import { AntDesign } from "@expo/vector-icons";
 import { useNavigation, useFocusEffect } from "@react-navigation/native";
 import { Ionicons } from "@expo/vector-icons";
 import { Entypo } from "@expo/vector-icons";
 import { firebase } from "../firebaseConfig";
-import * as VideoThumbnails from "expo-video-thumbnails";
 
 const { width } = Dimensions.get("window");
 const numColumns = 2;
 const clientWidth = (width - 20 * (numColumns + 1)) / numColumns;
 
 const randomImages = [
-  "https://images.unsplash.com/photo-1494790108377-be9c29b29330",
-  "https://images.unsplash.com/photo-1544725176-7c40e5a71c5e",
-  "https://images.unsplash.com/photo-1592194996308-7b43878e84a6",
-  "https://images.unsplash.com/photo-1531251445707-1f000e1e87d0",
   "https://images.unsplash.com/photo-1561948955-570b270e7c36",
-  "https://images.unsplash.com/photo-1506794778202-cad84cf45f1d",
 ];
-
-const randomNames = ["Alice", "Bob", "Charlie"];
 
 export default function TeacherHome() {
   const [clients, setClients] = useState([]);
@@ -38,13 +28,12 @@ export default function TeacherHome() {
   const [currentUserID, setCurrentUserID] = useState("");
 
   useEffect(() => {
-    async function getCurrentUser() {
-      const user = firebase.auth().currentUser;
-      if (user) {
-        setCurrentUserID(user.uid);
-      }
-    }
-    getCurrentUser();
+    (async () => {
+      const currentUser = firebase.auth().currentUser;
+      setCurrentUserID(currentUser.uid);
+      const loadedClients = await loadClients();
+      setClients(loadedClients);
+    })();
   }, []);
 
   React.useEffect(() => {
@@ -55,6 +44,7 @@ export default function TeacherHome() {
           videoList.map(async (video) => {
             return {
               id: video.id,
+              userId: video.userId,
               url: video.url,
               thumbnail: video.thumbnail,
               booleanVar: video.booleanVar,
@@ -115,6 +105,7 @@ export default function TeacherHome() {
 
             return {
               url,
+              userId: data.userId,
               id: data.id,
               booleanVar: data.booleanVar,
               thumbnail: data.thumbnail,
@@ -132,30 +123,6 @@ export default function TeacherHome() {
     } catch (error) {
       console.error("Error getting video data:", error);
       return []; // Return an empty array in case of an error
-    }
-  }
-
-  /* retrieve bool value of each video */
-  async function getVideoBooleanValue(videoName) {
-    try {
-      const firestore = firebase.firestore();
-      const videoRef = firestore.collection("videos").doc(videoName);
-      const doc = await videoRef.get();
-
-      if (!doc.exists) {
-        console.log("No document with the given video name");
-        return { booleanVar: false }; // Return an object with a default value for booleanVar
-      }
-
-      const data = doc.data();
-      return {
-        booleanVar: data.booleanVar,
-        id: data.id,
-        thumbnail: data.thumbnail,
-      };
-    } catch (error) {
-      console.error("Error fetching video metadata:", error);
-      return null;
     }
   }
 
@@ -217,63 +184,44 @@ export default function TeacherHome() {
 
   const loadClients = async () => {
     try {
-      const jsonString = await AsyncStorage.getItem("@clients");
-      if (jsonString !== null) {
-        return JSON.parse(jsonString);
-      } else {
-        return []; // Return an empty array if there's no data
+      const userIDs = await getUserIDsByTrainer(currentUserID);
+      const clientsData = [];
+
+      for (const userID of userIDs) {
+        const userDoc = await firebase
+          .firestore()
+          .collection("users")
+          .doc(userID)
+          .get();
+
+        const userData = userDoc.data();
+        const randomImage =
+          randomImages[Math.floor(Math.random() * randomImages.length)];
+
+        clientsData.push({
+          id: userID,
+          imageUri: randomImage,
+          email: userData.email,
+        });
       }
+
+      return clientsData;
     } catch (error) {
       console.error("Error loading clients:", error);
       return [];
     }
   };
 
-  const saveClients = async (clients) => {
-    try {
-      const jsonString = JSON.stringify(clients);
-      await AsyncStorage.setItem("@clients", jsonString);
-    } catch (error) {
-      console.error("Error saving clients:", error);
-    }
-  };
-
-  const handleAddClient = () => {
-    const randomImage =
-      randomImages[Math.floor(Math.random() * randomImages.length)];
-    const randomName =
-      randomNames[Math.floor(Math.random() * randomNames.length)];
-
-    const newClient = {
-      id: Date.now(),
-      imageUri: randomImage,
-      name: randomName,
-      videos: [
-        {
-          uri: "https://example.com/video1.mp4", // Replace with actual video URI
-          played: false,
-        },
-      ],
-    };
-
-    const updatedClients = [...clients, newClient];
-    setClients(updatedClients);
-    saveClients(updatedClients);
-  };
-
-  function handleRemoveClient(index) {
-    const updatedClients = clients.filter((_, i) => i !== index);
-    setClients(updatedClients);
-    saveClients(updatedClients);
-  }
-
   const renderItem = ({ item, index }) => (
     <View style={styles.clientContainer}>
       <TouchableOpacity
         onPress={() => {
+          const filteredVideos = videos.filter(
+            (video) => video.userId === item.id
+          );
           navigation.navigate("ClientsSharedScreen", {
-            clientName: item.name,
-            videos: videos,
+            clientEmail: item.email,
+            videos: filteredVideos,
           });
         }}
       >
@@ -282,13 +230,7 @@ export default function TeacherHome() {
           source={{ uri: item.imageUri }}
           resizeMode="cover"
         />
-        <Text style={styles.clientName}>{item.name}</Text>
-      </TouchableOpacity>
-      <TouchableOpacity
-        style={styles.removeButton}
-        onPress={() => handleRemoveClient(index)}
-      >
-        <AntDesign name="close" size={24} color="white" />
+        <Text style={styles.clientName}>{item.email}</Text>
       </TouchableOpacity>
     </View>
   );
@@ -304,9 +246,6 @@ export default function TeacherHome() {
         style={styles.flatlist}
         columnWrapperStyle={{ justifyContent: "space-between" }}
       />
-      <TouchableOpacity style={styles.addButton} onPress={handleAddClient}>
-        <Text style={styles.addButtonText}>+ Add Client</Text>
-      </TouchableOpacity>
     </View>
   );
 }
@@ -332,29 +271,6 @@ const styles = StyleSheet.create({
   flatlist: {
     width: "100%",
     paddingHorizontal: 10,
-  },
-
-  addButton: {
-    backgroundColor: "blue",
-    paddingHorizontal: 20,
-    paddingVertical: 10,
-    borderRadius: 5,
-    position: "absolute",
-    bottom: 20,
-    alignSelf: "center",
-  },
-  addButtonText: {
-    color: "white",
-    fontSize: 18,
-  },
-  removeButton: {
-    position: "absolute",
-    top: 5,
-    right: 5,
-    justifyContent: "center",
-    alignItems: "center",
-    width: 24,
-    height: 24,
   },
 
   clientName: {

@@ -8,7 +8,6 @@ import Svg, { Path } from "react-native-svg";
 
 export default function SharedVideoPlayer({ route }) {
   const { videoUri, comments, overlays } = route.params;
-  const [playbackStatus, setPlaybackStatus] = useState(Video.RESUME_PLAYBACK);
   const [showControls, setShowControls] = useState(false);
   const [sliderValue, setSliderValue] = useState(0);
   const [isPlaying, setIsPlaying] = useState(true);
@@ -145,7 +144,7 @@ export default function SharedVideoPlayer({ route }) {
         {showControls && (
           <MaterialIcons
             name={isPlaying ? "play-circle-outline" : "pause-circle-outline"}
-            size={70}
+            size={60}
             color="white"
           />
         )}
@@ -248,17 +247,6 @@ const styles = StyleSheet.create({
     ...StyleSheet.absoluteFillObject,
     justifyContent: "center",
     alignItems: "center",
-  },
-  sliderContainer: {
-    position: "absolute",
-    left: 0,
-    right: 0,
-    bottom: 20,
-    justifyContent: "center",
-  },
-  slider: {
-    width: "90%",
-    alignSelf: "center",
   },
 
   sliderContainer: {
