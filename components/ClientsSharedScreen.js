@@ -9,6 +9,7 @@ import {
   TouchableOpacity,
   SafeAreaView,
   Image,
+  ActivityIndicator,
 } from "react-native";
 import { useNavigation, useFocusEffect } from "@react-navigation/native";
 import { AntDesign } from "@expo/vector-icons";
@@ -18,9 +19,7 @@ export default function ClientsSharedScreen(props) {
   const [status, setStatus] = useState({});
   const { navigate } = useNavigation();
   const [allVideos, setAllVideos] = useState(props.route.params.videos);
-  const newVideos = allVideos.filter((video) => video.booleanVar === false);
-  const handledVideos = allVideos.filter((video) => video.booleanVar === true);
-  console.log("+++++++++", allVideos);
+  const [isLoading, setIsLoading] = useState(true);
   const [categories, setCategories] = useState([]);
 
   const fetchVideos = () => {
@@ -33,9 +32,12 @@ export default function ClientsSharedScreen(props) {
       { id: 0, name: "New videos", videos: newVideos },
       { id: 1, name: "Handled videos", videos: handledVideos },
     ]);
+
+    setIsLoading(false);
   };
 
   useEffect(() => {
+    setIsLoading(true);
     fetchVideos();
   }, [allVideos]);
 
@@ -100,35 +102,41 @@ export default function ClientsSharedScreen(props) {
   return (
     <SafeAreaView>
       <ScrollView>
-        <View style={styles.myVideosTabContainer}>
-          {categories.map((category) => (
-            <View key={category.id} style={styles.sectionContainer}>
-              <View style={styles.labels}>
-                <Text style={styles.text}>{category.name}</Text>
-                <Pressable
-                  onPress={() =>
-                    navigate("SharedCategory", {
-                      categoryName: category.name,
-                      videos: category.videos,
-                      categoryId: category.id,
-                    })
-                  }
-                  android_ripple={{ color: "#210644" }}
-                >
-                  <Text style={styles.pressableLabel}>SHOW ALL</Text>
-                </Pressable>
+        {isLoading ? (
+          <View style={styles.loadingContainer}>
+            <ActivityIndicator size="large" color="#0000ff" />
+          </View>
+        ) : (
+          <View style={styles.myVideosTabContainer}>
+            {categories.map((category) => (
+              <View key={category.id} style={styles.sectionContainer}>
+                <View style={styles.labels}>
+                  <Text style={styles.text}>{category.name}</Text>
+                  <Pressable
+                    onPress={() =>
+                      navigate("SharedCategory", {
+                        categoryName: category.name,
+                        videos: category.videos,
+                        categoryId: category.id,
+                      })
+                    }
+                    android_ripple={{ color: "#210644" }}
+                  >
+                    <Text style={styles.pressableLabel}>SHOW ALL</Text>
+                  </Pressable>
+                </View>
+                <FlatList
+                  data={category.videos}
+                  renderItem={renderItem}
+                  keyExtractor={(item) => item.id}
+                  horizontal={true}
+                  style={styles.flatlist}
+                  showsHorizontalScrollIndicator={false}
+                />
               </View>
-              <FlatList
-                data={category.videos}
-                renderItem={renderItem}
-                keyExtractor={(item) => item.id}
-                horizontal={true}
-                style={styles.flatlist}
-                showsHorizontalScrollIndicator={false}
-              />
-            </View>
-          ))}
-        </View>
+            ))}
+          </View>
+        )}
       </ScrollView>
     </SafeAreaView>
   );
@@ -190,5 +198,11 @@ const styles = StyleSheet.create({
 
   labelStyle: {
     bottom: 0,
+  },
+
+  loadingContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
   },
 });
