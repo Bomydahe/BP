@@ -14,6 +14,7 @@ export default function CustomVideoPlayer({
   videoUri,
   onPlaybackStatusUpdate,
   videoPlayerRef,
+  onScaledVideoSizeChange,
 }) {
   const [showControls, setShowControls] = useState(false);
   const [sliderValue, setSliderValue] = useState(0);
@@ -21,6 +22,29 @@ export default function CustomVideoPlayer({
   const [lastPlaybackStatus, setLastPlaybackStatus] = useState(null);
   const [sliderThumbColor, setSliderThumbColor] = useState("transparent");
   const [showSliderThumb, setShowSliderThumb] = useState(false);
+  const [scaledVideoSize, setScaledVideoSize] = useState({
+    width: 0,
+    height: 0,
+  });
+
+  const handleVideoReadyForDisplay = (event) => {
+    const { naturalSize } = event;
+    const { width, height } = Dimensions.get("window");
+    let ratio = Math.min(
+      width / naturalSize.width,
+      height / naturalSize.height
+    );
+
+    const scaledWidth = naturalSize.width * ratio;
+    const scaledHeight = naturalSize.height * ratio;
+
+    setScaledVideoSize({ width: scaledWidth, height: scaledHeight });
+    console.log(`Scaled video width: ${scaledWidth}, height: ${scaledHeight}`);
+
+    if (typeof onScaledVideoSizeChange === "function") {
+      onScaledVideoSizeChange({ width: scaledWidth, height: scaledHeight });
+    }
+  };
 
   const formatTime = (millis) => {
     const totalSeconds = Math.floor(millis / 1000);
@@ -89,7 +113,9 @@ export default function CustomVideoPlayer({
         isLooping
         style={styles.video}
         onPlaybackStatusUpdate={(status) => handlePlaybackStatus(status)}
+        onReadyForDisplay={(event) => handleVideoReadyForDisplay(event)}
       />
+
       <TouchableOpacity
         style={styles.videoOverlay}
         onPress={togglePlayback}
@@ -126,7 +152,6 @@ export default function CustomVideoPlayer({
     </View>
   );
 }
-
 const styles = StyleSheet.create({
   container: {
     flex: 1,

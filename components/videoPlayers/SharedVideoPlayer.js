@@ -1,10 +1,19 @@
 import React, { useEffect, useState, useRef } from "react";
-import { View, StyleSheet, TouchableOpacity, Text, Image } from "react-native";
+import {
+  View,
+  StyleSheet,
+  TouchableOpacity,
+  Text,
+  Image,
+  Dimensions,
+} from "react-native";
 import { Video } from "expo-av";
 import * as ScreenOrientation from "expo-screen-orientation";
 import Slider from "@react-native-community/slider";
 import { MaterialIcons } from "@expo/vector-icons";
 import Svg, { Path } from "react-native-svg";
+
+const { width, height } = Dimensions.get("window");
 
 export default function SharedVideoPlayer({ route }) {
   const { videoUri, comments, overlays } = route.params;
@@ -118,6 +127,17 @@ export default function SharedVideoPlayer({ route }) {
     }
   };
 
+  const RedDot = ({ position }) => (
+    <View
+      style={[
+        styles.redDot,
+        {
+          left: `${position}%`,
+        },
+      ]}
+    />
+  );
+
   return (
     <View style={styles.container}>
       <Video
@@ -172,6 +192,12 @@ export default function SharedVideoPlayer({ route }) {
         <Text style={styles.timeText}>
           {lastPlaybackStatus && formatTime(lastPlaybackStatus.durationMillis)}
         </Text>
+        {lastPlaybackStatus &&
+          overlays.map((overlay, index) => {
+            const dotPosition =
+              (overlay.time / lastPlaybackStatus.durationMillis) * 100;
+            return <RedDot key={index} position={dotPosition} />;
+          })}
       </View>
       {lastPlaybackStatus &&
         comments.map((comment, index) => {
@@ -215,7 +241,7 @@ export default function SharedVideoPlayer({ route }) {
           style={styles.overlaySvg}
           width="100%"
           height="100%"
-          viewBox={`0 0 ${videoWidth} ${videoHeight}`}
+          viewBox={`0 0 ${width} ${height}`}
           pointerEvents="none"
         >
           {currentOverlay.overlayData.map((pathData, index) => (
@@ -223,7 +249,7 @@ export default function SharedVideoPlayer({ route }) {
               key={index}
               d={pathData.d}
               stroke={pathData.stroke}
-              strokeWidth={pathData.strokeWidth}
+              strokeWidth={pathData.strokeWidth * 4}
               fill="none"
             />
           ))}
@@ -298,8 +324,9 @@ const styles = StyleSheet.create({
 
   overlaySvg: {
     position: "absolute",
-    top: 0,
-    left: 0,
+    top: -15,
+    left: -5,
+
     zIndex: 2,
     width: "100%",
     height: "100%",
@@ -317,5 +344,15 @@ const styles = StyleSheet.create({
     bottom: 0,
     justifyContent: "flex-end",
     backgroundColor: "rgba(0, 0, 0, 0.8)",
+  },
+
+  redDot: {
+    position: "absolute",
+    bottom: 6,
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: "red",
+    zIndex: 1,
   },
 });

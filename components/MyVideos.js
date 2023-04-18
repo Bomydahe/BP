@@ -104,7 +104,7 @@ export default function MyVideos(props) {
 
   function showModalForUploadPrompt(videoId) {
     setUploadPromptVisible(true);
-    setCurrentVideoId(videoId); // Add this line
+    setCurrentVideoId(videoId);
   }
 
   /* adding category */

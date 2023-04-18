@@ -1,12 +1,5 @@
 import React, { useState, useEffect, useCallback, useRef } from "react";
-import {
-  View,
-  StyleSheet,
-  TouchableOpacity,
-  Alert,
-  Image,
-  Dimensions,
-} from "react-native";
+import { View, StyleSheet, TouchableOpacity, Alert, Image } from "react-native";
 import * as ScreenOrientation from "expo-screen-orientation";
 import { useNavigation, useFocusEffect } from "@react-navigation/native";
 import { MaterialIcons, FontAwesome } from "@expo/vector-icons";
@@ -21,9 +14,13 @@ export default function TrainerVideoPlayer({ route }) {
   const navigation = useNavigation();
   const [modalVisible, setModalVisible] = useState(false);
   const [inputValue, setInputValue] = useState("");
-  const screenWidth = Dimensions.get("window").width;
-  const screenHeight = Dimensions.get("window").height;
   const videoPlayerRef = useRef(null);
+  const parentScaledVideoSize = useRef({ width: 0, height: 0 });
+
+  const updateParentScaledVideoSize = (scaledSize) => {
+    console.log("Updated parentScaledVideoSize:", scaledSize);
+    parentScaledVideoSize.current = scaledSize;
+  };
 
   async function uploadThumbnail(localThumbnailUrl) {
     const response = await fetch(localThumbnailUrl);
@@ -67,17 +64,19 @@ export default function TrainerVideoPlayer({ route }) {
       const currentTime = await videoPlayerRef.current.getStatusAsync();
       const position = currentTime.positionMillis;
 
-      console.log("+++++++++++", screenWidth, screenHeight);
+      const { width: scaledWidth, height: scaledHeight } =
+        parentScaledVideoSize.current;
+      console.log("scaled values", scaledHeight, scaledWidth);
 
       navigation.navigate("VideoEditScreen", {
         videoName,
         position,
         snapshotUri: snapshot,
-        snapshotWidth: screenWidth,
-        snapshotHeight: screenHeight,
+        scaledWidth,
+        scaledHeight,
       });
     });
-  }, [navigation]);
+  }, [navigation, parentScaledVideoSize]);
 
   async function addComment(commentText) {
     try {
@@ -190,6 +189,7 @@ export default function TrainerVideoPlayer({ route }) {
           }
         }}
         videoPlayerRef={videoPlayerRef}
+        onScaledVideoSizeChange={updateParentScaledVideoSize}
       />
     </View>
   );

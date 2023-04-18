@@ -42,7 +42,7 @@ export default function ClientsSharedScreen(props) {
   useFocusEffect(
     React.useCallback(() => {
       props.navigation.setOptions({
-        title: "Shared with " + props.route.params.clientName,
+        title: "Shared with " + props.route.params.clientEmail,
       });
     }, [props.navigation, props.route.params.clientName])
   );

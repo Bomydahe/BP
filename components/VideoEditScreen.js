@@ -23,8 +23,8 @@ export default function VideoEditScreen({ route, navigation }) {
     videoName,
     position,
     snapshotUri,
-    snapshotWidth,
-    snapshotHeight,
+    scaledWidth,
+    scaledHeight,
   } = route.params;
   const [paths, setPaths] = useState([]);
   const [currentPath, setCurrentPath] = useState("");
@@ -149,8 +149,8 @@ export default function VideoEditScreen({ route, navigation }) {
     <View style={styles.container}>
       <Image
         source={{ uri: snapshotUri }}
-        style={{ width: snapshotWidth, height: snapshotHeight }}
-        resizeMode="contain"
+        style={{ width: "100%", height: scaledHeight }}
+        resizeMode="stretch"
       />
       <View {...panResponder.panHandlers} style={styles.overlay}>
         <Svg viewBox={`0 0 ${width} ${height}`} style={styles.overlay}>

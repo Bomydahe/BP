@@ -1,287 +1,268 @@
-Issue still persists for some reason, maybe it will help u if i show u another component, where data render after they load: import React, { useState } from "react";
+import React, { useState, useEffect, useLayoutEffect } from "react";
 import {
   View,
-  FlatList,
-  SafeAreaView,
-  StyleSheet,
-  Image,
-  Dimensions,
   TouchableOpacity,
   Text,
-  Modal,
-  TextInput,
-  Alert,
+  StyleSheet,
+  Image,
+  PanResponder,
+  Dimensions,
 } from "react-native";
-import { useNavigation, useFocusEffect } from "@react-navigation/native";
+import Svg, { Path } from "react-native-svg";
+import * as ImageManipulator from "expo-image-manipulator";
+import * as FileSystem from "expo-file-system";
+import { FontAwesome, Ionicons } from "@expo/vector-icons";
 import { firebase } from "../firebaseConfig";
-import { AntDesign } from "@expo/vector-icons";
+import { showMessage } from "react-native-flash-message";
 
-const { width } = Dimensions.get("window");
-const numColumns = 2;
-const videoWidth = (width - 20) / numColumns;
+const { width, height } = Dimensions.get("window");
 
-export default function SharedVideos({ route }) {
-  const [status, setStatus] = React.useState({});
-  const [videos, setVideos] = React.useState([]);
-  const navigation = useNavigation();
-  const userId = firebase.auth().currentUser.uid;
-  const [modalVisible, setModalVisible] = useState(false);
-  const [trainers, setTrainers] = useState([]);
-  const [filteredTrainers, setFilteredTrainers] = useState([]);
-  const [searchText, setSearchText] = useState("");
+export default function VideoEditScreen({ route, navigation }) {
+  const { videoName, position, snapshotUri } = route.params;
+  const [paths, setPaths] = useState([]);
+  const [currentPath, setCurrentPath] = useState("");
+  const [color, setColor] = useState("red");
+  const [lineWidth, setLineWidth] = useState(5);
+  const [resizedSnapshotUri, setResizedSnapshotUri] = useState(null);
 
-  useFocusEffect(
-    React.useCallback(() => {
-      async function fetchVideos() {
-        const videoList = await getAllVideos();
-        const videoData = await Promise.all(
-          videoList.map(async (video) => {
-            return {
-              id: video.id,
-              url: video.url,
-              thumbnail: video.thumbnail,
-              videoName: video.videoName,
-              comments: video.comments,
-              overlays: video.overlays,
-            };
-          })
-        );
-        setVideos(videoData);
-      }
+  const getAspectRatio = (originalWidth, originalHeight) => {
+    const originalAspectRatio = originalWidth / originalHeight;
+    const deviceAspectRatio = width / height;
 
-      fetchVideos();
-      // Cleanup function
-      return () => {};
-    }, [])
-  );
-
-  const toggleModal = () => {
-    setModalVisible(!modalVisible);
-  };
-
-  const fetchTrainers = async () => {
-    try {
-      const trainersRef = firebase
-        .firestore()
-        .collection("users")
-        .where("role", "==", "trainer");
-
-      const snapshot = await trainersRef.get();
-
-      const trainerList = snapshot.docs.map((doc) => ({
-        uid: doc.id,
-        email: doc.data().email,
-      }));
-
-      setTrainers(trainerList);
-      setFilteredTrainers(trainerList);
-    } catch (error) {
-      console.error("Error fetching trainers:", error);
-    }
-  };
-
-  const filterTrainers = () => {
-    if (searchText === "") {
-      setFilteredTrainers(trainers);
+    if (originalAspectRatio > deviceAspectRatio) {
+      return { newWidth: width, newHeight: width / originalAspectRatio };
     } else {
-      const filtered = trainers.filter((trainer) =>
-        trainer.email.toLowerCase().includes(searchText.toLowerCase())
-      );
-      setFilteredTrainers(filtered);
+      return { newWidth: height * originalAspectRatio, newHeight: height };
     }
   };
 
-  async function handleTrainerSelect(trainerEmail, trainerId) {
-    try {
-      await firebase.firestore().collection("users").doc(userId).update({
-        trainerId: trainerId,
-      });
-      toggleModal();
-      Alert.alert(
-        "Success",
-        `Trainer ${trainerEmail} was selected successfully.`
-      );
-    } catch (error) {
-      console.error("Error selecting trainer:", error);
-      Alert.alert("Error", "An error occurred while selecting the trainer.");
-    }
-  }
+  const getImageSize = (uri) => {
+    Image.getSize(
+      uri,
+      (originalWidth, originalHeight) => {
+        console.log("Snapshot width/height", originalWidth, originalHeight);
+        const { newWidth, newHeight } = getAspectRatio(
+          originalWidth,
+          originalHeight
+        );
+        console.log("New width/height", newWidth, newHeight);
 
-  async function deleteVideo(item) {
-    try {
-      // Delete video from Firebase Storage
-      const storageRef = firebase.storage().ref();
-      const videoRef = storageRef.child(item.videoName);
-      await videoRef.delete();
-
-      // Delete video metadata from Firestore
-      const firestore = firebase.firestore();
-      const videoMetadataRef = firestore
-        .collection("videos")
-        .doc(item.videoName);
-      await videoMetadataRef.delete();
-
-      // Update local state to remove the deleted video
-      setVideos((prevVideos) =>
-        prevVideos.filter((video) => video.id !== item.id)
-      );
-    } catch (error) {
-      console.error("Error deleting video:", error);
-    }
-  }
-
-  /* retrieving all videos from firebase */
-  async function getAllVideos() {
-    try {
-      const userId = firebase.auth().currentUser.uid;
-      const storageRef = firebase.storage().ref();
-      const listResult = await storageRef.listAll();
-
-      const firestore = firebase.firestore();
-
-      const videoData = await Promise.all(
-        listResult.items.map(async (item) => {
-          const url = await item.getDownloadURL();
-          const videoName = item.name;
-
-          // Get video metadata from Firestore
-          const videoRef = firestore.collection("videos").doc(videoName);
-          const doc = await videoRef.get();
-
-          if (!doc.exists) {
-            console.log("No document with the given video name");
-            return null;
+        const resizeSnapshot = async () => {
+          try {
+            const resizedImage = await ImageManipulator.manipulateAsync(
+              uri,
+              [{ resize: { width: newWidth, height: newHeight } }],
+              { compress: 1, format: ImageManipulator.SaveFormat.JPEG }
+            );
+            setResizedSnapshotUri(resizedImage.uri);
+            console.log("Resized snapshot:", resizedImage.uri);
+          } catch (error) {
+            console.error("Error resizing snapshot:", error);
           }
+        };
 
-          const data = doc.data();
-
-          // Filter videos based on user ID
-          if (data.userId !== userId) {
-            return null;
-          }
-
-          return {
-            url,
-            id: data.id,
-            thumbnail: data.thumbnail,
-            videoName,
-            comments: data.comments || [],
-            overlays: data.overlays || [],
-          };
-        })
-      );
-
-      console.log("Video Data:", JSON.stringify(videoData, null, 2));
-
-      return videoData.filter((video) => video !== null);
-    } catch (error) {
-      console.error("Error getting video data:", error);
-      return []; // Return an empty array in case of an error
-    }
-  }
-
-  const renderItem = ({ item, index }) => {
-    return (
-      <View
-        style={[
-          styles.videoWrapper,
-          index % 2 === 1 && styles.videoWrapperRight,
-        ]}
-      >
-        <TouchableOpacity
-          onPress={() =>
-            navigation.navigate("SharedVideoPlayer", {
-              videoUri: item.url,
-              comments: item.comments,
-              overlays: item.overlays,
-            })
-          }
-        >
-          <View style={styles.imageContainer}>
-            <Image
-              source={{ uri: item.thumbnail }}
-              style={styles.video}
-              resizeMode="cover"
-            />
-          </View>
-        </TouchableOpacity>
-        <TouchableOpacity
-          style={styles.removeVideoButton}
-          onPress={() => deleteVideo(item)}
-        >
-          <AntDesign name="close" size={24} color="white" />
-        </TouchableOpacity>
-      </View>
+        resizeSnapshot();
+      },
+      (error) => {
+        console.error("Error getting image size:", error);
+      }
     );
   };
 
-  return (
-    <SafeAreaView style={styles.container}>
-      <FlatList
-        data={videos}
-        renderItem={renderItem}
-        keyExtractor={(item) => item.id.toString()}
-        numColumns={numColumns}
-        horizontal={false}
-        style={styles.flatlist}
-        columnWrapperStyle={{
-          justifyContent: "flex-start",
-          alignItems: "flex-start",
-        }}
-      />
-      <TouchableOpacity
-        style={styles.selectTrainerButton}
-        onPress={() => {
-          toggleModal();
-          fetchTrainers();
-        }}
-      >
-        <Text style={styles.selectTrainerButtonText}>Select Trainer</Text>
-      </TouchableOpacity>
+  useEffect(() => {
+    console.log("width/height", width, height);
+    getImageSize(snapshotUri);
+  }, [snapshotUri]);
 
-      <Modal
-        animationType="slide"
-        transparent={true}
-        visible={modalVisible}
-        onRequestClose={toggleModal}
-      >
-        <View style={styles.modalView}>
-          <TextInput
-            style={styles.searchInput}
-            onChangeText={setSearchText}
-            value={searchText}
-            placeholder="Search trainers"
-            autoCapitalize="none"
-          />
-          <TouchableOpacity
-            style={styles.searchButton}
-            onPress={filterTrainers}
-          >
-            <Text style={styles.searchButtonText}>Search</Text>
-          </TouchableOpacity>
-          <FlatList
-            data={filteredTrainers}
-            renderItem={({ item }) => (
-              <TouchableOpacity
-                onPress={() => handleTrainerSelect(item.email, item.uid)}
-                style={styles.trainerListItem}
-              >
-                <Text style={styles.trainerListItemText}>{item.email}</Text>
-              </TouchableOpacity>
-            )}
-            keyExtractor={(item) => item.uid}
-            style={styles.trainerList}
-          />
-          <TouchableOpacity
-            style={styles.closeModalButton}
-            onPress={toggleModal}
-          >
-            <Text style={styles.closeModalButtonText}>Close</Text>
-          </TouchableOpacity>
-        </View>
-      </Modal>
-    </SafeAreaView>
+  const handleGoBack = async () => {
+    if (snapshotUri) {
+      try {
+        await FileSystem.deleteAsync(snapshotUri, { idempotent: true });
+        console.log("Temporary snapshot file deleted:", snapshotUri);
+      } catch (error) {
+        console.error("Error deleting temporary snapshot file:", error);
+      }
+    }
+    navigation.goBack();
+  };
+
+  const panResponder = PanResponder.create({
+    onStartShouldSetPanResponder: () => true,
+    onMoveShouldSetPanResponder: () => true,
+    onPanResponderGrant: () => {
+      setCurrentPath("");
+    },
+    onPanResponderMove: (event, gestureState) => {
+      const { moveX, moveY } = gestureState;
+      const newPoint = `${moveX},${moveY}`;
+      setCurrentPath((prevPath) =>
+        prevPath ? `${prevPath} L${newPoint}` : `M${newPoint}`
+      );
+      console.log("Current path:", currentPath);
+    },
+
+    onPanResponderRelease: () => {
+      setPaths((prevPaths) => {
+        const newPaths = [
+          ...prevPaths,
+          { d: currentPath, stroke: color, strokeWidth: lineWidth },
+        ];
+        console.log("Paths:", newPaths);
+        return newPaths;
+      });
+      setCurrentPath("");
+    },
+  });
+
+  useLayoutEffect(() => {
+    navigation.setOptions({
+      headerLeft: () => (
+        <TouchableOpacity
+          onPress={handleGoBack}
+          style={{ marginLeft: 0, paddingRight: 25 }}
+        >
+          <Ionicons name="arrow-back" size={24} color="white" />
+        </TouchableOpacity>
+      ),
+      headerRight: () => (
+        <TouchableOpacity onPress={handleSave} style={{ marginRight: 10 }}>
+          <Ionicons name="save" size={24} color="white" />
+        </TouchableOpacity>
+      ),
+    });
+  }, [navigation]);
+
+  async function addOverlay(videoName, overlayData, time) {
+    try {
+      const firestore = firebase.firestore();
+      const videoRef = firestore.collection("videos").doc(videoName);
+
+      // Get the current overlays array from the video document
+      const videoDoc = await videoRef.get();
+      const overlays = videoDoc.data().overlays || [];
+
+      // Create a new overlay object with the provided overlay data and time
+      const newOverlay = { overlayData: overlayData, time: time };
+
+      // Add the new overlay to the existing overlays array
+      overlays.push(newOverlay);
+
+      // Update the overlays field in the video document with the new overlays array
+      await videoRef.update({ overlays: overlays });
+
+      console.log(`Overlay added to video ${videoName}:`, newOverlay);
+    } catch (error) {
+      console.error("Error adding overlay:", error);
+    }
+  }
+
+  const handleSave = async () => {
+    setPaths((currentPaths) => {
+      console.log("paths:", currentPaths);
+      (async () => {
+        try {
+          // Create a new array with all necessary data
+          const pathsData = currentPaths.map((path) => ({
+            d: path.d,
+            stroke: path.stroke,
+            strokeWidth: (path.strokeWidth / width) * 100, // store strokeWidth as a percentage
+          }));
+
+          console.log("pathsdata:", pathsData);
+
+          // Add the path data to Firestore
+          await addOverlay(videoName, pathsData, position);
+          showMessage({
+            message: "Message uploaded successfully",
+            type: "success",
+            duration: 3000,
+            position: "top",
+          });
+          // Navigate back to the previous component
+          navigation.goBack();
+        } catch (error) {
+          console.error("Error saving overlay:", error);
+        }
+      })();
+      return currentPaths;
+    });
+  };
+
+  return (
+    <View style={styles.container}>
+      <Image
+        source={{ uri: resizedSnapshotUri }}
+        style={{ width: "100%", height: "100%" }}
+        resizeMode="contain"
+      />
+
+      <View {...panResponder.panHandlers} style={styles.overlay}>
+        <Svg viewBox={`0 0 ${width} ${height}`} style={styles.overlay}>
+          {Array.isArray(paths) &&
+            paths.map((path, index) => (
+              <Path key={index} {...path} fill="none" />
+            ))}
+          {currentPath !== paths[paths.length - 1]?.d && (
+            <Path
+              d={currentPath}
+              stroke={color}
+              strokeWidth={lineWidth}
+              fill="none"
+            />
+          )}
+        </Svg>
+      </View>
+      <View style={styles.toolbar}>
+        <TouchableOpacity onPress={() => setColor("red")}>
+          <FontAwesome name="circle" size={24} color="red" />
+        </TouchableOpacity>
+        <TouchableOpacity onPress={() => setColor("blue")}>
+          <FontAwesome name="circle" size={24} color="blue" />
+        </TouchableOpacity>
+        <TouchableOpacity onPress={() => setColor("green")}>
+          <FontAwesome name="circle" size={24} color="green" />
+        </TouchableOpacity>
+        <TouchableOpacity
+          onPress={() => setLineWidth((prev) => (prev < 10 ? prev + 1 : 1))}
+        >
+          <Text style={styles.toolbarText}>Width: {lineWidth}</Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          onPress={() => setPaths((prevPaths) => prevPaths.slice(0, -1))}
+        >
+          <FontAwesome name="undo" size={24} color="white" />
+        </TouchableOpacity>
+      </View>
+    </View>
   );
 }
 
-try to fix my other component according to thiso ne.. this one is working properly. No need to load data instantly, just display them when they are loaded as it is in this other component.
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    justifyContent: "center",
+    backgroundColor: "black",
+  },
+  overlay: {
+    position: "absolute",
+    top: 0,
+    left: 0,
+    width: "100%",
+    height: "100%",
+  },
+  toolbar: {
+    position: "absolute",
+    bottom: 10,
+    left: 0,
+    right: 0,
+    flexDirection: "row",
+    justifyContent: "space-around",
+    alignItems: "center",
+    backgroundColor: "rgba(0, 0, 0, 0.5)",
+    paddingVertical: 10,
+  },
+  toolbarText: {
+    color: "white",
+    fontSize: 18,
+  },
+});
