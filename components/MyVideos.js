@@ -24,6 +24,14 @@ import { EventRegister } from "react-native-event-listeners";
 import CategoryEditModal from "./CategoryEditModal";
 import * as VideoThumbnails from "expo-video-thumbnails";
 import { firebase } from "../firebaseConfig";
+import {
+  uploadThumbnail,
+  saveVideoMetadata,
+  uploadVideo,
+  generateThumbnail,
+  generateUniqueId,
+} from "./firebaseFunctions";
+import UploadPromptModal from "./UploadPromptModal";
 
 export default function MyVideos(props) {
   const [status, setStatus] = React.useState({});
@@ -41,66 +49,6 @@ export default function MyVideos(props) {
   const [categories, setCategories] = useStoredData("@categories", [
     { id: 0, name: "All Videos", videos: [] },
   ]);
-
-  async function uploadThumbnail(localThumbnailUrl) {
-    const response = await fetch(localThumbnailUrl);
-    const blob = await response.blob();
-    const thumbnailName =
-      "thumbnails/" +
-      localThumbnailUrl.substring(localThumbnailUrl.lastIndexOf("/") + 1);
-    const storageRef = firebase.storage().ref().child(thumbnailName);
-
-    await storageRef.put(blob);
-
-    const downloadUrl = await storageRef.getDownloadURL();
-    return downloadUrl;
-  }
-
-  /* metadata to save/upload along with videos */
-  async function saveVideoMetadata(
-    videoName,
-    videoUrl,
-    thumbnailUrl,
-    booleanVar,
-    userId
-  ) {
-    const videoRef = firebase.firestore().collection("videos").doc(videoName);
-    await videoRef.set({
-      id: generateUniqueId(),
-      url: videoUrl,
-      videoName: videoName,
-      thumbnail: thumbnailUrl,
-      booleanVar: booleanVar,
-      userId: userId,
-    });
-  }
-
-  /* upload video to firebase */
-  async function uploadVideo(videoUrl) {
-    console.log("Uploading video with URL:", videoUrl);
-    const localThumbnailUrl = await generateThumbnail(videoUrl);
-
-    // Upload the thumbnail to Firebase Storage and get its download URL
-    const thumbnailUrl = await uploadThumbnail(localThumbnailUrl);
-
-    const response = await fetch(videoUrl);
-    const blob = await response.blob();
-    const videoName = videoUrl.substring(videoUrl.lastIndexOf("/") + 1);
-    const storageRef = firebase.storage().ref().child(videoName).put(blob);
-
-    try {
-      await storageRef;
-      console.log("Video uploaded successfully");
-
-      // Get the user ID from Firebase Authentication
-      const userId = firebase.auth().currentUser.uid;
-
-      // Save video metadata to Firestore with an initial boolean value (e.g., true)
-      await saveVideoMetadata(videoName, videoUrl, thumbnailUrl, false, userId);
-    } catch (error) {
-      console.error("Error uploading video:", error);
-    }
-  }
 
   function showModalForUploadPrompt(videoId) {
     setUploadPromptVisible(true);
@@ -189,18 +137,6 @@ export default function MyVideos(props) {
     if (modalVisible) setModalVisible(false);
   }
 
-  async function generateThumbnail(videoUri) {
-    try {
-      const { uri } = await VideoThumbnails.getThumbnailAsync(videoUri, {
-        time: 0,
-      });
-      return uri;
-    } catch (e) {
-      console.warn(e);
-      return null;
-    }
-  }
-
   /* picking video from native phone memory */
   async function pickVideo() {
     const { status } = await MediaLibrary.requestPermissionsAsync();
@@ -229,12 +165,6 @@ export default function MyVideos(props) {
   function showModal(videoUri) {
     setModalVisible(true);
     setSelectedVideoUri(videoUri);
-  }
-
-  function generateUniqueId() {
-    return (
-      Date.now().toString(36) + Math.random().toString(36).substr(2, 5)
-    ).toUpperCase();
   }
 
   /* removing video */
@@ -332,42 +262,17 @@ export default function MyVideos(props) {
         action={action}
         addCategory={addCategory}
       />
-      <Modal
-        animationType="slide"
-        transparent={true}
+      <UploadPromptModal
         visible={uploadPromptVisible}
-        onRequestClose={() => {
+        onClose={() => setUploadPromptVisible(false)}
+        onYes={() => {
+          const videoObj = categories
+            .flatMap((category) => category.videos)
+            .find((video) => video.id === currentVideoId);
+          uploadVideo(videoObj.url);
           setUploadPromptVisible(false);
         }}
-      >
-        <View style={styles.centeredView}>
-          <View style={styles.modalView}>
-            <Text style={styles.modalText}>
-              Do you want to share this video?
-            </Text>
-            <View style={styles.modalButtons}>
-              <TouchableOpacity
-                style={{ ...styles.button, backgroundColor: "green" }}
-                onPress={() => {
-                  const videoObj = categories
-                    .flatMap((category) => category.videos)
-                    .find((video) => video.id === currentVideoId);
-                  uploadVideo(videoObj.url);
-                  setUploadPromptVisible(false);
-                }}
-              >
-                <Text style={styles.textStyle}>Yes</Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={{ ...styles.button, backgroundColor: "red" }}
-                onPress={() => setUploadPromptVisible(false)}
-              >
-                <Text style={styles.textStyle}>No</Text>
-              </TouchableOpacity>
-            </View>
-          </View>
-        </View>
-      </Modal>
+      />
 
       <FAB
         open={open}
@@ -445,46 +350,5 @@ const styles = StyleSheet.create({
     right: 15,
     justifyContent: "center",
     alignItems: "center",
-  },
-
-  centeredView: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-    marginTop: 22,
-  },
-  modalView: {
-    margin: 20,
-    backgroundColor: "white",
-    borderRadius: 20,
-    padding: 35,
-    alignItems: "center",
-    shadowColor: "#000",
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.25,
-    shadowRadius: 4,
-    elevation: 5,
-  },
-  modalText: {
-    marginBottom: 15,
-    textAlign: "center",
-  },
-  modalButtons: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-  },
-  button: {
-    borderRadius: 20,
-    padding: 10,
-    elevation: 2,
-    marginHorizontal: 10,
-  },
-  textStyle: {
-    color: "white",
-    fontWeight: "bold",
-    textAlign: "center",
   },
 });

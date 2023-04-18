@@ -5,20 +5,12 @@ desing overall (low prio)
   > adding slow motion in video player (low prio)
   > cudlik
 
-leave modal when you tap out of it
 zmena kategorie videa niekde
 
-
-
 Bugs:
-
   message position off as fuck (adjust how overlay data is saved&received)
-  pridat share button do normalneho video playera
-  modal na pridanie trenera nejaky black tranparent background
 
 cleanup of components&code | commenting
-
 expo eas app distribution
-
 
 (BP hierarchy tree)

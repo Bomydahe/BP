@@ -15,6 +15,7 @@ import {
 import { useNavigation, useFocusEffect } from "@react-navigation/native";
 import { firebase } from "../firebaseConfig";
 import { AntDesign } from "@expo/vector-icons";
+import { TouchableWithoutFeedback } from "react-native-gesture-handler";
 
 const { width } = Dimensions.get("window");
 const numColumns = 2;
@@ -240,45 +241,53 @@ export default function SharedVideos({ route }) {
       </TouchableOpacity>
 
       <Modal
-        animationType="slide"
+        animationType="fade"
         transparent={true}
         visible={modalVisible}
         onRequestClose={toggleModal}
       >
-        <View style={styles.modalView}>
-          <TextInput
-            style={styles.searchInput}
-            onChangeText={setSearchText}
-            value={searchText}
-            placeholder="Search trainers"
-            autoCapitalize="none"
-          />
-          <TouchableOpacity
-            style={styles.searchButton}
-            onPress={filterTrainers}
-          >
-            <Text style={styles.searchButtonText}>Search</Text>
-          </TouchableOpacity>
-          <FlatList
-            data={filteredTrainers}
-            renderItem={({ item }) => (
+        <TouchableOpacity
+          style={styles.modalBackground}
+          onPress={toggleModal}
+          activeOpacity={1}
+        >
+          <TouchableWithoutFeedback>
+            <View style={styles.modalView}>
+              <TextInput
+                style={styles.searchInput}
+                onChangeText={setSearchText}
+                value={searchText}
+                placeholder="Search trainers"
+                autoCapitalize="none"
+              />
               <TouchableOpacity
-                onPress={() => handleTrainerSelect(item.email, item.uid)}
-                style={styles.trainerListItem}
+                style={styles.searchButton}
+                onPress={filterTrainers}
               >
-                <Text style={styles.trainerListItemText}>{item.email}</Text>
+                <Text style={styles.searchButtonText}>Search</Text>
               </TouchableOpacity>
-            )}
-            keyExtractor={(item) => item.uid}
-            style={styles.trainerList}
-          />
-          <TouchableOpacity
-            style={styles.closeModalButton}
-            onPress={toggleModal}
-          >
-            <Text style={styles.closeModalButtonText}>Close</Text>
-          </TouchableOpacity>
-        </View>
+              <FlatList
+                data={filteredTrainers}
+                renderItem={({ item }) => (
+                  <TouchableOpacity
+                    onPress={() => handleTrainerSelect(item.email, item.uid)}
+                    style={styles.trainerListItem}
+                  >
+                    <Text style={styles.trainerListItemText}>{item.email}</Text>
+                  </TouchableOpacity>
+                )}
+                keyExtractor={(item) => item.uid}
+                style={styles.trainerList}
+              />
+              <TouchableOpacity
+                style={styles.closeModalButton}
+                onPress={toggleModal}
+              >
+                <Text style={styles.closeModalButtonText}>Close</Text>
+              </TouchableOpacity>
+            </View>
+          </TouchableWithoutFeedback>
+        </TouchableOpacity>
       </Modal>
     </SafeAreaView>
   );
@@ -394,5 +403,11 @@ const styles = StyleSheet.create({
   closeModalButtonText: {
     color: "white",
     fontSize: 16,
+  },
+
+  modalBackground: {
+    flex: 1,
+    justifyContent: "center",
+    backgroundColor: "rgba(0, 0, 0, 0.6)",
   },
 });

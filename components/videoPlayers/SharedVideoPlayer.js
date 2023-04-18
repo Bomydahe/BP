@@ -352,7 +352,7 @@ const styles = StyleSheet.create({
     width: 8,
     height: 8,
     borderRadius: 4,
-    backgroundColor: "red",
+    backgroundColor: "rgba(175, 0, 0, 1)",
     zIndex: 1,
   },
 });

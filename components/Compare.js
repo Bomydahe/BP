@@ -6,7 +6,7 @@ import React, {
   useEffect,
 } from "react";
 import { Video } from "expo-av";
-import { AntDesign } from "@expo/vector-icons";
+import { AntDesign, MaterialCommunityIcons } from "@expo/vector-icons";
 import {
   View,
   Text,
@@ -17,10 +17,13 @@ import {
   Image,
   Modal,
   Button,
+  Platform,
 } from "react-native";
 import * as MediaLibrary from "expo-media-library";
 import * as ImagePicker from "expo-image-picker";
 import { useNavigation } from "@react-navigation/native";
+import Tooltip from "react-native-walkthrough-tooltip";
+import { FontAwesome, Ionicons } from "@expo/vector-icons";
 
 const { width, height } = Dimensions.get("window");
 
@@ -38,6 +41,8 @@ export default function Compare(props) {
   const video2Ref = useRef(null);
   const navigation = useNavigation();
 
+  const [tooltipVisible, setTooltipVisible] = useState(false);
+
   useEffect(() => {
     checkFirstVideo();
   }, []);
@@ -52,18 +57,63 @@ export default function Compare(props) {
     const firstVideo = props.route.params?.firstVideo;
     if (firstVideo) {
       setVideo1(firstVideo);
-      //setModalStep("initial");
     }
   };
 
   const updateNavigationOptions = useCallback(() => {
     navigation.setOptions({
-      headerRight: () =>
-        video1 && video2 ? (
-          <Button onPress={handleCompare} title="Compare" />
-        ) : null,
+      headerRight: () => (
+        <View
+          style={{
+            flexDirection: "row",
+            alignItems: "center",
+            marginRight: 10,
+          }}
+        >
+          {video1 && video2 ? (
+            <>
+              <Tooltip
+                isVisible={tooltipVisible}
+                content={
+                  <Text style={{ color: "black" }}>
+                    When you click 'Synchronize', a new video will be created in
+                    the compare tab. It will represent comparison of the two
+                    selected videos and will be launched from state, in which
+                    both videos were when Synchronize button was pressed.
+                  </Text>
+                }
+                placement="bottom"
+                onClose={() => setTooltipVisible(false)}
+                tooltipStyle={{
+                  backgroundColor: "rgba(0, 0, 0, 0.7)",
+                  borderRadius: 5,
+                }}
+              >
+                <FontAwesome
+                  name="question-circle"
+                  size={24}
+                  color="black"
+                  onPress={() => setTooltipVisible(true)}
+                  style={{ marginRight: 15 }}
+                />
+              </Tooltip>
+              <TouchableOpacity
+                onPress={handleCompare}
+                style={styles.compareButton}
+              >
+                <Text style={styles.compareButtonText}>SYNCHRONIZE</Text>
+              </TouchableOpacity>
+            </>
+          ) : null}
+        </View>
+      ),
     });
-  }, [navigation, handleCompare, video1, video2]);
+  }, [navigation, handleCompare, video1, video2, tooltipVisible]);
+
+  const handleModalClose = () => {
+    setModalVisible(false);
+    setModalStep("initial");
+  };
 
   const handleCompare = useCallback(async () => {
     const video1Status = await video1Ref.current.getStatusAsync();
@@ -255,19 +305,20 @@ export default function Compare(props) {
         animationType="fade"
         transparent={true}
         visible={modalVisible}
-        onRequestClose={() => {
-          setModalVisible(false);
-        }}
+        onRequestClose={handleModalClose}
       >
-        <View
+        <TouchableOpacity
           style={{
             flex: 1,
             justifyContent: "center",
             alignItems: "center",
             backgroundColor: "rgba(0, 0, 0, 0.5)",
           }}
+          onPress={handleModalClose}
+          activeOpacity={1}
         >
           <View
+            onStartShouldSetResponder={() => true}
             style={{
               backgroundColor: "white",
               //justifyContent: "center",
@@ -280,7 +331,7 @@ export default function Compare(props) {
           >
             {renderModalContent()}
           </View>
-        </View>
+        </TouchableOpacity>
       </Modal>
     </View>
   );
@@ -349,5 +400,17 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
     paddingHorizontal: 10,
+  },
+  compareButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: 5,
+    borderWidth: 1,
+    borderColor: "#000",
+  },
+  compareButtonText: {
+    color: "#000",
   },
 });

@@ -1,14 +1,24 @@
-import React, { useEffect, useCallback, useRef } from "react";
-import { View, StyleSheet, TouchableOpacity, Button, Text } from "react-native";
+import React, { useEffect, useCallback, useRef, useState } from "react";
+import { View, StyleSheet, TouchableOpacity, Text } from "react-native";
 import * as ScreenOrientation from "expo-screen-orientation";
 import { useNavigation } from "@react-navigation/native";
 import CustomVideoPlayer from "./CustomVideoPlayer";
 import { MaterialIcons } from "@expo/vector-icons";
+import UploadPromptModal from "../UploadPromptModal";
+import {
+  uploadThumbnail,
+  saveVideoMetadata,
+  uploadVideo,
+  generateThumbnail,
+  generateUniqueId,
+} from "../firebaseFunctions";
+import { firebase } from "../../firebaseConfig";
 
 export default function VideoPlayerScreen({ route }) {
   const { videoUri, categories } = route.params;
   const navigation = useNavigation();
   const videoPlayerRef = useRef(null);
+  const [modalVisible, setModalVisible] = useState(false);
 
   const stopVideo = async () => {
     if (videoPlayerRef.current) {
@@ -20,7 +30,10 @@ export default function VideoPlayerScreen({ route }) {
     navigation.setOptions({
       headerRight: () => (
         <View style={styles.headerButtonsContainer}>
-          <TouchableOpacity onPress={() => {}} style={styles.shareIcon}>
+          <TouchableOpacity
+            onPress={() => setModalVisible(true)}
+            style={styles.shareIcon}
+          >
             <MaterialIcons name="share" size={24} color="white" />
           </TouchableOpacity>
           <TouchableOpacity
@@ -64,6 +77,25 @@ export default function VideoPlayerScreen({ route }) {
 
   return (
     <View style={styles.container}>
+      <UploadPromptModal
+        visible={modalVisible}
+        onClose={() => setModalVisible(false)}
+        onYes={async () => {
+          setModalVisible(false);
+          const thumbnailUri = await generateThumbnail(videoUri);
+          const thumbnailUrl = await uploadThumbnail(thumbnailUri);
+          const videoUrl = await uploadVideo(videoUri);
+          const userId = firebase.auth().currentUser.uid;
+          const videoName = videoUri.substring(videoUri.lastIndexOf("/") + 1);
+          await saveVideoMetadata(
+            videoName,
+            videoUrl,
+            thumbnailUrl,
+            false,
+            userId
+          );
+        }}
+      />
       <CustomVideoPlayer
         videoUri={videoUri}
         onPlaybackStatusUpdate={(status) => {
@@ -108,6 +140,5 @@ const styles = StyleSheet.create({
   },
   compareButtonText: {
     color: "#fff",
-    marginLeft: 5,
   },
 });
