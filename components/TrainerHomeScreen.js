@@ -7,57 +7,159 @@ import {
   Image,
   Dimensions,
   Text,
+  ActivityIndicator,
+  TextInput,
 } from "react-native";
 import { useNavigation, useFocusEffect } from "@react-navigation/native";
 import { Ionicons } from "@expo/vector-icons";
 import { Entypo } from "@expo/vector-icons";
 import { firebase } from "../firebaseConfig";
+import {
+  Menu,
+  MenuOptions,
+  MenuOption,
+  MenuTrigger,
+} from "react-native-popup-menu";
 
 const { width } = Dimensions.get("window");
 const numColumns = 2;
 const clientWidth = (width - 20 * (numColumns + 1)) / numColumns;
 
-const randomImages = [
-  "https://images.unsplash.com/photo-1561948955-570b270e7c36",
-];
-
-export default function TeacherHome() {
+export default function TrainerHomeScreen() {
   const [clients, setClients] = useState([]);
+  const [filteredClients, setFilteredClients] = useState([]);
+  const [searchInput, setSearchInput] = useState("");
   const navigation = useNavigation();
   const [videos, setVideos] = React.useState([]);
   const [currentUserID, setCurrentUserID] = useState("");
+  const [dataLoaded, setDataLoaded] = useState(false);
+  const [showSearchInput, setShowSearchInput] = useState(false);
+
+  const fetchData = async () => {
+    setDataLoaded(false);
+    const currentUser = firebase.auth().currentUser;
+
+    if (!currentUser) return;
+    const currentUserID = currentUser.uid;
+    setCurrentUserID(currentUserID); // Set the current user ID here
+
+    const loadedClients = await loadClients(currentUserID);
+    const videoList = await getAllVideos(currentUserID);
+
+    setClients(loadedClients);
+    setVideos(videoList);
+    setDataLoaded(true);
+
+    console.log("Clients:", loadedClients);
+  };
 
   useEffect(() => {
-    (async () => {
-      const currentUser = firebase.auth().currentUser;
-      setCurrentUserID(currentUser.uid);
-      const loadedClients = await loadClients();
-      setClients(loadedClients);
-    })();
+    setFilteredClients(clients);
+  }, [clients]);
+
+  const filterClients = (searchText) => {
+    setSearchInput(searchText);
+
+    if (searchText) {
+      const filtered = clients.filter((client) =>
+        client.email.toLowerCase().includes(searchText.toLowerCase())
+      );
+      setFilteredClients(filtered);
+    } else {
+      setFilteredClients(clients);
+    }
+  };
+
+  useEffect(() => {
+    navigation.setOptions({
+      headerBackTitleVisible: false,
+      headerLeft: () => (
+        <View style={{ flexDirection: "row" }}>
+          <Menu>
+            <MenuTrigger>
+              <Entypo
+                name="menu"
+                size={24}
+                color="#000"
+                style={{ marginLeft: 15 }}
+              />
+            </MenuTrigger>
+            <MenuOptions>
+              <MenuOption onSelect={handleLogout}>
+                <Text style={styles.menuOptionText}>Log Out</Text>
+              </MenuOption>
+            </MenuOptions>
+          </Menu>
+        </View>
+      ),
+      headerTitle: () => (
+        <View
+          style={{
+            flexDirection: "row",
+            justifyContent: "flex-start",
+            marginLeft: width * 0.1,
+          }}
+        >
+          <Text style={{ fontWeight: "bold", fontSize: 20 }}>AppName</Text>
+        </View>
+      ),
+      headerRight: () => (
+        <View>
+          {showSearchInput ? (
+            <TextInput
+              style={{
+                borderWidth: 1,
+                borderColor: "#000",
+                borderRadius: 5,
+                paddingHorizontal: 5,
+                width: width * 0.4,
+                height: 30,
+              }}
+              onChangeText={filterClients}
+              value={searchInput}
+              placeholder="Search clients..."
+            />
+          ) : (
+            <TouchableOpacity
+              style={{ flexDirection: "row", alignItems: "center" }}
+              onPress={() => {
+                setShowSearchInput(!showSearchInput);
+              }}
+            >
+              <Ionicons
+                name="search"
+                size={24}
+                color="#000"
+                style={{ marginRight: 15 }}
+              />
+            </TouchableOpacity>
+          )}
+        </View>
+      ),
+    });
+  }, [navigation, filterClients]);
+
+  useEffect(() => {
+    console.log("fetchData useEffect triggered");
+
+    fetchData();
+
+    return () => {
+      setDataLoaded(false);
+    };
   }, []);
 
-  React.useEffect(() => {
-    async function fetchVideos() {
-      if (currentUserID) {
-        const videoList = await getAllVideos();
-        const videoData = await Promise.all(
-          videoList.map(async (video) => {
-            return {
-              id: video.id,
-              userId: video.userId,
-              url: video.url,
-              thumbnail: video.thumbnail,
-              booleanVar: video.booleanVar,
-              videoName: video.videoName,
-            };
-          })
-        );
-        setVideos(videoData);
-      }
+  const handleLogout = async () => {
+    try {
+      await firebase.auth().signOut();
+      navigation.reset({
+        index: 0,
+        routes: [{ name: "LoginScreen" }],
+      });
+    } catch (error) {
+      console.error("Error signing out:", error);
     }
-
-    fetchVideos();
-  }, [currentUserID]);
+  };
 
   async function getUserIDsByTrainer(trainerID) {
     try {
@@ -77,7 +179,7 @@ export default function TeacherHome() {
   }
 
   /* retrieving all videos from firebase */
-  async function getAllVideos() {
+  async function getAllVideos(currentUserID) {
     try {
       const userIDs = await getUserIDsByTrainer(currentUserID);
 
@@ -126,63 +228,7 @@ export default function TeacherHome() {
     }
   }
 
-  useFocusEffect(
-    React.useCallback(() => {
-      navigation.setOptions({
-        headerBackTitleVisible: false,
-        headerLeft: () => (
-          <View style={{ flexDirection: "row" }}>
-            <TouchableOpacity
-              onPress={() => {
-                // Implement your onPress functionality here
-              }}
-            >
-              <Entypo
-                name="menu"
-                size={24}
-                color="#000"
-                style={{ marginLeft: 15 }}
-              />
-            </TouchableOpacity>
-          </View>
-        ),
-        headerTitle: () => (
-          <View
-            style={{
-              flexDirection: "row",
-              justifyContent: "flex-start",
-              marginLeft: width * 0.1,
-            }}
-          >
-            <Text style={{ fontWeight: "bold", fontSize: 20 }}>AppName</Text>
-          </View>
-        ),
-        headerRight: () => (
-          <TouchableOpacity
-            onPress={() => {
-              // Implement your onPress functionality here
-            }}
-          >
-            <Ionicons
-              name="search"
-              size={24}
-              color="#000"
-              style={{ marginRight: 15 }}
-            />
-          </TouchableOpacity>
-        ),
-      });
-    }, [navigation])
-  );
-
-  useEffect(() => {
-    (async () => {
-      const loadedClients = await loadClients();
-      setClients(loadedClients);
-    })();
-  }, []);
-
-  const loadClients = async () => {
+  const loadClients = async (currentUserID) => {
     try {
       const userIDs = await getUserIDsByTrainer(currentUserID);
       const clientsData = [];
@@ -195,12 +241,11 @@ export default function TeacherHome() {
           .get();
 
         const userData = userDoc.data();
-        const randomImage =
-          randomImages[Math.floor(Math.random() * randomImages.length)];
+        const imageUri = require("../assets/images/user-no-image.png");
 
         clientsData.push({
           id: userID,
-          imageUri: randomImage,
+          imageUri: imageUri,
           email: userData.email,
         });
       }
@@ -227,7 +272,7 @@ export default function TeacherHome() {
       >
         <Image
           style={styles.clientImage}
-          source={{ uri: item.imageUri }}
+          source={item.imageUri}
           resizeMode="cover"
         />
         <Text style={styles.clientName}>{item.email}</Text>
@@ -237,15 +282,16 @@ export default function TeacherHome() {
 
   return (
     <View style={styles.container}>
-      <FlatList
-        data={clients}
-        renderItem={renderItem}
-        keyExtractor={(item) => item.id.toString()}
-        numColumns={numColumns}
-        horizontal={false}
-        style={styles.flatlist}
-        columnWrapperStyle={{ justifyContent: "space-between" }}
-      />
+      {dataLoaded ? (
+        <FlatList
+          data={filteredClients}
+          renderItem={renderItem}
+          keyExtractor={(item) => item.id}
+          numColumns={numColumns}
+        />
+      ) : (
+        <ActivityIndicator size="large" color="#0000ff" />
+      )}
     </View>
   );
 }
@@ -275,10 +321,16 @@ const styles = StyleSheet.create({
 
   clientName: {
     position: "absolute",
-    bottom: 10,
+    bottom: 20,
     alignSelf: "center",
     color: "white",
     fontWeight: "bold",
     fontSize: 16,
+  },
+
+  menuOptionText: {
+    fontSize: 16,
+    paddingHorizontal: 15,
+    paddingVertical: 10,
   },
 });

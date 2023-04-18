@@ -11,7 +11,7 @@ cleanup of components&code | commenting
 
 Bugs:
 
-  trainerhomescreen data loading
   overlay/message position off as fuck (adjust how overlay data is saved&received)
   edit videa u trenera fucked (stretch)
+
 

@@ -74,7 +74,10 @@ export default function VideoEditScreen({ route, navigation }) {
   useLayoutEffect(() => {
     navigation.setOptions({
       headerLeft: () => (
-        <TouchableOpacity onPress={handleGoBack} style={{ marginLeft: 10 }}>
+        <TouchableOpacity
+          onPress={handleGoBack}
+          style={{ marginLeft: 0, paddingRight: 25 }}
+        >
           <Ionicons name="arrow-back" size={24} color="white" />
         </TouchableOpacity>
       ),
