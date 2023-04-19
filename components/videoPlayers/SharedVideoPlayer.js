@@ -201,21 +201,25 @@ export default function SharedVideoPlayer({ route }) {
       </View>
       {lastPlaybackStatus &&
         comments.map((comment, index) => {
+          const sliderWidthPercentage = 0.6 * width;
+          const sliderStartPercentage = (width - sliderWidthPercentage) / 2;
           const messagePosition =
-            (comment.time / lastPlaybackStatus.durationMillis) * 100;
+            sliderStartPercentage +
+            (comment.time / lastPlaybackStatus.durationMillis) *
+              sliderWidthPercentage -
+            12;
+
           return (
             <TouchableOpacity
               key={index}
-              style={[
-                styles.messageIconContainer,
-                { left: `${messagePosition}%` },
-              ]}
+              style={[styles.messageIconContainer, { left: messagePosition }]}
               onPress={() => displayMessage(comment)}
             >
               <MaterialIcons name="message" size={24} color="white" />
             </TouchableOpacity>
           );
         })}
+
       {showMessageModal && (
         <>
           <View style={styles.modalContainer}>
@@ -296,7 +300,7 @@ const styles = StyleSheet.create({
   messageIconContainer: {
     position: "absolute",
     bottom: 40,
-    marginLeft: 5,
+    marginLeft: 0,
     justifyContent: "center",
     alignItems: "center",
   },

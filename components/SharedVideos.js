@@ -222,7 +222,7 @@ export default function SharedVideos({ route }) {
 
   return (
     <SafeAreaView style={styles.container}>
-      {loading ? ( // Add this block
+      {loading ? (
         <View style={styles.loadingContainer}>
           <ActivityIndicator size="large" color="#0000ff" />
         </View>

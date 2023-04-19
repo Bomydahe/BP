@@ -3,7 +3,6 @@ NOTIFICATIONS (high prio)
 desing overall (low prio) 
   > adding slow motion in video player (low prio)
   > cudlik
-  > on video upload tap out of modal closes modal 
 
 zmena kategorie videa niekde
 
