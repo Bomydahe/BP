@@ -1,10 +1,19 @@
-import React, { useEffect, useCallback, useRef, useState } from "react";
-import { View, StyleSheet, TouchableOpacity, Text } from "react-native";
+import React, { useState, useEffect, useCallback, useRef } from "react";
+import {
+  View,
+  StyleSheet,
+  TouchableOpacity,
+  Text,
+  ActivityIndicator,
+} from "react-native";
 import * as ScreenOrientation from "expo-screen-orientation";
-import { useNavigation } from "@react-navigation/native";
-import CustomVideoPlayer from "./CustomVideoPlayer";
-import { MaterialIcons } from "@expo/vector-icons";
+import { useNavigation, useFocusEffect } from "@react-navigation/native";
+import { MaterialIcons, FontAwesome } from "@expo/vector-icons";
+import { firebase } from "../../firebaseConfig";
+import { showMessage } from "react-native-flash-message";
+import { captureRef } from "react-native-view-shot";
 import UploadPromptModal from "../UploadPromptModal";
+import CustomVideoPlayer from "./CustomVideoPlayer";
 import {
   uploadThumbnail,
   saveVideoMetadata,
@@ -12,18 +21,37 @@ import {
   generateThumbnail,
   generateUniqueId,
 } from "../firebaseFunctions";
-import { firebase } from "../../firebaseConfig";
 
 export default function VideoPlayerScreen({ route }) {
   const { videoUri, categories } = route.params;
   const navigation = useNavigation();
   const videoPlayerRef = useRef(null);
   const [modalVisible, setModalVisible] = useState(false);
+  const [uploading, setUploading] = useState(false);
 
   const stopVideo = async () => {
     if (videoPlayerRef.current) {
       await videoPlayerRef.current.stopAsync();
     }
+  };
+
+  const handleSubmitUpload = async () => {
+    setModalVisible(false);
+    setUploading(true); // Start loading indicator
+    const thumbnailUri = await generateThumbnail(videoUri);
+    const thumbnailUrl = await uploadThumbnail(thumbnailUri);
+    const videoUrl = await uploadVideo(videoUri);
+    const userId = firebase.auth().currentUser.uid;
+    const videoName = videoUri.substring(videoUri.lastIndexOf("/") + 1);
+    await saveVideoMetadata(videoName, videoUrl, thumbnailUrl, false, userId);
+    setUploading(false); // Stop loading indicator
+
+    showMessage({
+      message: "Video uploaded successfully",
+      type: "success",
+      duration: 3000,
+      position: "top",
+    });
   };
 
   const updateNavigationOptions = useCallback(() => {
@@ -77,24 +105,15 @@ export default function VideoPlayerScreen({ route }) {
 
   return (
     <View style={styles.container}>
+      {uploading && (
+        <View style={styles.loadingOverlay}>
+          <ActivityIndicator size="large" color="#ffffff" />
+        </View>
+      )}
       <UploadPromptModal
         visible={modalVisible}
         onClose={() => setModalVisible(false)}
-        onYes={async () => {
-          setModalVisible(false);
-          const thumbnailUri = await generateThumbnail(videoUri);
-          const thumbnailUrl = await uploadThumbnail(thumbnailUri);
-          const videoUrl = await uploadVideo(videoUri);
-          const userId = firebase.auth().currentUser.uid;
-          const videoName = videoUri.substring(videoUri.lastIndexOf("/") + 1);
-          await saveVideoMetadata(
-            videoName,
-            videoUrl,
-            thumbnailUrl,
-            false,
-            userId
-          );
-        }}
+        onYes={handleSubmitUpload}
       />
       <CustomVideoPlayer
         videoUri={videoUri}

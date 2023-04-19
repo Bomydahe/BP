@@ -12,7 +12,7 @@ import {
   TouchableHighlight,
   SafeAreaView,
   Image,
-  Modal,
+  ActivityIndicator,
 } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import { AntDesign } from "@expo/vector-icons";
@@ -32,6 +32,7 @@ import {
   generateUniqueId,
 } from "./firebaseFunctions";
 import UploadPromptModal from "./UploadPromptModal";
+import { showMessage } from "react-native-flash-message";
 
 export default function MyVideos(props) {
   const [status, setStatus] = React.useState({});
@@ -46,6 +47,7 @@ export default function MyVideos(props) {
   const [action, setAction] = useState(null);
   const [uploadPromptVisible, setUploadPromptVisible] = useState(false);
   const [currentVideoId, setCurrentVideoId] = useState(null);
+  const [uploading, setUploading] = useState(false);
   const [categories, setCategories] = useStoredData("@categories", [
     { id: 0, name: "All Videos", videos: [] },
   ]);
@@ -262,17 +264,39 @@ export default function MyVideos(props) {
         action={action}
         addCategory={addCategory}
       />
-      <UploadPromptModal
-        visible={uploadPromptVisible}
-        onClose={() => setUploadPromptVisible(false)}
-        onYes={() => {
-          const videoObj = categories
-            .flatMap((category) => category.videos)
-            .find((video) => video.id === currentVideoId);
-          uploadVideo(videoObj.url);
-          setUploadPromptVisible(false);
-        }}
-      />
+      <View style={styles.uploadContainer}>
+        <UploadPromptModal
+          visible={uploadPromptVisible}
+          onClose={() => setUploadPromptVisible(false)}
+          onYes={async () => {
+            setUploadPromptVisible(false);
+            setUploading(true);
+            const videoObj = categories
+              .flatMap((category) => category.videos)
+              .find((video) => video.id === currentVideoId);
+            try {
+              await uploadVideo(videoObj.url);
+
+              showMessage({
+                message: "Video shared successfully",
+                type: "success",
+                duration: 3000,
+                position: "top",
+              });
+            } catch (error) {
+              console.log("Error uploading video: ", error);
+            } finally {
+              setUploading(false);
+            }
+          }}
+        />
+        {uploading && (
+          <View style={styles.activityIndicatorContainer}>
+            <ActivityIndicator size="large" color="#0000ff" />
+            <Text style={styles.activityIndicatorText}>Uploading video...</Text>
+          </View>
+        )}
+      </View>
 
       <FAB
         open={open}
@@ -350,5 +374,26 @@ const styles = StyleSheet.create({
     right: 15,
     justifyContent: "center",
     alignItems: "center",
+  },
+
+  uploadContainer: {
+    position: "relative",
+  },
+  activityIndicatorContainer: {
+    position: "absolute",
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: "rgba(255, 255, 255, 0.8)",
+    justifyContent: "center",
+    alignItems: "center",
+    zIndex: 10,
+  },
+  activityIndicatorText: {
+    marginTop: 10,
+    fontSize: 18,
+    fontWeight: "bold",
+    color: "rgba(255, 255, 255, 1)",
   },
 });

@@ -7,6 +7,7 @@ import {
   TouchableOpacity,
   Pressable,
   Alert,
+  ActivityIndicator,
 } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import { CommonActions } from "@react-navigation/native";
@@ -19,8 +20,10 @@ export default function LoginScreen() {
   const [userRole, setUserRole] = useState("user");
   const [isRegistering, setIsRegistering] = useState(false);
   const navigation = useNavigation();
+  const [loading, setLoading] = useState(false);
 
   const handleLogin = async () => {
+    setLoading(true);
     try {
       const response = await firebase
         .auth()
@@ -64,9 +67,11 @@ export default function LoginScreen() {
         Alert.alert("Error during login: " + error.message);
       }
     }
+    setLoading(false);
   };
 
   const handleRegister = async () => {
+    setLoading(true);
     if (password.length < 8) {
       Alert.alert("Password must be at least 8 characters");
       return;
@@ -114,92 +119,103 @@ export default function LoginScreen() {
       // Handle the error (e.g., show an error message)
       Alert.alert("Error during registration: " + error.message);
     }
+    setLoading(false);
   };
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>{isRegistering ? "Register" : "Login"}</Text>
-      <TextInput
-        style={styles.input}
-        onChangeText={setUsername}
-        value={username}
-        placeholder="Email"
-        keyboardType="email-address"
-        autoCapitalize="none"
-      />
-      <TextInput
-        style={styles.input}
-        onChangeText={setPassword}
-        value={password}
-        placeholder="Password"
-        secureTextEntry
-      />
-      {isRegistering && (
+      {loading ? (
+        <ActivityIndicator size="large" color="#007AFF" />
+      ) : (
         <>
+          <Text style={styles.title}>
+            {isRegistering ? "Register" : "Login"}
+          </Text>
           <TextInput
             style={styles.input}
-            onChangeText={setRepeatPassword}
-            value={repeatPassword}
-            placeholder="Repeat Password"
+            onChangeText={setUsername}
+            value={username}
+            placeholder="Email"
+            keyboardType="email-address"
+            autoCapitalize="none"
+          />
+          <TextInput
+            style={styles.input}
+            onChangeText={setPassword}
+            value={password}
+            placeholder="Password"
             secureTextEntry
           />
-          <View style={styles.roleSelection}>
-            <Text style={styles.roleText}>Select your role:</Text>
-            <View style={{ flexDirection: "row" }}>
-              <TouchableOpacity
-                onPress={() => setUserRole("user")}
-                style={[
-                  styles.roleButton,
-                  userRole === "user" ? styles.roleButtonSelected : null,
-                ]}
-              >
-                <Text
-                  style={[
-                    styles.roleButtonText,
-                    userRole === "user" ? styles.roleButtonTextSelected : null,
-                  ]}
-                >
-                  User
-                </Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                onPress={() => setUserRole("trainer")}
-                style={[
-                  styles.roleButton,
-                  userRole === "trainer" ? styles.roleButtonSelected : null,
-                ]}
-              >
-                <Text
-                  style={[
-                    styles.roleButtonText,
-                    userRole === "trainer"
-                      ? styles.roleButtonTextSelected
-                      : null,
-                  ]}
-                >
-                  Trainer
-                </Text>
-              </TouchableOpacity>
-            </View>
-          </View>
+          {isRegistering && (
+            <>
+              <TextInput
+                style={styles.input}
+                onChangeText={setRepeatPassword}
+                value={repeatPassword}
+                placeholder="Repeat Password"
+                secureTextEntry
+              />
+              <View style={styles.roleSelection}>
+                <Text style={styles.roleText}>Select your role:</Text>
+                <View style={{ flexDirection: "row" }}>
+                  <TouchableOpacity
+                    onPress={() => setUserRole("user")}
+                    style={[
+                      styles.roleButton,
+                      userRole === "user" ? styles.roleButtonSelected : null,
+                    ]}
+                  >
+                    <Text
+                      style={[
+                        styles.roleButtonText,
+                        userRole === "user"
+                          ? styles.roleButtonTextSelected
+                          : null,
+                      ]}
+                    >
+                      User
+                    </Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    onPress={() => setUserRole("trainer")}
+                    style={[
+                      styles.roleButton,
+                      userRole === "trainer" ? styles.roleButtonSelected : null,
+                    ]}
+                  >
+                    <Text
+                      style={[
+                        styles.roleButtonText,
+                        userRole === "trainer"
+                          ? styles.roleButtonTextSelected
+                          : null,
+                      ]}
+                    >
+                      Trainer
+                    </Text>
+                  </TouchableOpacity>
+                </View>
+              </View>
+            </>
+          )}
+          {isRegistering ? (
+            <TouchableOpacity style={styles.button} onPress={handleRegister}>
+              <Text style={styles.buttonText}>Register</Text>
+            </TouchableOpacity>
+          ) : (
+            <TouchableOpacity style={styles.button} onPress={handleLogin}>
+              <Text style={styles.buttonText}>Login</Text>
+            </TouchableOpacity>
+          )}
+          <Pressable onPress={() => setIsRegistering(!isRegistering)}>
+            <Text style={styles.switchText}>
+              {isRegistering
+                ? "Already have an account? Log in"
+                : "Don't have an account? Register"}
+            </Text>
+          </Pressable>
         </>
       )}
-      {isRegistering ? (
-        <TouchableOpacity style={styles.button} onPress={handleRegister}>
-          <Text style={styles.buttonText}>Register</Text>
-        </TouchableOpacity>
-      ) : (
-        <TouchableOpacity style={styles.button} onPress={handleLogin}>
-          <Text style={styles.buttonText}>Login</Text>
-        </TouchableOpacity>
-      )}
-      <Pressable onPress={() => setIsRegistering(!isRegistering)}>
-        <Text style={styles.switchText}>
-          {isRegistering
-            ? "Already have an account? Log in"
-            : "Don't have an account? Register"}
-        </Text>
-      </Pressable>
     </View>
   );
 }

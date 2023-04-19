@@ -130,7 +130,7 @@ export default function VideoEditScreen({ route, navigation }) {
           // Add the path data to Firestore
           await addOverlay(videoName, pathsData, position);
           showMessage({
-            message: "Message uploaded successfully",
+            message: "Overlay edit uploaded successfully",
             type: "success",
             duration: 3000,
             position: "top",

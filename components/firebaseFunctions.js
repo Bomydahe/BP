@@ -34,44 +34,49 @@ export async function saveVideoMetadata(
   });
 }
 
-export async function uploadVideo(videoUrl) {
-  console.log("Uploading video with URL:", videoUrl);
-  const localThumbnailUrl = await generateThumbnail(videoUrl);
+export async function uploadVideo(videoUri) {
+  return new Promise(async (resolve, reject) => {
+    console.log("Uploading video with URL:", videoUri);
+    const localThumbnailUrl = await generateThumbnail(videoUri);
 
-  // Upload the thumbnail to Firebase Storage and get its download URL
-  const thumbnailUrl = await uploadThumbnail(localThumbnailUrl);
+    // Upload the thumbnail to Firebase Storage and get its download URL
+    const thumbnailUrl = await uploadThumbnail(localThumbnailUrl);
 
-  const response = await fetch(videoUrl);
-  const blob = await response.blob();
-  const videoName = videoUrl.substring(videoUrl.lastIndexOf("/") + 1);
-  const storageRef = firebase.storage().ref().child(videoName).put(blob);
+    const response = await fetch(videoUri);
+    const blob = await response.blob();
+    const videoName = videoUri.substring(videoUri.lastIndexOf("/") + 1);
+    const storageRef = firebase.storage().ref().child(videoName);
+    const uploadTask = storageRef.put(blob);
 
-  try {
-    await storageRef;
-    console.log("Video uploaded successfully");
+    uploadTask.on(
+      "state_changed",
+      (snapshot) => {
+        // progress updates
+      },
+      (error) => {
+        console.log("Error uploading video: ", error);
+        reject(error);
+      },
+      async () => {
+        const downloadUrl = await uploadTask.snapshot.ref.getDownloadURL();
+        console.log("Video available at: ", downloadUrl);
 
-    // Get the user ID from Firebase Authentication
-    const userId = firebase.auth().currentUser.uid;
+        // Get the user ID from Firebase Authentication
+        const userId = firebase.auth().currentUser.uid;
 
-    // Get the download URL
-    const downloadUrl = await firebase
-      .storage()
-      .ref(videoName)
-      .getDownloadURL();
+        // Save video metadata to Firestore with an initial boolean value
+        await saveVideoMetadata(
+          videoName,
+          downloadUrl,
+          thumbnailUrl,
+          false,
+          userId
+        );
 
-    // Save video metadata to Firestore with an initial boolean value (e.g., true)
-    await saveVideoMetadata(
-      videoName,
-      downloadUrl,
-      thumbnailUrl,
-      false,
-      userId
+        resolve(downloadUrl);
+      }
     );
-
-    return downloadUrl;
-  } catch (error) {
-    console.error("Error uploading video:", error);
-  }
+  });
 }
 
 export async function generateThumbnail(videoUri) {
