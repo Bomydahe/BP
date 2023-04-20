@@ -22,8 +22,6 @@ import {
 } from "react-native-popup-menu";
 
 const { width } = Dimensions.get("window");
-const numColumns = 2;
-const clientWidth = (width - 20 * (numColumns + 1)) / numColumns;
 
 export default function TrainerHomeScreen() {
   const [clients, setClients] = useState([]);
@@ -256,28 +254,26 @@ export default function TrainerHomeScreen() {
       return [];
     }
   };
-
   const renderItem = ({ item, index }) => (
-    <View style={styles.clientContainer}>
-      <TouchableOpacity
-        onPress={() => {
-          const filteredVideos = videos.filter(
-            (video) => video.userId === item.id
-          );
-          navigation.navigate("ClientsSharedScreen", {
-            clientEmail: item.email,
-            videos: filteredVideos,
-          });
-        }}
-      >
-        <Image
-          style={styles.clientImage}
-          source={item.imageUri}
-          resizeMode="cover"
-        />
-        <Text style={styles.clientName}>{item.email}</Text>
-      </TouchableOpacity>
-    </View>
+    <TouchableOpacity
+      style={styles.clientContainer}
+      onPress={() => {
+        const filteredVideos = videos.filter(
+          (video) => video.userId === item.id
+        );
+        navigation.navigate("ClientsSharedScreen", {
+          clientEmail: item.email,
+          videos: filteredVideos,
+        });
+      }}
+    >
+      <Image
+        style={styles.clientImage}
+        source={item.imageUri}
+        resizeMode="cover"
+      />
+      <Text style={styles.clientName}>{item.email}</Text>
+    </TouchableOpacity>
   );
 
   return (
@@ -292,7 +288,7 @@ export default function TrainerHomeScreen() {
             data={filteredClients}
             renderItem={renderItem}
             keyExtractor={(item) => item.id}
-            numColumns={numColumns}
+            horizontal={false}
           />
         </>
       ) : (
@@ -305,33 +301,24 @@ export default function TrainerHomeScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    flexDirection: "column",
-    alignItems: "center",
-    justifyContent: "center",
+    backgroundColor: "#f5f5f5",
   },
   clientContainer: {
-    width: clientWidth,
-    height: 200,
-    marginBottom: 10,
-    marginHorizontal: 10,
-    marginTop: 20,
+    flexDirection: "row",
+    alignItems: "center",
+    padding: 15,
+    borderBottomWidth: 1,
+    borderColor: "#ccc",
   },
   clientImage: {
-    width: "100%",
-    height: "100%",
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    marginRight: 15,
   },
-  flatlist: {
-    width: "100%",
-    paddingHorizontal: 10,
-  },
-
   clientName: {
-    position: "absolute",
-    bottom: 20,
-    alignSelf: "center",
-    color: "white",
-    fontWeight: "bold",
     fontSize: 16,
+    fontWeight: "500",
   },
 
   menuOptionText: {
@@ -346,7 +333,7 @@ const styles = StyleSheet.create({
     paddingTop: 20,
   },
   headerTitle: {
-    //fontWeight: "bold",
     fontSize: 18,
+    paddingBottom: 10,
   },
 });

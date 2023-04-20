@@ -26,6 +26,14 @@ export default function CustomVideoPlayer({
     width: 0,
     height: 0,
   });
+  const [playbackRate, setPlaybackRate] = useState(1.0);
+
+  const handlePlaybackRateChange = async (newRate) => {
+    setPlaybackRate(newRate);
+    if (videoPlayerRef.current) {
+      await videoPlayerRef.current.setRateAsync(newRate, true);
+    }
+  };
 
   const handleVideoReadyForDisplay = (event) => {
     const { naturalSize } = event;
@@ -57,7 +65,7 @@ export default function CustomVideoPlayer({
     setShowSliderThumb(true);
     setTimeout(() => {
       setShowSliderThumb(false);
-    }, 1000);
+    }, 2000);
   };
 
   const handlePlaybackStatus = (status) => {
@@ -87,7 +95,7 @@ export default function CustomVideoPlayer({
     setShowControls(true);
     setTimeout(() => {
       setShowControls(false);
-    }, 1000);
+    }, 5000);
   };
 
   const handleSliderValueChange = async (value) => {
@@ -100,12 +108,22 @@ export default function CustomVideoPlayer({
     }
   };
 
+  const changeVideoPosition = async (delta) => {
+    if (videoPlayerRef.current && lastPlaybackStatus) {
+      const newPosition = lastPlaybackStatus.positionMillis + delta;
+      await videoPlayerRef.current.setPositionAsync(newPosition, {
+        toleranceMillisBefore: 10,
+        toleranceMillisAfter: 10,
+      });
+    }
+  };
+
   return (
     <View style={styles.container}>
       <Video
         ref={videoPlayerRef}
         source={{ uri: videoUri }}
-        rate={1.0}
+        rate={playbackRate}
         volume={1.0}
         isMuted={false}
         resizeMode="contain"
@@ -129,29 +147,62 @@ export default function CustomVideoPlayer({
           />
         )}
       </TouchableOpacity>
-      <View style={styles.sliderContainer}>
-        <Text style={styles.time}>
-          {formatTime(sliderValue * lastPlaybackStatus?.durationMillis || 0)}
-        </Text>
-        <Slider
-          style={styles.slider}
-          minimumValue={0}
-          maximumValue={1}
-          value={sliderValue}
-          onValueChange={handleSliderValueChange}
-          minimumTrackTintColor="white"
-          maximumTrackTintColor="lightgrey"
-          thumbTintColor={showSliderThumb ? "#FFFFFF" : "transparent"}
-          onResponderGrant={() => setSliderThumbColor("#FFFFFF")}
-          onResponderRelease={() => setSliderThumbColor("transparent")}
-        />
-        <Text style={styles.time}>
-          {formatTime(lastPlaybackStatus?.durationMillis || 0)}
-        </Text>
-      </View>
+      {showControls && (
+        <>
+          <View style={styles.sliderContainer}>
+            <Text style={styles.time}>
+              {formatTime(
+                sliderValue * lastPlaybackStatus?.durationMillis || 0
+              )}
+            </Text>
+            <Slider
+              style={styles.slider}
+              minimumValue={0}
+              maximumValue={1}
+              value={sliderValue}
+              onValueChange={handleSliderValueChange}
+              minimumTrackTintColor="white"
+              maximumTrackTintColor="lightgrey"
+              thumbTintColor={showSliderThumb ? "#FFFFFF" : "transparent"}
+              onResponderGrant={() => setSliderThumbColor("#FFFFFF")}
+              onResponderRelease={() => setSliderThumbColor("transparent")}
+            />
+            <Text style={styles.time}>
+              {formatTime(lastPlaybackStatus?.durationMillis || 0)}
+            </Text>
+          </View>
+          <View style={styles.controlButtonsContainer}>
+            <TouchableOpacity
+              style={styles.controlButton}
+              onPress={() => changeVideoPosition(-10000)}
+            >
+              <MaterialIcons name="replay-10" size={30} color="white" />
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={[
+                styles.controlButton,
+                { borderWidth: 1, borderColor: "white" },
+              ]}
+              onPress={() => {
+                const newRate = playbackRate === 2 ? 0.25 : playbackRate * 2;
+                handlePlaybackRateChange(newRate);
+              }}
+            >
+              <Text style={styles.controlButtonText}>{`${playbackRate}x`}</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={styles.controlButton}
+              onPress={() => changeVideoPosition(10000)}
+            >
+              <MaterialIcons name="forward-10" size={30} color="white" />
+            </TouchableOpacity>
+          </View>
+        </>
+      )}
     </View>
   );
 }
+
 const styles = StyleSheet.create({
   container: {
     flex: 1,
@@ -170,7 +221,7 @@ const styles = StyleSheet.create({
     position: "absolute",
     left: 0,
     right: 0,
-    bottom: 20,
+    bottom: 60,
     justifyContent: "center",
     flexDirection: "row",
     alignItems: "center",
@@ -182,5 +233,25 @@ const styles = StyleSheet.create({
   time: {
     color: "white",
     fontSize: 14,
+  },
+  controlButtonsContainer: {
+    position: "absolute",
+    left: 50,
+    right: 50,
+    bottom: 15,
+    flexDirection: "row",
+    justifyContent: "space-evenly",
+    alignItems: "center",
+  },
+  controlButton: {
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: 3,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  controlButtonText: {
+    color: "white",
+    fontSize: 16,
   },
 });

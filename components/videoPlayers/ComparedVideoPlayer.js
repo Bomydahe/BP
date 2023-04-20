@@ -2,6 +2,7 @@ import React, { useEffect, useRef } from "react";
 import { View, StyleSheet } from "react-native";
 import { Video } from "expo-av";
 import * as ScreenOrientation from "expo-screen-orientation";
+import CustomVideoPlayer from "./CustomVideoPlayer";
 
 export default function ComparedVideoPlayer({ route }) {
   const { video1Uri, video1Time, video2Uri, video2Time } = route.params;
@@ -39,29 +40,23 @@ export default function ComparedVideoPlayer({ route }) {
 
   return (
     <View style={styles.container}>
-      <Video
-        ref={video1Ref}
-        source={{ uri: video1Uri }}
-        rate={1.0}
-        volume={1.0}
-        isMuted={false}
-        resizeMode="contain"
-        shouldPlay
-        isLooping
-        useNativeControls
-        style={styles.video}
+      <CustomVideoPlayer
+        videoUri={video1Uri}
+        onPlaybackStatusUpdate={(status) => {
+          if (status.didJustFinish && !status.isLooping) {
+            videoPlayerRef.current.pauseAsync();
+          }
+        }}
+        videoPlayerRef={video1Ref}
       />
-      <Video
-        ref={video2Ref}
-        source={{ uri: video2Uri }}
-        rate={1.0}
-        volume={1.0}
-        isMuted={false}
-        resizeMode="contain"
-        shouldPlay
-        isLooping
-        useNativeControls
-        style={styles.video}
+      <CustomVideoPlayer
+        videoUri={video2Uri}
+        onPlaybackStatusUpdate={(status) => {
+          if (status.didJustFinish && !status.isLooping) {
+            videoPlayerRef.current.pauseAsync();
+          }
+        }}
+        videoPlayerRef={video2Ref}
       />
     </View>
   );

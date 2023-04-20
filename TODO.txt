@@ -1,14 +1,11 @@
 NOTIFICATIONS (high prio)
-
-desing overall (low prio) 
-  > adding slow motion in video player (low prio)
-
 zmena kategorie videa niekde
 
 Bugs: 
   > ...
 
 cleanup of code | commenting
+
 expo eas app distribution
 
 (BP hierarchy tree)

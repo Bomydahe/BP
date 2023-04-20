@@ -24,6 +24,7 @@ import * as ImagePicker from "expo-image-picker";
 import { useNavigation } from "@react-navigation/native";
 import Tooltip from "react-native-walkthrough-tooltip";
 import { FontAwesome, Ionicons } from "@expo/vector-icons";
+import CustomVideoPlayer from "../videoPlayers/CustomVideoPlayer";
 
 const { width, height } = Dimensions.get("window");
 
@@ -274,14 +275,14 @@ export default function Compare(props) {
       <View style={styles.videoWrapper}>
         {video1 ? (
           <>
-            <Video
-              ref={video1Ref}
-              source={{ uri: video1 }}
-              style={styles.video}
-              resizeMode="contain"
-              isLooping
-              useNativeControls
-              backgroundColor="black"
+            <CustomVideoPlayer
+              videoUri={video1}
+              onPlaybackStatusUpdate={(status) => {
+                if (status.didJustFinish && !status.isLooping) {
+                  videoPlayerRef.current.pauseAsync();
+                }
+              }}
+              videoPlayerRef={video1Ref}
             />
             <TouchableOpacity
               style={styles.removeVideoButton}
@@ -305,14 +306,14 @@ export default function Compare(props) {
       <View style={styles.videoWrapper}>
         {video2 ? (
           <>
-            <Video
-              ref={video2Ref}
-              source={{ uri: video2 }}
-              style={styles.video}
-              resizeMode="contain"
-              isLooping
-              useNativeControls
-              backgroundColor="black"
+            <CustomVideoPlayer
+              videoUri={video2}
+              onPlaybackStatusUpdate={(status) => {
+                if (status.didJustFinish && !status.isLooping) {
+                  videoPlayerRef.current.pauseAsync();
+                }
+              }}
+              videoPlayerRef={video2Ref}
             />
             <TouchableOpacity
               style={styles.removeVideoButton}
