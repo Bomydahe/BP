@@ -194,8 +194,13 @@ export default function SharedVideoPlayer({ route }) {
         </Text>
         {lastPlaybackStatus &&
           overlays.map((overlay, index) => {
+            const sliderWidthPercentage = 0.6 * width;
+            const sliderStartPercentage = (width - sliderWidthPercentage) / 2;
             const dotPosition =
-              (overlay.time / lastPlaybackStatus.durationMillis) * 100;
+              sliderStartPercentage +
+              (overlay.time / lastPlaybackStatus.durationMillis) *
+                sliderWidthPercentage -
+              12;
             return <RedDot key={index} position={dotPosition} />;
           })}
       </View>

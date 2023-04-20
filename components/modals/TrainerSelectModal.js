@@ -96,7 +96,7 @@ const styles = StyleSheet.create({
     marginBottom: 10,
   },
   searchButton: {
-    backgroundColor: "blue",
+    backgroundColor: "#007AFF",
     padding: 10,
     alignItems: "center",
     justifyContent: "center",

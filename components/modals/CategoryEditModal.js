@@ -41,68 +41,96 @@ const CategoryEditModal = ({
 
   return (
     <Modal
-      animationType="slide"
+      animationType="fade"
       transparent={true}
       visible={modalVisible}
       onRequestClose={() => {
         setModalVisible(!modalVisible);
       }}
     >
-      <View style={styles.centeredModalView}>
-        <View style={styles.modalView}>
-          <Text style={styles.modalTitle}>Edit Category Name</Text>
-          <TextInput
-            style={styles.textInput}
-            value={categoryName}
-            onChangeText={setCategoryName}
-            autoFocus
-          />
-          <Pressable style={styles.modalButton} onPress={handleSubmit}>
-            <Text style={styles.modalButtonText}>Save</Text>
-          </Pressable>
+      <Pressable
+        style={styles.overlay}
+        onPress={() => setModalVisible(false)}
+        accessible={false}
+      >
+        <View style={styles.centeredModalView} pointerEvents="box-none">
+          <View style={styles.modalView}>
+            <Text style={styles.modalTitle}>Enter Category Name</Text>
+            <TextInput
+              style={styles.textInput}
+              value={categoryName}
+              onChangeText={setCategoryName}
+              autoFocus
+            />
+            <Pressable style={styles.modalButton} onPress={handleSubmit}>
+              <Text style={styles.modalButtonText}>Save</Text>
+            </Pressable>
+          </View>
         </View>
-      </View>
+      </Pressable>
     </Modal>
   );
 };
 
 const styles = StyleSheet.create({
+  overlay: {
+    flex: 1,
+    backgroundColor: "rgba(0, 0, 0, 0.6)",
+  },
   centeredModalView: {
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
-    marginTop: 22,
   },
   modalView: {
-    margin: 20,
+    width: 300,
     backgroundColor: "white",
-    borderRadius: 20,
-    padding: 35,
+    borderRadius: 10,
+    padding: 20,
     alignItems: "center",
+    shadowColor: "#000",
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+    elevation: 5,
   },
   modalTitle: {
-    fontSize: 20,
+    fontSize: 18,
     fontWeight: "bold",
+    color: "#1F2023",
     marginBottom: 15,
   },
   textInput: {
-    borderColor: "gray",
+    borderColor: "#2196F3",
     borderWidth: 1,
     borderRadius: 5,
-    width: "100%",
+    width: "70%",
     paddingHorizontal: 10,
-    marginBottom: 15,
+    paddingVertical: 5,
+    fontSize: 18,
+    marginBottom: 20,
   },
   modalButton: {
     backgroundColor: "#2196F3",
-    borderRadius: 20,
-    padding: 10,
-    paddingHorizontal: 20,
-    marginTop: 10,
+    borderRadius: 10,
+    paddingHorizontal: 30,
+    paddingVertical: 10,
+    shadowColor: "#000",
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+    elevation: 5,
   },
   modalButtonText: {
     color: "white",
     fontWeight: "bold",
+    fontSize: 15,
   },
 });
 

@@ -12,15 +12,15 @@ import { MaterialIcons, FontAwesome } from "@expo/vector-icons";
 import { firebase } from "../../firebaseConfig";
 import { showMessage } from "react-native-flash-message";
 import { captureRef } from "react-native-view-shot";
-import UploadPromptModal from "../UploadPromptModal";
-import CustomVideoPlayer from "./CustomVideoPlayer";
+import UploadPromptModal from "../modals/UploadPromptModal";
+import CustomVideoPlayer from "../videoPlayers/CustomVideoPlayer";
 import {
   uploadThumbnail,
   saveVideoMetadata,
   uploadVideo,
   generateThumbnail,
   generateUniqueId,
-} from "../firebaseFunctions";
+} from "../../utils/firebaseFunctions";
 
 export default function VideoPlayerScreen({ route }) {
   const { videoUri, categories } = route.params;

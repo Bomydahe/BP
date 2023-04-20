@@ -64,6 +64,14 @@ export async function uploadVideo(videoUri) {
         // Get the user ID from Firebase Authentication
         const userId = firebase.auth().currentUser.uid;
 
+        // Retrieve the trainer ID from the users collection
+        const userDoc = await firebase
+          .firestore()
+          .collection("users")
+          .doc(userId)
+          .get();
+        const trainerId = userDoc.data().trainerId;
+
         // Save video metadata to Firestore with an initial boolean value
         await saveVideoMetadata(
           videoName,
@@ -72,8 +80,8 @@ export async function uploadVideo(videoUri) {
           false,
           userId
         );
-
         resolve(downloadUrl);
+        console.log("resolved upload");
       }
     );
   });

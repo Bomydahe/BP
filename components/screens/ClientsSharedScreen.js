@@ -13,7 +13,7 @@ import {
 } from "react-native";
 import { useNavigation, useFocusEffect } from "@react-navigation/native";
 import { AntDesign } from "@expo/vector-icons";
-import { firebase } from "../firebaseConfig";
+import { firebase } from "../../firebaseConfig";
 
 export default function ClientsSharedScreen(props) {
   const [status, setStatus] = useState({});
@@ -185,7 +185,7 @@ const styles = StyleSheet.create({
   },
 
   pressableLabel: {
-    color: "blue",
+    color: "#007AFF",
     fontSize: 16,
     lineHeight: 22,
   },

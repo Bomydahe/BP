@@ -8,6 +8,7 @@ const MyVideosFAB = ({
   navigate,
   addCategory,
   categories,
+  handleLogout,
 }) => {
   return (
     <FAB.Group
@@ -15,25 +16,31 @@ const MyVideosFAB = ({
       icon={open ? "close" : "plus"}
       actions={[
         {
-          icon: "plus",
+          icon: "video-plus-outline",
           onPress: () => pickVideo(),
           label: "Add video",
         },
         {
-          icon: "square",
+          icon: "tab-plus",
+          onPress: () => addCategory(),
+          label: "Add category",
+        },
+        {
+          icon: "compare",
           onPress: () => {
             navigate("Compare", { categories });
           },
           label: "Compare video",
         },
+
         {
-          icon: "plus",
-          onPress: () => addCategory(),
-          label: "Add category",
+          icon: "logout",
+          onPress: () => handleLogout(),
+          label: "Log out",
         },
       ]}
       onStateChange={({ open }) => setOpen(open)}
-      fabStyle={{ backgroundColor: "blue" }}
+      fabStyle={{ backgroundColor: "#007AFF" }}
       color="white"
     />
   );

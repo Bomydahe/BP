@@ -1,7 +1,7 @@
 {
   "expo": {
     "name": "video_attempt",
-    "slug": "video_attempt",
+    "slug": "motionmatch",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
@@ -25,6 +25,12 @@
     },
     "web": {
       "favicon": "./assets/favicon.png"
-    }
+    },
+    "extra": {
+      "eas": {
+        "projectId": "93a61caa-14f8-4646-8166-42822da837eb"
+      }
+    },
+    "owner": "bomydahe"
   }
 }

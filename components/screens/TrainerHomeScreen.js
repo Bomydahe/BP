@@ -13,7 +13,7 @@ import {
 import { useNavigation, useFocusEffect } from "@react-navigation/native";
 import { Ionicons } from "@expo/vector-icons";
 import { Entypo } from "@expo/vector-icons";
-import { firebase } from "../firebaseConfig";
+import { firebase } from "../../firebaseConfig";
 import {
   Menu,
   MenuOptions,
@@ -241,7 +241,7 @@ export default function TrainerHomeScreen() {
           .get();
 
         const userData = userDoc.data();
-        const imageUri = require("../assets/images/user-no-image.png");
+        const imageUri = require("../../assets/images/user-no-image.png");
 
         clientsData.push({
           id: userID,
@@ -283,12 +283,18 @@ export default function TrainerHomeScreen() {
   return (
     <View style={styles.container}>
       {dataLoaded ? (
-        <FlatList
-          data={filteredClients}
-          renderItem={renderItem}
-          keyExtractor={(item) => item.id}
-          numColumns={numColumns}
-        />
+        <>
+          <View style={styles.headerTitleContainer}>
+            <Text style={styles.headerTitle}>Choose Your Client:</Text>
+          </View>
+
+          <FlatList
+            data={filteredClients}
+            renderItem={renderItem}
+            keyExtractor={(item) => item.id}
+            numColumns={numColumns}
+          />
+        </>
       ) : (
         <ActivityIndicator size="large" color="#0000ff" />
       )}
@@ -332,5 +338,15 @@ const styles = StyleSheet.create({
     fontSize: 16,
     paddingHorizontal: 15,
     paddingVertical: 10,
+  },
+
+  headerTitleContainer: {
+    justifyContent: "center",
+    alignItems: "center",
+    paddingTop: 20,
+  },
+  headerTitle: {
+    //fontWeight: "bold",
+    fontSize: 18,
   },
 });

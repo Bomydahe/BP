@@ -6,7 +6,7 @@ import { MaterialIcons, FontAwesome } from "@expo/vector-icons";
 import { firebase } from "../../firebaseConfig";
 import { showMessage } from "react-native-flash-message";
 import { captureRef } from "react-native-view-shot";
-import CommentModal from "../CommentModal";
+import CommentModal from "../modals/CommentModal";
 import CustomVideoPlayer from "./CustomVideoPlayer";
 
 export default function TrainerVideoPlayer({ route }) {

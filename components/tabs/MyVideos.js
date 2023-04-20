@@ -17,22 +17,22 @@ import {
 import { useNavigation } from "@react-navigation/native";
 import { AntDesign } from "@expo/vector-icons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import useStoredData from "../hooks/useStoredData";
-import VideoAddModal from "./VideoAddModal";
-import FAB from "./FAB";
+import useStoredData from "../../hooks/useStoredData";
+import VideoAddModal from "../modals/VideoAddModal";
+import FAB from "../FAB";
 import { EventRegister } from "react-native-event-listeners";
-import CategoryEditModal from "./CategoryEditModal";
-import * as VideoThumbnails from "expo-video-thumbnails";
-import { firebase } from "../firebaseConfig";
+import CategoryEditModal from "../modals/CategoryEditModal";
+import { firebase } from "../../firebaseConfig";
 import {
   uploadThumbnail,
   saveVideoMetadata,
   uploadVideo,
   generateThumbnail,
   generateUniqueId,
-} from "./firebaseFunctions";
-import UploadPromptModal from "./UploadPromptModal";
+} from "../../utils/firebaseFunctions";
+import UploadPromptModal from "../modals/UploadPromptModal";
 import { showMessage } from "react-native-flash-message";
+import * as Notifications from "expo-notifications";
 
 export default function MyVideos(props) {
   const [status, setStatus] = React.useState({});
@@ -51,6 +51,28 @@ export default function MyVideos(props) {
   const [categories, setCategories] = useStoredData("@categories", [
     { id: 0, name: "All Videos", videos: [] },
   ]);
+  const [trainerId, setTrainerId] = useState(null);
+
+  useEffect(() => {
+    const fetchTrainerId = async () => {
+      // Get the user ID from Firebase Authentication
+      const userId = firebase.auth().currentUser.uid;
+
+      // Retrieve the trainer ID from the users collection
+      const userDoc = await firebase
+        .firestore()
+        .collection("users")
+        .doc(userId)
+        .get();
+      const trainerId = userDoc.data().trainerId;
+      console.log(" trainerId ", trainerId);
+
+      // Update the state variable with the fetched trainer ID
+      setTrainerId(trainerId);
+    };
+
+    fetchTrainerId();
+  }, []);
 
   function showModalForUploadPrompt(videoId) {
     setUploadPromptVisible(true);
@@ -181,6 +203,15 @@ export default function MyVideos(props) {
     );
   }
 
+  async function handleLogout() {
+    try {
+      await firebase.auth().signOut();
+      navigate("LoginScreen");
+    } catch (error) {
+      console.error("Error signing out:", error);
+    }
+  }
+
   const renderItem = ({ item }) => (
     <>
       <TouchableHighlight
@@ -305,6 +336,7 @@ export default function MyVideos(props) {
         navigate={navigate}
         addCategory={showAddCategoryModal}
         categories={categories}
+        handleLogout={handleLogout}
       />
     </>
   );
@@ -353,7 +385,7 @@ const styles = StyleSheet.create({
   },
 
   pressableLabel: {
-    color: "blue",
+    color: "#007AFF",
     fontSize: 16,
     lineHeight: 22,
   },
@@ -362,6 +394,7 @@ const styles = StyleSheet.create({
     width: 130,
     height: 160,
     marginRight: 10,
+    borderRadius: 8,
   },
 
   labelStyle: {

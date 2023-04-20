@@ -11,7 +11,7 @@ import {
 } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import { CommonActions } from "@react-navigation/native";
-import { firebase } from "../firebaseConfig";
+import { firebase } from "../../firebaseConfig";
 
 export default function LoginScreen() {
   const [username, setUsername] = useState("");

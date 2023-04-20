@@ -2,14 +2,13 @@ NOTIFICATIONS (high prio)
 
 desing overall (low prio) 
   > adding slow motion in video player (low prio)
-  > cudlik
 
 zmena kategorie videa niekde
 
-Bugs:
-  message position off as fuck (adjust how overlay data is saved&received)
+Bugs: 
+  > ...
 
-cleanup of components&code | commenting
+cleanup of code | commenting
 expo eas app distribution
 
 (BP hierarchy tree)

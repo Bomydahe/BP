@@ -1,268 +1,259 @@
-import React, { useState, useEffect, useLayoutEffect } from "react";
-import {
-  View,
-  TouchableOpacity,
-  Text,
-  StyleSheet,
-  Image,
-  PanResponder,
-  Dimensions,
-} from "react-native";
-import Svg, { Path } from "react-native-svg";
-import * as ImageManipulator from "expo-image-manipulator";
-import * as FileSystem from "expo-file-system";
-import { FontAwesome, Ionicons } from "@expo/vector-icons";
-import { firebase } from "../firebaseConfig";
-import { showMessage } from "react-native-flash-message";
+So again, got this error: 
 
-const { width, height } = Dimensions.get("window");
+Android Bundling complete 35897ms
+ LOG   trainerId  5xLv2aPtHdbFHWAnhgEmIKTTjQy1
+ LOG  ExponentPushToken[uDboz4PvjD84s3mGp_qpmx]
+ LOG  Expo push token saved to Firestore
+ ERROR  Error sending notification: [Error: HTTP error! Status: 500]
 
-export default function VideoEditScreen({ route, navigation }) {
-  const { videoName, position, snapshotUri } = route.params;
-  const [paths, setPaths] = useState([]);
-  const [currentPath, setCurrentPath] = useState("");
-  const [color, setColor] = useState("red");
-  const [lineWidth, setLineWidth] = useState(5);
-  const [resizedSnapshotUri, setResizedSnapshotUri] = useState(null);
+this is my index.js: 
 
-  const getAspectRatio = (originalWidth, originalHeight) => {
-    const originalAspectRatio = originalWidth / originalHeight;
-    const deviceAspectRatio = width / height;
+const functions = require("firebase-functions");
+const admin = require("firebase-admin");
+const { Expo } = require("expo-server-sdk");
 
-    if (originalAspectRatio > deviceAspectRatio) {
-      return { newWidth: width, newHeight: width / originalAspectRatio };
-    } else {
-      return { newWidth: height * originalAspectRatio, newHeight: height };
-    }
-  };
+admin.initializeApp();
 
-  const getImageSize = (uri) => {
-    Image.getSize(
-      uri,
-      (originalWidth, originalHeight) => {
-        console.log("Snapshot width/height", originalWidth, originalHeight);
-        const { newWidth, newHeight } = getAspectRatio(
-          originalWidth,
-          originalHeight
-        );
-        console.log("New width/height", newWidth, newHeight);
+// Create a new Expo SDK client
+const expo = new Expo();
 
-        const resizeSnapshot = async () => {
-          try {
-            const resizedImage = await ImageManipulator.manipulateAsync(
-              uri,
-              [{ resize: { width: newWidth, height: newHeight } }],
-              { compress: 1, format: ImageManipulator.SaveFormat.JPEG }
-            );
-            setResizedSnapshotUri(resizedImage.uri);
-            console.log("Resized snapshot:", resizedImage.uri);
-          } catch (error) {
-            console.error("Error resizing snapshot:", error);
-          }
-        };
-
-        resizeSnapshot();
-      },
-      (error) => {
-        console.error("Error getting image size:", error);
-      }
-    );
-  };
-
-  useEffect(() => {
-    console.log("width/height", width, height);
-    getImageSize(snapshotUri);
-  }, [snapshotUri]);
-
-  const handleGoBack = async () => {
-    if (snapshotUri) {
-      try {
-        await FileSystem.deleteAsync(snapshotUri, { idempotent: true });
-        console.log("Temporary snapshot file deleted:", snapshotUri);
-      } catch (error) {
-        console.error("Error deleting temporary snapshot file:", error);
-      }
-    }
-    navigation.goBack();
-  };
-
-  const panResponder = PanResponder.create({
-    onStartShouldSetPanResponder: () => true,
-    onMoveShouldSetPanResponder: () => true,
-    onPanResponderGrant: () => {
-      setCurrentPath("");
-    },
-    onPanResponderMove: (event, gestureState) => {
-      const { moveX, moveY } = gestureState;
-      const newPoint = `${moveX},${moveY}`;
-      setCurrentPath((prevPath) =>
-        prevPath ? `${prevPath} L${newPoint}` : `M${newPoint}`
-      );
-      console.log("Current path:", currentPath);
-    },
-
-    onPanResponderRelease: () => {
-      setPaths((prevPaths) => {
-        const newPaths = [
-          ...prevPaths,
-          { d: currentPath, stroke: color, strokeWidth: lineWidth },
-        ];
-        console.log("Paths:", newPaths);
-        return newPaths;
-      });
-      setCurrentPath("");
-    },
-  });
-
-  useLayoutEffect(() => {
-    navigation.setOptions({
-      headerLeft: () => (
-        <TouchableOpacity
-          onPress={handleGoBack}
-          style={{ marginLeft: 0, paddingRight: 25 }}
-        >
-          <Ionicons name="arrow-back" size={24} color="white" />
-        </TouchableOpacity>
-      ),
-      headerRight: () => (
-        <TouchableOpacity onPress={handleSave} style={{ marginRight: 10 }}>
-          <Ionicons name="save" size={24} color="white" />
-        </TouchableOpacity>
-      ),
-    });
-  }, [navigation]);
-
-  async function addOverlay(videoName, overlayData, time) {
-    try {
-      const firestore = firebase.firestore();
-      const videoRef = firestore.collection("videos").doc(videoName);
-
-      // Get the current overlays array from the video document
-      const videoDoc = await videoRef.get();
-      const overlays = videoDoc.data().overlays || [];
-
-      // Create a new overlay object with the provided overlay data and time
-      const newOverlay = { overlayData: overlayData, time: time };
-
-      // Add the new overlay to the existing overlays array
-      overlays.push(newOverlay);
-
-      // Update the overlays field in the video document with the new overlays array
-      await videoRef.update({ overlays: overlays });
-
-      console.log(`Overlay added to video ${videoName}:`, newOverlay);
-    } catch (error) {
-      console.error("Error adding overlay:", error);
-    }
+exports.sendNotification = functions.https.onRequest(async (req, res) => {
+  const trainerId = req.body.trainerId;
+  if (!trainerId) {
+    res.status(400).send("Missing trainerId");
+    return;
   }
 
-  const handleSave = async () => {
-    setPaths((currentPaths) => {
-      console.log("paths:", currentPaths);
-      (async () => {
-        try {
-          // Create a new array with all necessary data
-          const pathsData = currentPaths.map((path) => ({
-            d: path.d,
-            stroke: path.stroke,
-            strokeWidth: (path.strokeWidth / width) * 100, // store strokeWidth as a percentage
-          }));
+  // Fetch the user's Expo push token from Firestore
+  const userDoc = await admin
+    .firestore()
+    .collection("users")
+    .doc(trainerId)
+    .get();
+  const pushToken = userDoc.data().expoPushToken;
 
-          console.log("pathsdata:", pathsData);
+  if (!Expo.isExpoPushToken(pushToken)) {
+    console.error("Invalid push token:", pushToken);
+    res.status(400).send("Invalid push token");
+    return;
+  }
 
-          // Add the path data to Firestore
-          await addOverlay(videoName, pathsData, position);
-          showMessage({
-            message: "Message uploaded successfully",
-            type: "success",
-            duration: 3000,
-            position: "top",
-          });
-          // Navigate back to the previous component
-          navigation.goBack();
-        } catch (error) {
-          console.error("Error saving overlay:", error);
+  // Create the message
+  const message = {
+    to: pushToken,
+    sound: "default",
+    title: "New video uploaded",
+    body: "A new video has been uploaded for you to review!",
+    data: { someData: "goes here" },
+  };
+
+  // Send the notification
+  try {
+    const receipt = await expo.sendPushNotificationsAsync([message]);
+    console.log("Notification sent:", receipt);
+    res.status(200).send("Notification sent");
+  } catch (error) {
+    console.error("Error sending notification:", error);
+    res.status(500).send("Error sending notification");
+  }
+});
+
+
+and logs from error: 
+
+2023-04-20 13:25:28.255 CEST
+sendNotification
+r4j3l95t8uvm
+Function execution started
+{
+insertId: "qdb4unfhc5unq"
+labels: {1}
+logName: "projects/testproject-d2c7e/logs/cloudfunctions.googleapis.com%2Fcloud-functions"
+receiveTimestamp: "2023-04-20T11:25:28.263035795Z"
+resource: {2}
+severity: "DEBUG"
+textPayload: "Function execution started"
+timestamp: "2023-04-20T11:25:28.255058398Z"
+trace: "projects/testproject-d2c7e/traces/1014709fc84e380bf05ca0947ba001b2"
+}
+2023-04-20 13:25:29.064 CEST
+sendNotification
+r4j3l95t8uvm
+Error sending notification: Error: "[0].to" is required.
+{
+insertId: "644121290000fc19056ddf94"
+labels: {2}
+logName: "projects/testproject-d2c7e/logs/cloudfunctions.googleapis.com%2Fcloud-functions"
+receiveTimestamp: "2023-04-20T11:25:29.260642675Z"
+resource: {2}
+textPayload: "Error sending notification: Error: "[0].to" is required."
+timestamp: "2023-04-20T11:25:29.064537Z"
+trace: "projects/testproject-d2c7e/traces/1014709fc84e380bf05ca0947ba001b2"
+}
+2023-04-20 13:25:29.064 CEST
+sendNotification
+r4j3l95t8uvm
+    at Expo.getErrorFromResultError (/workspace/node_modules/expo-server-sdk/build/ExpoClient.js:299:23)
+{
+insertId: "644121290000fc31f4730a86"
+labels: {2}
+logName: "projects/testproject-d2c7e/logs/cloudfunctions.googleapis.com%2Fcloud-functions"
+receiveTimestamp: "2023-04-20T11:25:29.260642675Z"
+resource: {2}
+textPayload: "    at Expo.getErrorFromResultError (/workspace/node_modules/expo-server-sdk/build/ExpoClient.js:299:23)"
+timestamp: "2023-04-20T11:25:29.064561Z"
+trace: "projects/testproject-d2c7e/traces/1014709fc84e380bf05ca0947ba001b2"
+}
+2023-04-20 13:25:29.064 CEST
+sendNotification
+r4j3l95t8uvm
+at Expo.getErrorFromResult (/workspace/node_modules/expo-server-sdk/build/ExpoClient.js:288:28)
+2023-04-20 13:25:29.064 CEST
+sendNotification
+r4j3l95t8uvm
+at Expo.<anonymous> (/workspace/node_modules/expo-server-sdk/build/ExpoClient.js:270:25)
+2023-04-20 13:25:29.064 CEST
+sendNotification
+r4j3l95t8uvm
+at Generator.next (<anonymous>)
+2023-04-20 13:25:29.064 CEST
+sendNotification
+r4j3l95t8uvm
+at fulfilled (/workspace/node_modules/expo-server-sdk/build/ExpoClient.js:24:58)
+2023-04-20 13:25:29.064 CEST
+sendNotification
+r4j3l95t8uvm
+at processTicksAndRejections (node:internal/process/task_queues:96:5) {
+2023-04-20 13:25:29.064 CEST
+sendNotification
+r4j3l95t8uvm
+code: 'VALIDATION_ERROR',
+2023-04-20 13:25:29.064 CEST
+sendNotification
+r4j3l95t8uvm
+statusCode: 400
+2023-04-20 13:25:29.066 CEST
+sendNotification
+r4j3l95t8uvm
+Function execution took 811 ms, finished with status: 'error
+
+Maybe problem is also how trainer notification are setup:
+
+import * as Notifications from "expo-notifications";
+import React from "react";
+
+// This function will be called when a notification is received while the app is in the foreground
+Notifications.setNotificationHandler({
+  handleNotification: async () => ({
+    shouldShowAlert: true,
+    shouldPlaySound: true,
+    shouldSetBadge: false,
+  }),
+});
+
+// This function will be called when the app receives a notification in the background or is closed
+async function handleNotificationResponse(response) {
+  // Do something with the notification response data
+  console.log("Notification response:", response);
+}
+
+export default function useTrainerNotification() {
+  React.useEffect(() => {
+    // Register the notification response listener
+    const subscription = Notifications.addNotificationResponseReceivedListener(
+      handleNotificationResponse
+    );
+
+    // Clean up the listener on unmount
+    return () => {
+      subscription.remove();
+    };
+  }, []);
+}
+
+
+and this is how i call this hook:
+import React, { useState, useEffect } from "react";
+import {
+  StyleSheet,
+  View,
+  FlatList,
+  TouchableOpacity,
+  Image,
+  Dimensions,
+  Text,
+  ActivityIndicator,
+  TextInput,
+} from "react-native";
+import { useNavigation, useFocusEffect } from "@react-navigation/native";
+import { Ionicons } from "@expo/vector-icons";
+import { Entypo } from "@expo/vector-icons";
+import { firebase } from "../../firebaseConfig";
+import {
+  Menu,
+  MenuOptions,
+  MenuOption,
+  MenuTrigger,
+} from "react-native-popup-menu";
+import useTrainerNotification from "../../hooks/useTrainerNotification";
+
+const { width } = Dimensions.get("window");
+const numColumns = 2;
+const clientWidth = (width - 20 * (numColumns + 1)) / numColumns;
+
+export default function TrainerHomeScreen() {
+  const [clients, setClients] = useState([]);
+  const [filteredClients, setFilteredClients] = useState([]);
+  const [searchInput, setSearchInput] = useState("");
+  const navigation = useNavigation();
+  const [videos, setVideos] = React.useState([]);
+  const [currentUserID, setCurrentUserID] = useState("");
+  const [dataLoaded, setDataLoaded] = useState(false);
+  const [showSearchInput, setShowSearchInput] = useState(false);
+  useTrainerNotification();
+
+
+  And lastly this is the testbutton component theat sends notifications:
+
+  import React from "react";
+import { TouchableOpacity, Text } from "react-native";
+import { firebase } from "../../firebaseConfig";
+
+const TestButton = ({ trainerId }) => {
+  const handlePress = async () => {
+    try {
+      const response = await fetch(
+        "https://us-central1-testproject-d2c7e.cloudfunctions.net/sendNotification",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ trainerId: trainerId }),
         }
-      })();
-      return currentPaths;
-    });
+      );
+      if (!response.ok) {
+        throw new Error(`HTTP error! Status: ${response.status}`);
+      }
+      console.log("Sent notification");
+    } catch (error) {
+      console.error("Error sending notification:", error);
+    }
   };
 
   return (
-    <View style={styles.container}>
-      <Image
-        source={{ uri: resizedSnapshotUri }}
-        style={{ width: "100%", height: "100%" }}
-        resizeMode="contain"
-      />
-
-      <View {...panResponder.panHandlers} style={styles.overlay}>
-        <Svg viewBox={`0 0 ${width} ${height}`} style={styles.overlay}>
-          {Array.isArray(paths) &&
-            paths.map((path, index) => (
-              <Path key={index} {...path} fill="none" />
-            ))}
-          {currentPath !== paths[paths.length - 1]?.d && (
-            <Path
-              d={currentPath}
-              stroke={color}
-              strokeWidth={lineWidth}
-              fill="none"
-            />
-          )}
-        </Svg>
-      </View>
-      <View style={styles.toolbar}>
-        <TouchableOpacity onPress={() => setColor("red")}>
-          <FontAwesome name="circle" size={24} color="red" />
-        </TouchableOpacity>
-        <TouchableOpacity onPress={() => setColor("blue")}>
-          <FontAwesome name="circle" size={24} color="blue" />
-        </TouchableOpacity>
-        <TouchableOpacity onPress={() => setColor("green")}>
-          <FontAwesome name="circle" size={24} color="green" />
-        </TouchableOpacity>
-        <TouchableOpacity
-          onPress={() => setLineWidth((prev) => (prev < 10 ? prev + 1 : 1))}
-        >
-          <Text style={styles.toolbarText}>Width: {lineWidth}</Text>
-        </TouchableOpacity>
-        <TouchableOpacity
-          onPress={() => setPaths((prevPaths) => prevPaths.slice(0, -1))}
-        >
-          <FontAwesome name="undo" size={24} color="white" />
-        </TouchableOpacity>
-      </View>
-    </View>
+    <TouchableOpacity onPress={handlePress}>
+      <Text>Test Send Notification</Text>
+    </TouchableOpacity>
   );
-}
+};
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    justifyContent: "center",
-    backgroundColor: "black",
-  },
-  overlay: {
-    position: "absolute",
-    top: 0,
-    left: 0,
-    width: "100%",
-    height: "100%",
-  },
-  toolbar: {
-    position: "absolute",
-    bottom: 10,
-    left: 0,
-    right: 0,
-    flexDirection: "row",
-    justifyContent: "space-around",
-    alignItems: "center",
-    backgroundColor: "rgba(0, 0, 0, 0.5)",
-    paddingVertical: 10,
-  },
-  toolbarText: {
-    color: "white",
-    fontSize: 18,
-  },
-});
+export default TestButton;
+
+
+And n firebase database this are user fields of user that is trying to send notification:
+
+email: "c@c.com"
+expoPushToken: "ExponentPushToken[uDboz4PvjD84s3mGp_qpmx]"
+role: "user"
+trainerId: "5xLv2aPtHdbFHWAnhgEmIKTTjQy1" 

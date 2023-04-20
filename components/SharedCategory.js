@@ -10,7 +10,6 @@ import {
   TouchableOpacity,
 } from "react-native";
 import { useNavigation, useFocusEffect } from "@react-navigation/native";
-import { firebase } from "../firebaseConfig";
 import { useCallback } from "react";
 
 const { width } = Dimensions.get("window");

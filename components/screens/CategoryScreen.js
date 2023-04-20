@@ -1,6 +1,6 @@
 import React, { useLayoutEffect } from "react";
 import { View, Text, StyleSheet } from "react-native";
-import Category from "./Category";
+import Category from "../Category";
 import { Entypo } from "@expo/vector-icons";
 import {
   Menu,

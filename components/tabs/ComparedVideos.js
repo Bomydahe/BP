@@ -190,17 +190,19 @@ const styles = StyleSheet.create({
   video: {
     width: videoWidth,
     height: 200,
-    backgroundColor: "black",
+    //backgroundColor: "black",
     margin: 10,
   },
   timestampContainer: {
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
+    borderRadius: 8,
   },
   thumbnail: {
     width: "100%",
     height: "100%",
+    borderRadius: 8,
   },
   flatlist: {
     width: "100%",
@@ -210,11 +212,11 @@ const styles = StyleSheet.create({
   overlayText: {
     position: "absolute",
     color: "white",
-    fontSize: 26,
+    fontSize: 28,
     fontWeight: "bold",
     alignSelf: "center",
     justifyContent: "center",
-    top: "39%",
+    top: "38%",
     textShadowColor: "rgba(0, 0, 0, 0.35)",
     textShadowOffset: { width: -1, height: 1 },
     textShadowRadius: 15,
@@ -241,6 +243,6 @@ const styles = StyleSheet.create({
   whiteLine: {
     width: "100%", // adjust the width of the white line as desired
     height: 3,
-    backgroundColor: "white",
+    backgroundColor: "rgba(242, 242, 242, 1)",
   },
 });

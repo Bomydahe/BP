@@ -132,8 +132,11 @@ export default function Compare(props) {
   }, [updateNavigationOptions, video1, video2]);
 
   const renderCategoryItem = ({ item }) => (
-    <TouchableOpacity onPress={() => handleCategorySelection(item)}>
-      <Text style={styles.categoryItem}>{item.name}</Text>
+    <TouchableOpacity
+      onPress={() => handleCategorySelection(item)}
+      style={styles.modalButton}
+    >
+      <Text style={styles.modalButtonText}>{item.name}</Text>
     </TouchableOpacity>
   );
 
@@ -197,40 +200,69 @@ export default function Compare(props) {
     switch (modalStep) {
       case "initial":
         return (
-          <View style={styles.categoryList}>
+          <View>
+            <View style={styles.modalHeader}>
+              <Text style={{ fontSize: 18 }}>Choose Video Source</Text>
+              <TouchableOpacity onPress={handleModalClose}>
+                <AntDesign name="close" size={24} color="black" />
+              </TouchableOpacity>
+            </View>
             <TouchableOpacity
               onPress={pickVideoFromStorage}
-              style={{ marginBottom: 20 }}
+              style={styles.modalButton}
             >
-              <Text>Choose video from phone storage</Text>
+              <Text style={styles.modalButtonText}>
+                Choose video from phone storage
+              </Text>
             </TouchableOpacity>
-            <TouchableOpacity onPress={() => setModalStep("selectCategory")}>
-              <Text>Choose video from categories</Text>
+            <TouchableOpacity
+              onPress={() => setModalStep("selectCategory")}
+              style={styles.modalButton}
+            >
+              <Text style={styles.modalButtonText}>
+                Choose video from categories
+              </Text>
             </TouchableOpacity>
           </View>
         );
       case "selectCategory":
         return (
-          <FlatList
-            data={categories}
-            renderItem={renderCategoryItem}
-            keyExtractor={(item) => item.id.toString()}
-            contentContainerStyle={styles.categoryList}
-            showsVerticalScrollIndicator={false}
-            key="categoryList"
-          />
+          <>
+            <View style={styles.modalHeader}>
+              <Text style={{ fontSize: 18 }}>Choose Category</Text>
+              <TouchableOpacity onPress={handleModalClose}>
+                <AntDesign name="close" size={24} color="black" />
+              </TouchableOpacity>
+            </View>
+            <FlatList
+              data={categories}
+              renderItem={renderCategoryItem}
+              keyExtractor={(item) => item.id.toString()}
+              contentContainerStyle={styles.categoryList}
+              showsVerticalScrollIndicator={false}
+              key="categoryList"
+            />
+          </>
         );
       case "selectVideo":
         return (
-          <FlatList
-            data={selectedCategory.videos}
-            renderItem={renderVideoItem}
-            keyExtractor={(item) => item.id.toString()}
-            contentContainerStyle={styles.videoList}
-            numColumns={2}
-            showsVerticalScrollIndicator={false}
-            key="videoList"
-          />
+          <>
+            <View style={styles.modalHeader}>
+              <Text style={{ fontSize: 18 }}>Choose Video</Text>
+              <TouchableOpacity onPress={handleModalClose}>
+                <AntDesign name="close" size={24} color="black" />
+              </TouchableOpacity>
+            </View>
+            <FlatList
+              data={selectedCategory.videos}
+              renderItem={renderVideoItem}
+              keyExtractor={(item) => item.id.toString()}
+              contentContainerStyle={styles.videoList}
+              numColumns={2}
+              showsVerticalScrollIndicator={false}
+              key="videoList"
+            />
+          </>
         );
       default:
         return null;
@@ -398,7 +430,7 @@ const styles = StyleSheet.create({
   categoryList: {
     flexGrow: 1,
     justifyContent: "center",
-    alignItems: "center",
+    alignItems: "flex-start",
     paddingHorizontal: 10,
   },
   compareButton: {
@@ -412,5 +444,28 @@ const styles = StyleSheet.create({
   },
   compareButtonText: {
     color: "#000",
+  },
+
+  modalHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    borderBottomWidth: 1,
+    borderColor: "#eee",
+    paddingBottom: 10,
+    marginBottom: 10,
+  },
+
+  modalButton: {
+    paddingHorizontal: 15,
+    paddingVertical: 5,
+    backgroundColor: "#007AFF",
+    borderRadius: 5,
+    marginBottom: 10,
+  },
+
+  modalButtonText: {
+    color: "white",
+    fontWeight: "bold",
   },
 });

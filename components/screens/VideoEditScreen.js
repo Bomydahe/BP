@@ -12,7 +12,7 @@ import Svg, { Path } from "react-native-svg";
 import { BackHandler } from "react-native";
 import * as FileSystem from "expo-file-system";
 import { FontAwesome, Ionicons } from "@expo/vector-icons";
-import { firebase } from "../firebaseConfig";
+import { firebase } from "../../firebaseConfig";
 import { showMessage } from "react-native-flash-message";
 
 const { width, height } = Dimensions.get("window");
@@ -172,8 +172,8 @@ export default function VideoEditScreen({ route, navigation }) {
         <TouchableOpacity onPress={() => setColor("red")}>
           <FontAwesome name="circle" size={24} color="red" />
         </TouchableOpacity>
-        <TouchableOpacity onPress={() => setColor("blue")}>
-          <FontAwesome name="circle" size={24} color="blue" />
+        <TouchableOpacity onPress={() => setColor("#007AFF")}>
+          <FontAwesome name="circle" size={24} color="#007AFF" />
         </TouchableOpacity>
         <TouchableOpacity onPress={() => setColor("green")}>
           <FontAwesome name="circle" size={24} color="green" />

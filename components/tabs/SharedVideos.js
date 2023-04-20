@@ -14,10 +14,10 @@ import {
   ActivityIndicator,
 } from "react-native";
 import { useNavigation, useFocusEffect } from "@react-navigation/native";
-import { firebase } from "../firebaseConfig";
+import { firebase } from "../../firebaseConfig";
 import { AntDesign } from "@expo/vector-icons";
 import { TouchableWithoutFeedback } from "react-native-gesture-handler";
-import TrainerSelectModal from "./TrainerSelectModal";
+import TrainerSelectModal from "../modals/TrainerSelectModal";
 
 const { width } = Dimensions.get("window");
 const numColumns = 2;
@@ -286,6 +286,7 @@ const styles = StyleSheet.create({
     backgroundColor: "black",
     marginBottom: 10,
     overflow: "hidden",
+    borderRadius: 8,
   },
 
   videoWrapper: {
@@ -308,7 +309,7 @@ const styles = StyleSheet.create({
   selectTrainerButton: {
     position: "absolute",
     bottom: 20,
-    backgroundColor: "blue",
+    backgroundColor: "#007AFF",
     padding: 10,
     alignItems: "center",
     justifyContent: "center",
