@@ -20,6 +20,7 @@ import TrainerVideoPlayer from "./components/videoPlayers/TrainerVideoPlayer";
 import SharedVideoPlayer from "./components/videoPlayers/SharedVideoPlayer";
 import VideoEditScreen from "./components/screens/VideoEditScreen";
 import FlashMessage from "react-native-flash-message";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 const Stack = createNativeStackNavigator();
 const Tab = createMaterialTopTabNavigator();
@@ -33,8 +34,16 @@ const CompareScreen = ({ navigation, route }) => {
 };
 
 function Home() {
+  const insets = useSafeAreaInsets();
+
   return (
-    <Tab.Navigator>
+    <Tab.Navigator
+      screenOptions={{
+        tabBarStyle: {
+          marginTop: insets.top,
+        },
+      }}
+    >
       <Tab.Screen name="My videos" component={MyVideos} />
       <Tab.Screen name="Compared" component={ComparedVideos} />
       <Tab.Screen name="Shared" component={SharedVideos} />
