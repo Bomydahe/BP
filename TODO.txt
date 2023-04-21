@@ -2,7 +2,7 @@ NOTIFICATIONS (high prio)
 zmena kategorie videa niekde
 
 Bugs: 
-  > ...
+  > compress files
 
 cleanup of code | commenting
 
