@@ -1,5 +1,6 @@
 import React from "react";
-import { StyleSheet, StatusBar, View } from "react-native";
+import { StyleSheet, View } from "react-native";
+import { StatusBar } from "expo-status-bar";
 import { NavigationContainer } from "@react-navigation/native";
 import { createMaterialTopTabNavigator } from "@react-navigation/material-top-tabs";
 import MyVideos from "./components/tabs/MyVideos";
@@ -124,7 +125,7 @@ export default function App() {
             }}
           />
         </Stack.Navigator>
-        <StatusBar />
+        <StatusBar style="light" backgroundColor="black" />
       </NavigationContainer>
       <FlashMessage position="top" />
     </MenuProvider>
