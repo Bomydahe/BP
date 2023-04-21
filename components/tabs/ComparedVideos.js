@@ -12,6 +12,7 @@ import { useNavigation } from "@react-navigation/native";
 import * as VideoThumbnails from "expo-video-thumbnails";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { AntDesign } from "@expo/vector-icons";
+import ConfirmDeleteModal from "../modals/ConfirmDeleteModal";
 
 const { width } = Dimensions.get("window");
 const numColumns = 2;
@@ -23,6 +24,8 @@ export default function ComparedVideos({ route }) {
   const [video2Thumbnail, setVideo2Thumbnail] = useState(null);
   const [videoComparisons, setVideoComparisons] = useState([]);
   const navigation = useNavigation();
+  const [confirmDeleteVisible, setConfirmDeleteVisible] = useState(false);
+  const [deletingVideoId, setDeletingVideoId] = useState(null);
 
   useEffect(() => {
     (async () => {
@@ -67,21 +70,33 @@ export default function ComparedVideos({ route }) {
     }
   };
 
-  const handleRemoveVideo = async (videoId) => {
+  const handleRemoveVideo = (videoId) => {
+    setDeletingVideoId(videoId);
+    setConfirmDeleteVisible(true);
+  };
+
+  const confirmDeleteVideo = async () => {
     // Remove the comparison from the state
     setVideoComparisons((prevComparisons) =>
-      prevComparisons.filter((comparison) => comparison.id !== videoId)
+      prevComparisons.filter((comparison) => comparison.id !== deletingVideoId)
     );
 
     // Update the stored data
     const updatedComparisons = videoComparisons.filter(
-      (comparison) => comparison.id !== videoId
+      (comparison) => comparison.id !== deletingVideoId
     );
     await AsyncStorage.setItem(
       "@videoComparisons",
       JSON.stringify(updatedComparisons)
     );
+
+    setDeletingVideoId(null);
+    setConfirmDeleteVisible(false);
   };
+
+  function handleConfirmedDelete() {
+    confirmDeleteVideo();
+  }
 
   const loadVideoComparisons = async () => {
     try {
@@ -174,6 +189,11 @@ export default function ComparedVideos({ route }) {
         horizontal={false}
         style={styles.flatlist}
         columnWrapperStyle={{ justifyContent: "space-between" }}
+      />
+      <ConfirmDeleteModal
+        visible={confirmDeleteVisible}
+        onClose={() => setConfirmDeleteVisible(false)}
+        onConfirm={handleConfirmedDelete}
       />
     </View>
   );

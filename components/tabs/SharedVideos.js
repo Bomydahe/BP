@@ -18,6 +18,7 @@ import { firebase } from "../../firebaseConfig";
 import { AntDesign } from "@expo/vector-icons";
 import { TouchableWithoutFeedback } from "react-native-gesture-handler";
 import TrainerSelectModal from "../modals/TrainerSelectModal";
+import ConfirmDeleteModal from "../modals/ConfirmDeleteModal";
 
 const { width } = Dimensions.get("window");
 const numColumns = 2;
@@ -33,6 +34,8 @@ export default function SharedVideos({ route }) {
   const [filteredTrainers, setFilteredTrainers] = useState([]);
   const [searchText, setSearchText] = useState("");
   const [loading, setLoading] = useState(true);
+  const [confirmDeleteVisible, setConfirmDeleteVisible] = useState(false);
+  const [deletingVideoId, setDeletingVideoId] = useState(null);
 
   useFocusEffect(
     React.useCallback(() => {
@@ -212,7 +215,10 @@ export default function SharedVideos({ route }) {
         </TouchableOpacity>
         <TouchableOpacity
           style={styles.removeVideoButton}
-          onPress={() => deleteVideo(item)}
+          onPress={() => {
+            setDeletingVideoId(item);
+            setConfirmDeleteVisible(true);
+          }}
         >
           <AntDesign name="close" size={24} color="white" />
         </TouchableOpacity>
@@ -260,6 +266,15 @@ export default function SharedVideos({ route }) {
             filterTrainers={filterTrainers}
             handleTrainerSelect={handleTrainerSelect}
           />
+          <ConfirmDeleteModal
+            visible={confirmDeleteVisible}
+            onClose={() => setConfirmDeleteVisible(false)}
+            onConfirm={() => {
+              deleteVideo(deletingVideoId);
+              setConfirmDeleteVisible(false);
+            }}
+            addition={" This will also delete this video from your trainer"}
+          />
         </>
       )}
     </SafeAreaView>
@@ -277,7 +292,7 @@ const styles = StyleSheet.create({
     flex: 1,
     marginTop: 20,
     paddingHorizontal: 10,
-    marginBottom: 70,
+    marginBottom: 0,
   },
 
   video: {

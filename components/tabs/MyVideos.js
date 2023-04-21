@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { useFocusEffect } from "@react-navigation/native";
 import * as MediaLibrary from "expo-media-library";
 import * as ImagePicker from "expo-image-picker";
 import {
@@ -13,6 +14,7 @@ import {
   SafeAreaView,
   Image,
   ActivityIndicator,
+  Alert,
 } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import { AntDesign } from "@expo/vector-icons";
@@ -29,10 +31,12 @@ import {
   uploadVideo,
   generateThumbnail,
   generateUniqueId,
+  fetchTrainerIdAndEmail,
 } from "../../utils/firebaseFunctions";
 import UploadPromptModal from "../modals/UploadPromptModal";
 import { showMessage } from "react-native-flash-message";
 import * as Notifications from "expo-notifications";
+import ConfirmDeleteModal from "../modals/ConfirmDeleteModal";
 
 export default function MyVideos(props) {
   const [status, setStatus] = React.useState({});
@@ -52,31 +56,37 @@ export default function MyVideos(props) {
     { id: 0, name: "All Videos", videos: [] },
   ]);
   const [trainerId, setTrainerId] = useState(null);
+  const [trainerEmail, setTrainerEmail] = useState(null);
+  const [confirmDeleteVisible, setConfirmDeleteVisible] = useState(false);
+  const [deletingVideoId, setDeletingVideoId] = useState(null);
 
-  useEffect(() => {
-    const fetchTrainerId = async () => {
-      // Get the user ID from Firebase Authentication
-      const userId = firebase.auth().currentUser.uid;
+  useFocusEffect(
+    React.useCallback(() => {
+      const updateTrainerIdAndEmail = async () => {
+        const result = await fetchTrainerIdAndEmail();
 
-      // Retrieve the trainer ID from the users collection
-      const userDoc = await firebase
-        .firestore()
-        .collection("users")
-        .doc(userId)
-        .get();
-      const trainerId = userDoc.data().trainerId;
-      console.log(" trainerId ", trainerId);
+        if (result && result.trainerId && result.trainerEmail) {
+          setTrainerId(result.trainerId);
+          setTrainerEmail(result.trainerEmail);
+        }
+      };
 
-      // Update the state variable with the fetched trainer ID
-      setTrainerId(trainerId);
-    };
-
-    fetchTrainerId();
-  }, []);
+      updateTrainerIdAndEmail();
+    }, [])
+  );
 
   function showModalForUploadPrompt(videoId) {
-    setUploadPromptVisible(true);
-    setCurrentVideoId(videoId);
+    if (trainerId) {
+      setUploadPromptVisible(true);
+      setCurrentVideoId(videoId);
+    } else {
+      Alert.alert(
+        "No Trainer Assigned",
+        "You must have a choose trainer before you can share videos.",
+        [{ text: "OK", onPress: () => {} }],
+        { cancelable: true }
+      );
+    }
   }
 
   /* adding category */
@@ -193,14 +203,23 @@ export default function MyVideos(props) {
 
   /* removing video */
   function handleRemoveVideo(videoId) {
+    setDeletingVideoId(videoId);
+    setConfirmDeleteVisible(true);
+  }
+
+  function confirmDeleteVideo() {
     setCategories(
       categories.map((category) => {
         return {
           ...category,
-          videos: category.videos.filter((video) => video.id !== videoId),
+          videos: category.videos.filter(
+            (video) => video.id !== deletingVideoId
+          ),
         };
       })
     );
+    setDeletingVideoId(null);
+    setConfirmDeleteVisible(false);
   }
 
   async function handleLogout() {
@@ -240,6 +259,10 @@ export default function MyVideos(props) {
       </TouchableOpacity>
     </>
   );
+
+  function handleConfirmedDelete() {
+    confirmDeleteVideo();
+  }
 
   return (
     <>
@@ -298,6 +321,7 @@ export default function MyVideos(props) {
       <View style={styles.uploadContainer}>
         <UploadPromptModal
           visible={uploadPromptVisible}
+          trainerEmail={trainerEmail}
           onClose={() => setUploadPromptVisible(false)}
           onYes={async () => {
             setUploadPromptVisible(false);
@@ -309,10 +333,11 @@ export default function MyVideos(props) {
               await uploadVideo(videoObj.url);
 
               showMessage({
-                message: "Video shared successfully",
+                message: `Video shared with ${trainerEmail} successfully`,
                 type: "success",
                 duration: 3000,
                 position: "top",
+                style: { paddingTop: 40 },
               });
             } catch (error) {
               console.log("Error uploading video: ", error);
@@ -327,6 +352,11 @@ export default function MyVideos(props) {
             <Text style={styles.activityIndicatorText}>Uploading video...</Text>
           </View>
         )}
+        <ConfirmDeleteModal
+          visible={confirmDeleteVisible}
+          onClose={() => setConfirmDeleteVisible(false)}
+          onConfirm={handleConfirmedDelete}
+        />
       </View>
 
       <FAB

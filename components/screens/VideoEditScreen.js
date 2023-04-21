@@ -134,6 +134,7 @@ export default function VideoEditScreen({ route, navigation }) {
             type: "success",
             duration: 3000,
             position: "top",
+            style: { paddingTop: 40 },
           });
           // Navigate back to the previous component
           navigation.goBack();

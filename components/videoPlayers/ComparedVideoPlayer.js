@@ -44,19 +44,23 @@ export default function ComparedVideoPlayer({ route }) {
         videoUri={video1Uri}
         onPlaybackStatusUpdate={(status) => {
           if (status.didJustFinish && !status.isLooping) {
-            videoPlayerRef.current.pauseAsync();
+            video1Ref.current.pauseAsync();
           }
         }}
         videoPlayerRef={video1Ref}
+        secondaryVideoPlayerRef={video2Ref}
+        hideControls={true}
+        hidePlayPause={true}
       />
       <CustomVideoPlayer
         videoUri={video2Uri}
         onPlaybackStatusUpdate={(status) => {
           if (status.didJustFinish && !status.isLooping) {
-            videoPlayerRef.current.pauseAsync();
+            video2Ref.current.pauseAsync();
           }
         }}
         videoPlayerRef={video2Ref}
+        secondaryVideoPlayerRef={video1Ref}
       />
     </View>
   );

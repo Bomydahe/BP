@@ -1,11 +1,11 @@
 import React from "react";
 import { View, Text, TouchableOpacity, Modal, StyleSheet } from "react-native";
 
-export default function UploadPromptModal({
+export default function ConfirmDeleteModal({
   visible,
   onClose,
-  onYes,
-  trainerEmail,
+  onConfirm,
+  addition,
 }) {
   return (
     <Modal
@@ -26,20 +26,21 @@ export default function UploadPromptModal({
             style={styles.modalView}
           >
             <Text style={styles.modalText}>
-              Do you want to share this video with {trainerEmail}?
+              Are you sure you want to delete this video?
+              {addition ? addition : ""}
             </Text>
             <View style={styles.modalButtons}>
               <TouchableOpacity
                 style={{ ...styles.button, backgroundColor: "#8E8E93" }}
                 onPress={onClose}
               >
-                <Text style={styles.textStyle}>No</Text>
+                <Text style={styles.textStyle}>Cancel</Text>
               </TouchableOpacity>
               <TouchableOpacity
-                style={{ ...styles.button, backgroundColor: "#007AFF" }}
-                onPress={onYes}
+                style={{ ...styles.button, backgroundColor: "#FF3B30" }}
+                onPress={onConfirm}
               >
-                <Text style={styles.textStyle}>Yes</Text>
+                <Text style={styles.textStyle}>Delete</Text>
               </TouchableOpacity>
             </View>
           </TouchableOpacity>

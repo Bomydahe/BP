@@ -15,6 +15,9 @@ export default function CustomVideoPlayer({
   onPlaybackStatusUpdate,
   videoPlayerRef,
   onScaledVideoSizeChange,
+  secondaryVideoPlayerRef,
+  hideControls,
+  hidePlayPause,
 }) {
   const [showControls, setShowControls] = useState(false);
   const [sliderValue, setSliderValue] = useState(0);
@@ -28,10 +31,26 @@ export default function CustomVideoPlayer({
   });
   const [playbackRate, setPlaybackRate] = useState(1.0);
 
+  useEffect(() => {
+    // Sync secondary video player when primary video player state changes
+    if (secondaryVideoPlayerRef && secondaryVideoPlayerRef.current) {
+      if (isPlaying) {
+        secondaryVideoPlayerRef.current.playAsync();
+      } else {
+        secondaryVideoPlayerRef.current.pauseAsync();
+      }
+      secondaryVideoPlayerRef.current.setRateAsync(playbackRate, true);
+    }
+  }, [isPlaying, playbackRate]);
+
   const handlePlaybackRateChange = async (newRate) => {
     setPlaybackRate(newRate);
     if (videoPlayerRef.current) {
       await videoPlayerRef.current.setRateAsync(newRate, true);
+    }
+
+    if (secondaryVideoPlayerRef && secondaryVideoPlayerRef.current) {
+      await secondaryVideoPlayerRef.current.setRateAsync(newRate, true);
     }
   };
 
@@ -100,11 +119,20 @@ export default function CustomVideoPlayer({
 
   const handleSliderValueChange = async (value) => {
     if (videoPlayerRef.current && lastPlaybackStatus) {
+      setSliderValue(value);
       const newPosition = value * lastPlaybackStatus.durationMillis;
       await videoPlayerRef.current.setPositionAsync(newPosition, {
         toleranceMillisBefore: 10,
         toleranceMillisAfter: 10,
       });
+
+      // Sync secondary video player
+      if (secondaryVideoPlayerRef && secondaryVideoPlayerRef.current) {
+        await secondaryVideoPlayerRef.current.setPositionAsync(newPosition, {
+          toleranceMillisBefore: 10,
+          toleranceMillisAfter: 10,
+        });
+      }
     }
   };
 
@@ -115,6 +143,14 @@ export default function CustomVideoPlayer({
         toleranceMillisBefore: 10,
         toleranceMillisAfter: 10,
       });
+
+      // Sync secondary video player
+      if (secondaryVideoPlayerRef && secondaryVideoPlayerRef.current) {
+        await secondaryVideoPlayerRef.current.setPositionAsync(newPosition, {
+          toleranceMillisBefore: 10,
+          toleranceMillisAfter: 10,
+        });
+      }
     }
   };
 
@@ -136,10 +172,10 @@ export default function CustomVideoPlayer({
 
       <TouchableOpacity
         style={styles.videoOverlay}
-        onPress={togglePlayback}
+        onPress={hidePlayPause ? null : togglePlayback}
         activeOpacity={1}
       >
-        {showControls && (
+        {!hidePlayPause && showControls && (
           <MaterialIcons
             name={isPlaying ? "play-circle-outline" : "pause-circle-outline"}
             size={60}
@@ -147,7 +183,7 @@ export default function CustomVideoPlayer({
           />
         )}
       </TouchableOpacity>
-      {showControls && (
+      {!hideControls && showControls && (
         <>
           <View style={styles.sliderContainer}>
             <Text style={styles.time}>

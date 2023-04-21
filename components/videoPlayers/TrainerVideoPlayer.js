@@ -118,6 +118,7 @@ export default function TrainerVideoPlayer({ route }) {
         type: "success",
         duration: 3000,
         position: "top",
+        style: { paddingTop: 40 },
       });
     } catch (error) {
       console.error("Error adding comment:", error);

@@ -10,60 +10,71 @@ const CategoryModal = ({
 }) => {
   return (
     <Modal
-      animationType="slide"
+      animationType="fade"
       transparent={true}
       visible={modalVisible}
       onRequestClose={() => {
         setModalVisible(!modalVisible);
       }}
     >
-      <View style={styles.centeredModalView}>
-        <View style={styles.modalView}>
-          <Text style={styles.modalTitle}>Select a category</Text>
-          {categories.map((category) => (
-            <Pressable
-              key={category.id}
-              style={styles.modalButton}
-              onPress={() => handleAddVideo(selectedVideoUri, category.id)}
-            >
-              <Text style={styles.modalButtonText}>{category.name}</Text>
-            </Pressable>
-          ))}
+      <Pressable
+        style={styles.backgroundOverlay}
+        onPress={() => setModalVisible(!modalVisible)}
+      >
+        <View style={styles.centeredModalView}>
+          <View style={styles.modalView}>
+            <Text style={styles.modalTitle}>Select a category</Text>
+            {categories.map((category) => (
+              <Pressable
+                key={category.id}
+                style={styles.modalButton}
+                onPress={() => handleAddVideo(selectedVideoUri, category.id)}
+              >
+                <Text style={styles.modalButtonText}>{category.name}</Text>
+              </Pressable>
+            ))}
+          </View>
         </View>
-      </View>
+      </Pressable>
     </Modal>
   );
 };
 
 const styles = StyleSheet.create({
-  centeredModalView: {
+  backgroundOverlay: {
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
-    marginTop: 22,
+    backgroundColor: "rgba(0, 0, 0, 0.6)",
+  },
+  centeredModalView: {
+    alignSelf: "center",
   },
   modalView: {
-    margin: 20,
+    width: "70%",
     backgroundColor: "white",
-    borderRadius: 20,
-    padding: 35,
-    alignItems: "center",
+    borderRadius: 10,
+    padding: 25,
+    alignItems: "stretch",
+    elevation: 5,
   },
   modalTitle: {
-    fontSize: 20,
+    fontSize: 22,
     fontWeight: "bold",
     marginBottom: 15,
+    textAlign: "center",
   },
   modalButton: {
     backgroundColor: "#2196F3",
-    borderRadius: 20,
-    padding: 10,
-    paddingHorizontal: 20,
+    borderRadius: 10,
+    padding: 12,
     marginTop: 10,
+    alignItems: "center",
   },
   modalButtonText: {
     color: "white",
     fontWeight: "bold",
+    fontSize: 16,
   },
 });
 

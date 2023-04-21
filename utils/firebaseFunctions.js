@@ -104,3 +104,37 @@ export function generateUniqueId() {
     Date.now().toString(36) + Math.random().toString(36).substr(2, 5)
   ).toUpperCase();
 }
+
+export async function fetchTrainerIdAndEmail() {
+  // Get the user ID from Firebase Authentication
+  const userId = firebase.auth().currentUser.uid;
+
+  // Retrieve the user's document from the users collection
+  const userDoc = await firebase
+    .firestore()
+    .collection("users")
+    .doc(userId)
+    .get();
+
+  // Retrieve the trainer ID from the users collection
+  const trainerId = userDoc.data().trainerId;
+  console.log(" trainerId ", trainerId);
+
+  // Check if the trainerId is empty (null or undefined)
+  if (!trainerId) {
+    console.log("User has not chosen a trainer yet.");
+    return { trainerId: null, trainerEmail: null };
+  }
+
+  // Retrieve the trainer email using the trainer ID
+  const trainerDoc = await firebase
+    .firestore()
+    .collection("users")
+    .doc(trainerId)
+    .get();
+  const trainerEmail = trainerDoc.data().email;
+  console.log(" trainerEmail ", trainerEmail);
+
+  // Return the trainerId and trainerEmail as an object
+  return { trainerId, trainerEmail };
+}

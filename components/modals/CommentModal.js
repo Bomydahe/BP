@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React from "react";
 import {
   View,
   StyleSheet,
@@ -17,60 +17,76 @@ export default function CommentModal({
 }) {
   return (
     <Modal
-      animationType="slide"
+      animationType="fade"
       transparent={true}
       visible={modalVisible}
       onRequestClose={() => {
         setModalVisible(false);
       }}
     >
-      <View style={styles.centeredView}>
-        <View style={styles.modalView}>
-          <Text style={styles.modalText}>Add a comment:</Text>
-          <TextInput
-            style={styles.input}
-            onChangeText={(text) => setInputValue(text)}
-            value={inputValue}
-            placeholder="Write your comment"
-            multiline
-            numberOfLines={8}
-          />
-          <View style={styles.buttonContainer}>
-            <TouchableOpacity
-              style={[styles.button, { flex: 1, marginRight: 10 }]}
-              onPress={onSubmit}
-            >
-              <Text style={styles.buttonText}>Submit</Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={[styles.button, { flex: 1, marginLeft: 10 }]}
-              onPress={() => {
-                setModalVisible(false);
-                setInputValue(""); // Reset the input value
-              }}
-            >
-              <Text style={styles.buttonText}>Cancel</Text>
-            </TouchableOpacity>
-          </View>
+      <TouchableOpacity
+        style={styles.backgroundOverlay}
+        onPress={() => setModalVisible(false)}
+        activeOpacity={1}
+      >
+        <View style={styles.centeredView}>
+          <TouchableOpacity
+            activeOpacity={1}
+            onPress={() => {}}
+            style={styles.modalView}
+          >
+            <Text style={styles.modalText}>Add a comment:</Text>
+            <TextInput
+              style={styles.input}
+              onChangeText={(text) => setInputValue(text)}
+              value={inputValue}
+              placeholder="Write your comment"
+              multiline
+              numberOfLines={8}
+            />
+            <View style={styles.buttonContainer}>
+              <TouchableOpacity
+                style={[styles.button, { flex: 1, marginRight: 10 }]}
+                onPress={() => {
+                  setModalVisible(false);
+                  setInputValue(""); // Reset the input value
+                }}
+              >
+                <Text style={styles.buttonText}>Cancel</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[styles.button, { flex: 1, marginLeft: 10 }]}
+                onPress={onSubmit}
+              >
+                <Text style={styles.buttonText}>Submit</Text>
+              </TouchableOpacity>
+            </View>
+          </TouchableOpacity>
         </View>
-      </View>
+      </TouchableOpacity>
     </Modal>
   );
 }
 
 const styles = StyleSheet.create({
-  centeredView: {
+  backgroundOverlay: {
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
-    marginTop: 22,
+    backgroundColor: "rgba(0, 0, 0, 0.6)",
+  },
+  centeredView: {
+    width: "100%",
+    justifyContent: "center",
+    alignItems: "center",
   },
   modalView: {
     margin: 20,
     backgroundColor: "white",
-    borderRadius: 20,
+    borderRadius: 12,
     padding: 35,
     alignItems: "center",
+    width: "80%",
     shadowColor: "#000",
     shadowOffset: {
       width: 0,
@@ -79,7 +95,6 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.25,
     shadowRadius: 4,
     elevation: 5,
-    maxWidth: "90%",
   },
   input: {
     height: "auto",
@@ -95,7 +110,7 @@ const styles = StyleSheet.create({
   },
   button: {
     backgroundColor: "#2196F3",
-    borderRadius: 20,
+    borderRadius: 10,
     padding: 10,
     elevation: 2,
     marginTop: 15,
@@ -107,7 +122,7 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
   },
   modalText: {
-    fontSize: 18,
+    fontSize: 20,
     marginBottom: 15,
     textAlign: "center",
   },
@@ -115,6 +130,6 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "space-between",
     marginTop: 15,
-    width: "80%",
+    width: "90%",
   },
 });

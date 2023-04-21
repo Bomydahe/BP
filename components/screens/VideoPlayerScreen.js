@@ -5,6 +5,7 @@ import {
   TouchableOpacity,
   Text,
   ActivityIndicator,
+  Alert,
 } from "react-native";
 import * as ScreenOrientation from "expo-screen-orientation";
 import { useNavigation, useFocusEffect } from "@react-navigation/native";
@@ -20,6 +21,7 @@ import {
   uploadVideo,
   generateThumbnail,
   generateUniqueId,
+  fetchTrainerIdAndEmail,
 } from "../../utils/firebaseFunctions";
 
 export default function VideoPlayerScreen({ route }) {
@@ -28,6 +30,23 @@ export default function VideoPlayerScreen({ route }) {
   const videoPlayerRef = useRef(null);
   const [modalVisible, setModalVisible] = useState(false);
   const [uploading, setUploading] = useState(false);
+  const [trainerId, setTrainerId] = useState(null);
+  const [trainerEmail, setTrainerEmail] = useState(null);
+
+  useFocusEffect(
+    React.useCallback(() => {
+      const updateTrainerIdAndEmail = async () => {
+        const result = await fetchTrainerIdAndEmail();
+
+        if (result && result.trainerId && result.trainerEmail) {
+          setTrainerId(result.trainerId);
+          setTrainerEmail(result.trainerEmail);
+        }
+      };
+
+      updateTrainerIdAndEmail();
+    }, [])
+  );
 
   const stopVideo = async () => {
     if (videoPlayerRef.current) {
@@ -41,16 +60,16 @@ export default function VideoPlayerScreen({ route }) {
     const thumbnailUri = await generateThumbnail(videoUri);
     const thumbnailUrl = await uploadThumbnail(thumbnailUri);
     const videoUrl = await uploadVideo(videoUri);
-    const userId = firebase.auth().currentUser.uid;
     const videoName = videoUri.substring(videoUri.lastIndexOf("/") + 1);
     await saveVideoMetadata(videoName, videoUrl, thumbnailUrl, false, userId);
     setUploading(false); // Stop loading indicator
 
     showMessage({
-      message: "Video uploaded successfully",
+      message: `Video shared with ${trainerEmail} successfully`,
       type: "success",
       duration: 3000,
       position: "top",
+      style: { paddingTop: 40 },
     });
   };
 
@@ -59,7 +78,20 @@ export default function VideoPlayerScreen({ route }) {
       headerRight: () => (
         <View style={styles.headerButtonsContainer}>
           <TouchableOpacity
-            onPress={() => setModalVisible(true)}
+            onPress={() => {
+              console.log("trianerID +++++", trainerId);
+              console.log("---- +++++", trainerEmail);
+              if (trainerId) {
+                setModalVisible(true);
+              } else {
+                Alert.alert(
+                  "No Trainer Assigned",
+                  "You must have a choose trainer before you can share videos.",
+                  [{ text: "OK", onPress: () => {} }],
+                  { cancelable: true }
+                );
+              }
+            }}
             style={styles.shareIcon}
           >
             <MaterialIcons name="share" size={24} color="white" />
@@ -79,7 +111,7 @@ export default function VideoPlayerScreen({ route }) {
         </View>
       ),
     });
-  }, [navigation, videoUri]);
+  }, [navigation, videoUri, trainerId, trainerEmail]);
 
   useEffect(() => {
     updateNavigationOptions();
@@ -114,6 +146,7 @@ export default function VideoPlayerScreen({ route }) {
         visible={modalVisible}
         onClose={() => setModalVisible(false)}
         onYes={handleSubmitUpload}
+        trainerEmail={trainerEmail}
       />
       <CustomVideoPlayer
         videoUri={videoUri}
