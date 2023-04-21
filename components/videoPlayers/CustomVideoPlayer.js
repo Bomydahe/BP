@@ -46,11 +46,27 @@ export default function CustomVideoPlayer({
   const handlePlaybackRateChange = async (newRate) => {
     setPlaybackRate(newRate);
     if (videoPlayerRef.current) {
+      if (!isPlaying) {
+        // Temporarily play the video to change the playback rate
+        await videoPlayerRef.current.playAsync();
+      }
       await videoPlayerRef.current.setRateAsync(newRate, true);
+      if (!isPlaying) {
+        // Pause the video again if it was paused
+        await videoPlayerRef.current.pauseAsync();
+      }
     }
 
     if (secondaryVideoPlayerRef && secondaryVideoPlayerRef.current) {
+      if (!isPlaying) {
+        // Temporarily play the secondary video to change the playback rate
+        await secondaryVideoPlayerRef.current.playAsync();
+      }
       await secondaryVideoPlayerRef.current.setRateAsync(newRate, true);
+      if (!isPlaying) {
+        // Pause the secondary video again if it was paused
+        await secondaryVideoPlayerRef.current.pauseAsync();
+      }
     }
   };
 
@@ -105,16 +121,16 @@ export default function CustomVideoPlayer({
       if (status.isPlaying) {
         setIsPlaying(false);
         await videoPlayerRef.current.pauseAsync();
+        setShowControls(true);
       } else {
         setIsPlaying(true);
         await videoPlayerRef.current.playAsync();
+        setShowControls(true);
+        setTimeout(() => {
+          setShowControls(false);
+        }, 3000);
       }
     }
-
-    setShowControls(true);
-    setTimeout(() => {
-      setShowControls(false);
-    }, 5000);
   };
 
   const handleSliderValueChange = async (value) => {
