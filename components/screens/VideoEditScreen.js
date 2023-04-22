@@ -24,6 +24,7 @@ export default function VideoEditScreen({ route, navigation }) {
   const [currentPath, setCurrentPath] = useState("");
   const [color, setColor] = useState("red");
   const [lineWidth, setLineWidth] = useState(5);
+  console.log("tu sme", width, height);
 
   const handleGoBack = async () => {
     if (snapshotUri) {
@@ -92,8 +93,13 @@ export default function VideoEditScreen({ route, navigation }) {
       const videoDoc = await videoRef.get();
       const overlays = videoDoc.data().overlays || [];
 
-      // Create a new overlay object with the provided overlay data and time
-      const newOverlay = { overlayData: overlayData, time: time };
+      // Create a new overlay object with the provided overlay data, time, originalWidth and originalHeight
+      const newOverlay = {
+        overlayData: overlayData,
+        time: time,
+        originalWidth: width,
+        originalHeight: height,
+      };
 
       // Add the new overlay to the existing overlays array
       overlays.push(newOverlay);
@@ -122,7 +128,7 @@ export default function VideoEditScreen({ route, navigation }) {
           console.log("pathsdata:", pathsData);
 
           // Add the path data to Firestore
-          await addOverlay(videoName, pathsData, position);
+          await addOverlay(videoName, pathsData, position, width, height);
           showMessage({
             message: "Overlay edit uploaded successfully",
             type: "success",

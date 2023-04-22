@@ -28,7 +28,7 @@ export default function SharedVideoPlayer({ route }) {
   const [currentOverlay, setCurrentOverlay] = useState(null);
   const [videoWidth, setVideoWidth] = useState(0);
   const [videoHeight, setVideoHeight] = useState(0);
-  const [videoSnapshotUri, setVideoSnapshotUri] = useState(null); // Add this to your state variables
+  const [videoSnapshotUri, setVideoSnapshotUri] = useState(null);
 
   const displayMessage = async (message) => {
     if (videoRef.current) {
@@ -139,6 +139,26 @@ export default function SharedVideoPlayer({ route }) {
       <Feather name="edit" size={12} color="white" />
     </View>
   );
+
+  const scalePathData = (
+    pathData,
+    originalWidth,
+    originalHeight,
+    newWidth,
+    newHeight
+  ) => {
+    const scaleX = newWidth / originalWidth;
+    const scaleY = newHeight / originalHeight;
+
+    return pathData.replace(
+      /(\d+(\.\d+)?),(\d+(\.\d+)?)/g,
+      (match, xWhole, xDecimal, yWhole, yDecimal) => {
+        const x = parseFloat(xWhole + (xDecimal || ""));
+        const y = parseFloat(yWhole + (yDecimal || ""));
+        return `${x * scaleX},${y * scaleY}`;
+      }
+    );
+  };
 
   return (
     <View style={styles.container}>
@@ -266,7 +286,13 @@ export default function SharedVideoPlayer({ route }) {
           {currentOverlay.overlayData.map((pathData, index) => (
             <Path
               key={index}
-              d={pathData.d}
+              d={scalePathData(
+                pathData.d,
+                currentOverlay.originalWidth,
+                currentOverlay.originalHeight,
+                width,
+                height
+              )}
               stroke={pathData.stroke}
               strokeWidth={pathData.strokeWidth * 4}
               fill="none"
