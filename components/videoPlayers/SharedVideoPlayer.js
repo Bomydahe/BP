@@ -351,7 +351,7 @@ const styles = StyleSheet.create({
 
   overlaySvg: {
     position: "absolute",
-    top: 10,
+    top: 0,
     left: 0,
     zIndex: 2,
     width: "100%",
@@ -359,8 +359,8 @@ const styles = StyleSheet.create({
   },
 
   modalContainer: {
-    right: 10,
-    bottom: 0,
+    position: "absolute",
+    top: 0,
     left: 0,
     right: 0,
     bottom: 0,
