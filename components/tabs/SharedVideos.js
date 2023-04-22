@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   View,
   FlatList,
@@ -36,6 +36,8 @@ export default function SharedVideos({ route }) {
   const [loading, setLoading] = useState(true);
   const [confirmDeleteVisible, setConfirmDeleteVisible] = useState(false);
   const [deletingVideoId, setDeletingVideoId] = useState(null);
+  const [selectedTrainerEmail, setSelectedTrainerEmail] = useState("");
+  const [selectedTrainerId, setSelectedTrainerId] = useState("");
 
   useFocusEffect(
     React.useCallback(() => {
@@ -63,9 +65,43 @@ export default function SharedVideos({ route }) {
     }, [])
   );
 
+  const fetchTrainerEmail = async () => {
+    try {
+      const userDoc = await firebase
+        .firestore()
+        .collection("users")
+        .doc(userId)
+        .get();
+      const userTrainerId = userDoc.data().trainerId;
+      if (userTrainerId) {
+        const trainerDoc = await firebase
+          .firestore()
+          .collection("users")
+          .doc(userTrainerId)
+          .get();
+        const trainerEmail = trainerDoc.data().email;
+        setSelectedTrainerEmail(trainerEmail);
+        setSelectedTrainerId(userTrainerId);
+      } else {
+        setSelectedTrainerEmail("");
+        setSelectedTrainerId("");
+      }
+    } catch (error) {
+      console.error("Error fetching trainer email:", error);
+    }
+  };
+
+  useEffect(() => {
+    fetchTrainerEmail();
+  }, []);
+
   const toggleModal = () => {
     setModalVisible(!modalVisible);
   };
+
+  useEffect(() => {
+    fetchTrainerEmail();
+  }, [selectedTrainerId]);
 
   const fetchTrainers = async () => {
     try {
@@ -104,6 +140,7 @@ export default function SharedVideos({ route }) {
       await firebase.firestore().collection("users").doc(userId).update({
         trainerId: trainerId,
       });
+      setSelectedTrainerId(trainerId); // <-- Set the trainer ID
       toggleModal();
       Alert.alert(
         "Success",
@@ -265,7 +302,9 @@ export default function SharedVideos({ route }) {
             setSearchText={setSearchText}
             filterTrainers={filterTrainers}
             handleTrainerSelect={handleTrainerSelect}
+            selectedTrainerEmail={selectedTrainerEmail}
           />
+
           <ConfirmDeleteModal
             visible={confirmDeleteVisible}
             onClose={() => setConfirmDeleteVisible(false)}

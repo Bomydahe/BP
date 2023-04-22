@@ -19,7 +19,22 @@ const TrainerSelectModal = ({
   setSearchText,
   filterTrainers,
   handleTrainerSelect,
+  selectedTrainerEmail,
 }) => {
+  const selectedTrainer = selectedTrainerEmail
+    ? trainers.find((trainer) => trainer.email === selectedTrainerEmail)
+    : null;
+
+  const updatedFilteredTrainers = selectedTrainer
+    ? [
+        selectedTrainer,
+        ...filteredTrainers.filter(
+          (trainer) => trainer.email !== selectedTrainerEmail
+        ),
+      ]
+    : filteredTrainers;
+  console.log(selectedTrainer, "secte traienr");
+
   return (
     <Modal
       animationType="fade"
@@ -48,13 +63,21 @@ const TrainerSelectModal = ({
               <Text style={styles.searchButtonText}>Search</Text>
             </TouchableOpacity>
             <FlatList
-              data={filteredTrainers}
+              data={updatedFilteredTrainers}
               renderItem={({ item }) => (
                 <TouchableOpacity
                   onPress={() => handleTrainerSelect(item.email, item.uid)}
                   style={styles.trainerListItem}
                 >
-                  <Text style={styles.trainerListItemText}>{item.email}</Text>
+                  <View style={styles.trainerListItemContent}>
+                    <Text style={styles.trainerListItemText}>{item.email}</Text>
+                    {selectedTrainer &&
+                      selectedTrainer.email === item.email && (
+                        <Text style={styles.selectedTrainerText}>
+                          (Currently selected)
+                        </Text>
+                      )}
+                  </View>
                 </TouchableOpacity>
               )}
               keyExtractor={(item) => item.uid}
@@ -136,6 +159,18 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: "center",
     backgroundColor: "rgba(0, 0, 0, 0.6)",
+  },
+
+  trainerListItemContent: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    width: "100%",
+  },
+  selectedTrainerText: {
+    fontSize: 14,
+    fontStyle: "italic",
+    color: "green",
   },
 });
 

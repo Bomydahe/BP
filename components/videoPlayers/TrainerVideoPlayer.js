@@ -72,7 +72,6 @@ export default function TrainerVideoPlayer({ route }) {
         videoName,
         position,
         snapshotUri: snapshot,
-        scaledWidth,
         scaledHeight,
       });
     });
@@ -104,6 +103,7 @@ export default function TrainerVideoPlayer({ route }) {
         text: commentText,
         time: position,
         snapshot: snapshotUrl,
+        scaledHeight: parentScaledVideoSize.current.height,
       };
 
       // Add the new comment to the existing comments array

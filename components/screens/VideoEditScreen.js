@@ -18,14 +18,8 @@ import { showMessage } from "react-native-flash-message";
 const { width, height } = Dimensions.get("window");
 
 export default function VideoEditScreen({ route, navigation }) {
-  const {
-    videoUri,
-    videoName,
-    position,
-    snapshotUri,
-    scaledWidth,
-    scaledHeight,
-  } = route.params;
+  const { videoUri, videoName, position, snapshotUri, scaledHeight } =
+    route.params;
   const [paths, setPaths] = useState([]);
   const [currentPath, setCurrentPath] = useState("");
   const [color, setColor] = useState("red");

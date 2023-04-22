@@ -9,6 +9,8 @@ import {
   Text,
   ActivityIndicator,
   TextInput,
+  TouchableWithoutFeedback,
+  Keyboard,
 } from "react-native";
 import { useNavigation, useFocusEffect } from "@react-navigation/native";
 import { Ionicons } from "@expo/vector-icons";
@@ -68,6 +70,17 @@ export default function TrainerHomeScreen() {
     }
   };
 
+  const clearSearchInput = () => {
+    setSearchInput("");
+    setFilteredClients(clients);
+  };
+
+  const hideSearchInput = () => {
+    setShowSearchInput(false);
+    setSearchInput("");
+    setFilteredClients(clients);
+  };
+
   useEffect(() => {
     navigation.setOptions({
       headerBackTitleVisible: false,
@@ -98,25 +111,37 @@ export default function TrainerHomeScreen() {
             marginLeft: width * 0.1,
           }}
         >
-          <Text style={{ fontWeight: "bold", fontSize: 20 }}>AppName</Text>
+          <Text style={{ fontWeight: "bold", fontSize: 20 }}>MotionMatch</Text>
         </View>
       ),
       headerRight: () => (
         <View>
           {showSearchInput ? (
-            <TextInput
-              style={{
-                borderWidth: 1,
-                borderColor: "#000",
-                borderRadius: 5,
-                paddingHorizontal: 5,
-                width: width * 0.4,
-                height: 30,
-              }}
-              onChangeText={filterClients}
-              value={searchInput}
-              placeholder="Search clients..."
-            />
+            <View style={{ flexDirection: "row", alignItems: "center" }}>
+              <View style={styles.searchContainer}>
+                <TextInput
+                  style={{
+                    flex: 1,
+                    height: "100%",
+                  }}
+                  onChangeText={filterClients}
+                  value={searchInput}
+                  placeholder="Search clients..."
+                />
+                <TouchableOpacity
+                  onPress={() => {
+                    clearSearchInput();
+                  }}
+                  style={{
+                    position: "absolute",
+                    right: 5,
+                    top: 2,
+                  }}
+                >
+                  <Ionicons name="close" size={24} color="#000" />
+                </TouchableOpacity>
+              </View>
+            </View>
           ) : (
             <TouchableOpacity
               style={{ flexDirection: "row", alignItems: "center" }}
@@ -277,24 +302,33 @@ export default function TrainerHomeScreen() {
   );
 
   return (
-    <View style={styles.container}>
-      {dataLoaded ? (
-        <>
-          <View style={styles.headerTitleContainer}>
-            <Text style={styles.headerTitle}>Choose Your Client:</Text>
-          </View>
+    <TouchableWithoutFeedback
+      onPress={() => {
+        Keyboard.dismiss();
+        if (showSearchInput) {
+          hideSearchInput();
+        }
+      }}
+    >
+      <View style={styles.container}>
+        {dataLoaded ? (
+          <>
+            <View style={styles.headerTitleContainer}>
+              <Text style={styles.headerTitle}>Choose Your Client:</Text>
+            </View>
 
-          <FlatList
-            data={filteredClients}
-            renderItem={renderItem}
-            keyExtractor={(item) => item.id}
-            horizontal={false}
-          />
-        </>
-      ) : (
-        <ActivityIndicator size="large" color="#0000ff" />
-      )}
-    </View>
+            <FlatList
+              data={filteredClients}
+              renderItem={renderItem}
+              keyExtractor={(item) => item.id}
+              horizontal={false}
+            />
+          </>
+        ) : (
+          <ActivityIndicator size="large" color="#0000ff" />
+        )}
+      </View>
+    </TouchableWithoutFeedback>
   );
 }
 
@@ -335,5 +369,17 @@ const styles = StyleSheet.create({
   headerTitle: {
     fontSize: 18,
     paddingBottom: 10,
+  },
+
+  searchContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    borderWidth: 1,
+    borderColor: "#000",
+    borderRadius: 5,
+    paddingHorizontal: 5,
+    width: width * 0.36,
+    height: 30,
+    position: "relative",
   },
 });

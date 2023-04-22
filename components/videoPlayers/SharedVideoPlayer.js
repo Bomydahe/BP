@@ -10,8 +10,8 @@ import {
 import { Video } from "expo-av";
 import * as ScreenOrientation from "expo-screen-orientation";
 import Slider from "@react-native-community/slider";
-import { MaterialIcons } from "@expo/vector-icons";
 import Svg, { Path } from "react-native-svg";
+import { MaterialIcons, Feather } from "@expo/vector-icons";
 
 const { width, height } = Dimensions.get("window");
 
@@ -127,15 +127,17 @@ export default function SharedVideoPlayer({ route }) {
     }
   };
 
-  const RedDot = ({ position }) => (
+  const PencilIcon = ({ position }) => (
     <View
       style={[
-        styles.redDot,
+        styles.pencilIcon,
         {
           left: `${position}%`,
         },
       ]}
-    />
+    >
+      <Feather name="edit" size={12} color="white" />
+    </View>
   );
 
   return (
@@ -201,7 +203,13 @@ export default function SharedVideoPlayer({ route }) {
               (overlay.time / lastPlaybackStatus.durationMillis) *
                 sliderWidthPercentage -
               12;
-            return <RedDot key={index} position={dotPosition} />;
+            const dotPositionPercentage = (dotPosition / width) * 100;
+            return (
+              <PencilIcon
+                key={index}
+                position={dotPositionPercentage.toFixed(2)}
+              />
+            );
           })}
       </View>
       {lastPlaybackStatus &&
@@ -237,11 +245,13 @@ export default function SharedVideoPlayer({ route }) {
                 <MaterialIcons name="close" size={30} color="white" />
               </TouchableOpacity>
             </View>
-            <Image
-              style={[styles.videoSnapshot]}
-              source={{ uri: videoSnapshotUri }}
-              resizeMode="contain"
-            />
+            <View style={styles.imageContainer}>
+              <Image
+                style={{ width: "100%", height: selectedMessage?.scaledHeight }}
+                source={{ uri: videoSnapshotUri }}
+                resizeMode="stretch"
+              />
+            </View>
           </View>
         </>
       )}
@@ -314,6 +324,14 @@ const styles = StyleSheet.create({
     alignItems: "center",
     width: "100%",
     alignSelf: "center",
+    zIndex: 1000,
+  },
+
+  imageContainer: {
+    flex: 1,
+    alignItems: "center",
+    justifyContent: "center",
+    marginTop: "-25%",
   },
 
   messageText: {
@@ -340,10 +358,6 @@ const styles = StyleSheet.create({
     width: "100%",
     height: "100%",
   },
-  videoSnapshot: {
-    flex: 1,
-    width: "100%",
-  },
 
   modalContainer: {
     position: "absolute",
@@ -353,15 +367,12 @@ const styles = StyleSheet.create({
     bottom: 0,
     justifyContent: "flex-end",
     backgroundColor: "rgba(0, 0, 0, 0.8)",
+    flex: 1,
   },
 
-  redDot: {
+  pencilIcon: {
     position: "absolute",
-    bottom: 6,
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-    backgroundColor: "rgba(175, 0, 0, 1)",
+    bottom: 4,
     zIndex: 1,
   },
 });

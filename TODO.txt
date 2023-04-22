@@ -2,9 +2,7 @@ NOTIFICATIONS (high prio)
 zmena kategorie videa niekde
 
 Bugs: 
-  > search u trenera
-  > niekde displaynut ze knlient ma nejakeho trenera
-  > snapshot pri message
+  > cerveny cudlik
 
 cleanup of code | commenting
 
