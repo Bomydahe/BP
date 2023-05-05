@@ -1,6 +1,6 @@
 /*
   * Author: Rastislav Duránik (xduran03)
-  * File: TrainerHomeScreen.js
+  * File: VideoEditScreen.js
   * Brief: 
       This component allows users to edit videos 
       by drawing on a snapshot of the video. It 
@@ -42,18 +42,22 @@ export default function VideoEditScreen({ route, navigation }) {
   const [lineWidth, setLineWidth] = useState(5);
   const drawingAreaRef = useRef(null);
 
+  // This function handles going back to the previous screen and deletes the temporary snapshot file if it exists
   const handleGoBack = async () => {
-    if (snapshotUri) {
-      try {
-        await FileSystem.deleteAsync(snapshotUri, { idempotent: true });
-        console.log("Temporary snapshot file deleted:", snapshotUri);
-      } catch (error) {
-        console.error("Error deleting temporary snapshot file:", error);
+    const handleGoBack = async () => {
+      if (snapshotUri) {
+        try {
+          await FileSystem.deleteAsync(snapshotUri, { idempotent: true });
+          console.log("Temporary snapshot file deleted:", snapshotUri);
+        } catch (error) {
+          console.error("Error deleting temporary snapshot file:", error);
+        }
       }
-    }
-    navigation.goBack();
+      navigation.goBack();
+    };
   };
 
+  // Handles pan gestures on the drawing area, updating the current path when the user moves their finger.
   const panResponder = PanResponder.create({
     onStartShouldSetPanResponder: () => true,
     onMoveShouldSetPanResponder: () => true,
@@ -89,6 +93,7 @@ export default function VideoEditScreen({ route, navigation }) {
     },
   });
 
+  // Updates the header buttons
   useLayoutEffect(() => {
     navigation.setOptions({
       headerLeft: () => (
@@ -107,6 +112,7 @@ export default function VideoEditScreen({ route, navigation }) {
     });
   }, [navigation]);
 
+  // This function adds an overlay to a video in the Firestore database
   async function addOverlay(videoName, overlayData, time) {
     try {
       const firestore = firebase.firestore();
@@ -136,6 +142,7 @@ export default function VideoEditScreen({ route, navigation }) {
     }
   }
 
+  // This function saves the drawn paths as an overlay and uploads it to Firestore.
   const handleSave = async () => {
     setPaths((currentPaths) => {
       console.log("paths:", currentPaths);

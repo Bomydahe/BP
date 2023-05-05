@@ -137,6 +137,7 @@ export default function DefaultVideoPlayer({ route }) {
         );
       };
 
+      stopVideo();
       resetOrientation();
     };
   }, []);
@@ -154,7 +155,7 @@ export default function DefaultVideoPlayer({ route }) {
         onYes={handleSubmitUpload}
         trainerEmail={trainerEmail}
       />
-      {isFocused && (
+      {isFocused ? (
         <CustomVideoPlayer
           videoUri={videoUri}
           onPlaybackStatusUpdate={(status) => {
@@ -164,7 +165,7 @@ export default function DefaultVideoPlayer({ route }) {
           }}
           videoPlayerRef={videoPlayerRef}
         />
-      )}
+      ) : null}
     </View>
   );
 }

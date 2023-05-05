@@ -1,3 +1,15 @@
+/*
+  * Author: Rastislav Duránik (xduran03)
+  * File: ComparedVideos.js
+  * Brief: 
+      This component displays a grid of video comparisons. 
+      The videos are shown in pairs, with their thumbnails 
+      and a "vs" overlay. Users can delete a video comparison 
+      by tapping the close button on the top right corner of 
+      each video comparison. The component utilizes AsyncStorage 
+      to save and load video comparisons.
+*/
+
 import React, { useEffect, useState } from "react";
 import {
   View,
@@ -13,7 +25,9 @@ import * as VideoThumbnails from "expo-video-thumbnails";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { AntDesign } from "@expo/vector-icons";
 import ConfirmDeleteModal from "../modals/ConfirmDeleteModal";
+import { useVideoComparisons } from "../../hooks/useVideoComparisons";
 
+// Sets the dimensions for the video grid layout
 const { width } = Dimensions.get("window");
 const numColumns = 2;
 const videoWidth = (width - 20 * (numColumns + 1)) / numColumns;
@@ -22,16 +36,22 @@ export default function ComparedVideos({ route }) {
   const { video1, video2 } = { ...route.params };
   const [video1Thumbnail, setVideo1Thumbnail] = useState(null);
   const [video2Thumbnail, setVideo2Thumbnail] = useState(null);
-  const [videoComparisons, setVideoComparisons] = useState([]);
   const navigation = useNavigation();
   const [confirmDeleteVisible, setConfirmDeleteVisible] = useState(false);
   const [deletingVideoId, setDeletingVideoId] = useState(null);
 
+  const {
+    videoComparisons,
+    setVideoComparisons,
+    loadVideoComparisons,
+    saveVideoComparisons,
+    generateThumbnail,
+    confirmDeleteVideo,
+  } = useVideoComparisons();
+
+  // useEffect hook to load video comparisons and set thumbnails
   useEffect(() => {
     (async () => {
-      const loadedComparisons = await loadVideoComparisons();
-      setVideoComparisons(loadedComparisons);
-
       if (video1 && video2) {
         const thumbnail1 = await generateThumbnail(video1);
         const thumbnail2 = await generateThumbnail(video2);
@@ -50,91 +70,28 @@ export default function ComparedVideos({ route }) {
           },
         };
 
-        const updatedComparisons = [...loadedComparisons, newComparison];
+        const updatedComparisons = [...videoComparisons, newComparison];
         setVideoComparisons(updatedComparisons);
         saveVideoComparisons(updatedComparisons);
 
-        // Set the thumbnails after they have been used in the newComparison object
         setVideo1Thumbnail(thumbnail1);
         setVideo2Thumbnail(thumbnail2);
       }
     })();
   }, [video1, video2]);
-
-  const saveVideoComparisons = async (videoComparisons) => {
-    try {
-      const jsonString = JSON.stringify(videoComparisons);
-      await AsyncStorage.setItem("@videoComparisons", jsonString);
-    } catch (error) {
-      console.error("Error saving video comparisons:", error);
-    }
-  };
 
   const handleRemoveVideo = (videoId) => {
     setDeletingVideoId(videoId);
     setConfirmDeleteVisible(true);
   };
 
-  const confirmDeleteVideo = async () => {
-    // Remove the comparison from the state
-    setVideoComparisons((prevComparisons) =>
-      prevComparisons.filter((comparison) => comparison.id !== deletingVideoId)
-    );
-
-    // Update the stored data
-    const updatedComparisons = videoComparisons.filter(
-      (comparison) => comparison.id !== deletingVideoId
-    );
-    await AsyncStorage.setItem(
-      "@videoComparisons",
-      JSON.stringify(updatedComparisons)
-    );
-
+  const handleConfirmedDelete = () => {
+    confirmDeleteVideo(deletingVideoId);
     setDeletingVideoId(null);
     setConfirmDeleteVisible(false);
   };
 
-  function handleConfirmedDelete() {
-    confirmDeleteVideo();
-  }
-
-  const loadVideoComparisons = async () => {
-    try {
-      const jsonString = await AsyncStorage.getItem("@videoComparisons");
-      if (jsonString !== null) {
-        return JSON.parse(jsonString);
-      } else {
-        return []; // Return an empty array if there's no data
-      }
-    } catch (error) {
-      console.error("Error loading video comparisons:", error);
-      return [];
-    }
-  };
-
-  async function generateThumbnail(videoUri) {
-    try {
-      const { uri } = await VideoThumbnails.getThumbnailAsync(videoUri, {
-        time: 0,
-      });
-      return uri;
-    } catch (e) {
-      console.warn(e);
-      return null;
-    }
-  }
-
-  useEffect(() => {
-    (async () => {
-      if (video1 && video2) {
-        const thumbnail1 = await generateThumbnail(video1);
-        const thumbnail2 = await generateThumbnail(video2);
-        setVideo1Thumbnail(thumbnail1);
-        setVideo2Thumbnail(thumbnail2);
-      }
-    })();
-  }, [video1, video2]);
-
+  // Renders a video comparison item
   const renderItem = ({ item, index }) => {
     return (
       <View>
@@ -179,6 +136,7 @@ export default function ComparedVideos({ route }) {
     );
   };
 
+  // Returns the main view with a FlatList of video comparisons and a ConfirmDeleteModal
   return (
     <View style={styles.container}>
       <FlatList
