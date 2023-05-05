@@ -313,16 +313,26 @@ export default function TrainerHomeScreen() {
       <View style={styles.container}>
         {dataLoaded ? (
           <>
-            <View style={styles.headerTitleContainer}>
-              <Text style={styles.headerTitle}>Choose Your Client:</Text>
-            </View>
+            {filteredClients.length > 0 && (
+              <View style={styles.headerTitleContainer}>
+                <Text style={styles.headerTitle}>Choose Your Client:</Text>
+              </View>
+            )}
 
-            <FlatList
-              data={filteredClients}
-              renderItem={renderItem}
-              keyExtractor={(item) => item.id}
-              horizontal={false}
-            />
+            {filteredClients.length > 0 ? (
+              <FlatList
+                data={filteredClients}
+                renderItem={renderItem}
+                keyExtractor={(item) => item.id}
+                horizontal={false}
+              />
+            ) : (
+              <View style={styles.noClientsContainer}>
+                <Text style={styles.noClientsText}>
+                  No clients have chosen you as trainer yet.
+                </Text>
+              </View>
+            )}
           </>
         ) : (
           <ActivityIndicator size="large" color="#0000ff" />
@@ -381,5 +391,16 @@ const styles = StyleSheet.create({
     width: width * 0.36,
     height: 30,
     position: "relative",
+  },
+
+  noClientsContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  noClientsText: {
+    fontSize: 18,
+    fontWeight: "bold",
+    textAlign: "center",
   },
 });

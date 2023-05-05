@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useLayoutEffect } from "react";
+import React, { useState, useEffect, useLayoutEffect, useRef } from "react";
 import {
   View,
   TouchableOpacity,
@@ -24,7 +24,7 @@ export default function VideoEditScreen({ route, navigation }) {
   const [currentPath, setCurrentPath] = useState("");
   const [color, setColor] = useState("red");
   const [lineWidth, setLineWidth] = useState(5);
-  console.log("tu sme", width, height);
+  const drawingAreaRef = useRef(null);
 
   const handleGoBack = async () => {
     if (snapshotUri) {
@@ -44,9 +44,16 @@ export default function VideoEditScreen({ route, navigation }) {
     onPanResponderGrant: () => {
       setCurrentPath("");
     },
-    onPanResponderMove: (event, gestureState) => {
+    onPanResponderMove: async (event, gestureState) => {
       const { moveX, moveY } = gestureState;
-      const newPoint = `${moveX},${moveY}`;
+      const drawingAreaLayout = await new Promise((resolve) =>
+        drawingAreaRef.current.measure((x, y, width, height, pageX, pageY) => {
+          resolve({ x: pageX, y: pageY, width, height });
+        })
+      );
+      const relativeX = moveX - drawingAreaLayout.x;
+      const relativeY = moveY - drawingAreaLayout.y;
+      const newPoint = `${relativeX},${relativeY}`;
       setCurrentPath((prevPath) =>
         prevPath ? `${prevPath} L${newPoint}` : `M${newPoint}`
       );
@@ -153,7 +160,11 @@ export default function VideoEditScreen({ route, navigation }) {
         style={{ width: "100%", height: scaledHeight }}
         resizeMode="stretch"
       />
-      <View {...panResponder.panHandlers} style={styles.overlay}>
+      <View
+        ref={drawingAreaRef}
+        {...panResponder.panHandlers}
+        style={styles.overlay}
+      >
         <Svg viewBox={`0 0 ${width} ${height}`} style={styles.overlay}>
           {Array.isArray(paths) &&
             paths.map((path, index) => (

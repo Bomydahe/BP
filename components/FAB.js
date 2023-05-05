@@ -32,12 +32,6 @@ const MyVideosFAB = ({
           },
           label: "Compare video",
         },
-
-        {
-          icon: "logout",
-          onPress: () => handleLogout(),
-          label: "Log out",
-        },
       ]}
       onStateChange={({ open }) => setOpen(open)}
       fabStyle={{ backgroundColor: "#007AFF" }}

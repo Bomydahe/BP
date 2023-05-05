@@ -14,6 +14,7 @@ import {
 import { useNavigation, useFocusEffect } from "@react-navigation/native";
 import { AntDesign } from "@expo/vector-icons";
 import { firebase } from "../../firebaseConfig";
+import { isEmpty } from "lodash";
 
 export default function ClientsSharedScreen(props) {
   const [status, setStatus] = useState({});
@@ -99,6 +100,14 @@ export default function ClientsSharedScreen(props) {
     </>
   );
 
+  function EmptyListComponent() {
+    return (
+      <View style={styles.emptyListContainer}>
+        <Text style={styles.emptyListText}>No videos have been added yet.</Text>
+      </View>
+    );
+  }
+
   return (
     <SafeAreaView>
       <ScrollView>
@@ -132,6 +141,7 @@ export default function ClientsSharedScreen(props) {
                   horizontal={true}
                   style={styles.flatlist}
                   showsHorizontalScrollIndicator={false}
+                  ListEmptyComponent={EmptyListComponent}
                 />
               </View>
             ))}
@@ -204,5 +214,17 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
+  },
+
+  emptyListContainer: {
+    alignItems: "center",
+    justifyContent: "center",
+    width: "100%",
+    height: 160,
+  },
+  emptyListText: {
+    fontSize: 16,
+    color: "grey",
+    fontStyle: "italic",
   },
 });

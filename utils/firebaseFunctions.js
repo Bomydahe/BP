@@ -138,3 +138,12 @@ export async function fetchTrainerIdAndEmail() {
   // Return the trainerId and trainerEmail as an object
   return { trainerId, trainerEmail };
 }
+
+export async function handleLogout(navigation) {
+  try {
+    await firebase.auth().signOut();
+    navigation.navigate("LoginScreen");
+  } catch (error) {
+    console.error("Error signing out:", error);
+  }
+}

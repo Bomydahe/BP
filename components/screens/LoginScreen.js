@@ -12,6 +12,7 @@ import {
 import { useNavigation } from "@react-navigation/native";
 import { CommonActions } from "@react-navigation/native";
 import { firebase } from "../../firebaseConfig";
+import { MaterialCommunityIcons } from "@expo/vector-icons";
 
 export default function LoginScreen() {
   const [username, setUsername] = useState("");
@@ -21,6 +22,16 @@ export default function LoginScreen() {
   const [isRegistering, setIsRegistering] = useState(false);
   const navigation = useNavigation();
   const [loading, setLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const [showRepeatPassword, setShowRepeatPassword] = useState(false);
+
+  const togglePasswordVisibility = () => {
+    setShowPassword(!showPassword);
+  };
+
+  const toggleRepeatPasswordVisibility = () => {
+    setShowRepeatPassword(!showRepeatPassword);
+  };
 
   const handleLogin = async () => {
     setLoading(true);
@@ -72,13 +83,10 @@ export default function LoginScreen() {
 
   const handleRegister = async () => {
     setLoading(true);
-    if (password.length < 8) {
-      Alert.alert("Password must be at least 8 characters");
-      return;
-    }
 
     if (password !== repeatPassword) {
       Alert.alert("Passwords do not match");
+      setLoading(false);
       return;
     }
 
@@ -116,9 +124,21 @@ export default function LoginScreen() {
         }
       }
     } catch (error) {
-      // Handle the error (e.g., show an error message)
-      Alert.alert("Error during registration: " + error.message);
+      if (error.code === "auth/user-not-found") {
+        Alert.alert("User not found!");
+      } else if (error.code === "auth/wrong-password") {
+        Alert.alert("Incorrect password!");
+      } else if (error.code === "auth/invalid-email") {
+        Alert.alert("Invalid email address!");
+      } else if (error.code === "auth/email-already-in-use") {
+        Alert.alert("Email already in use!");
+      } else if (error.code === "auth/weak-password") {
+        Alert.alert(
+          "Password too short! Minimum required length is 6 characters!"
+        );
+      }
     }
+
     setLoading(false);
   };
 
@@ -139,22 +159,59 @@ export default function LoginScreen() {
             keyboardType="email-address"
             autoCapitalize="none"
           />
-          <TextInput
-            style={styles.input}
-            onChangeText={setPassword}
-            value={password}
-            placeholder="Password"
-            secureTextEntry
-          />
+          <View style={styles.input}>
+            <TextInput
+              onChangeText={setPassword}
+              value={password}
+              placeholder="Password"
+              secureTextEntry={!showPassword}
+              style={{ flex: 1, height: "100%", fontSize: 17 }}
+            />
+            <TouchableOpacity
+              onPress={togglePasswordVisibility}
+              style={styles.eyeIcon}
+            >
+              {showPassword ? (
+                <MaterialCommunityIcons name="eye" size={24} color="black" />
+              ) : (
+                <MaterialCommunityIcons
+                  name="eye-off"
+                  size={24}
+                  color="black"
+                />
+              )}
+            </TouchableOpacity>
+          </View>
           {isRegistering && (
             <>
-              <TextInput
-                style={styles.input}
-                onChangeText={setRepeatPassword}
-                value={repeatPassword}
-                placeholder="Repeat Password"
-                secureTextEntry
-              />
+              <View style={styles.input}>
+                <TextInput
+                  onChangeText={setRepeatPassword}
+                  value={repeatPassword}
+                  placeholder="Repeat Password"
+                  secureTextEntry={!showRepeatPassword}
+                  style={{ flex: 1, height: "100%", fontSize: 17 }}
+                />
+                <TouchableOpacity
+                  onPress={toggleRepeatPasswordVisibility}
+                  style={styles.eyeIcon}
+                >
+                  {showRepeatPassword ? (
+                    <MaterialCommunityIcons
+                      name="eye"
+                      size={24}
+                      color="black"
+                    />
+                  ) : (
+                    <MaterialCommunityIcons
+                      name="eye-off"
+                      size={24}
+                      color="black"
+                    />
+                  )}
+                </TouchableOpacity>
+              </View>
+
               <View style={styles.roleSelection}>
                 <Text style={styles.roleText}>Select your role:</Text>
                 <View style={{ flexDirection: "row" }}>
@@ -242,7 +299,7 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     marginBottom: 16,
     paddingHorizontal: 12,
-    fontSize: 16,
+    fontSize: 17,
   },
   button: {
     backgroundColor: "#007AFF",
@@ -297,5 +354,11 @@ const styles = StyleSheet.create({
 
   roleButtonTextSelected: {
     color: "white",
+  },
+  eyeIcon: {
+    position: "absolute",
+    right: 0,
+    top: 12,
+    paddingHorizontal: 12,
   },
 });

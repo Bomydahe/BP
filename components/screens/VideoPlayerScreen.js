@@ -8,7 +8,11 @@ import {
   Alert,
 } from "react-native";
 import * as ScreenOrientation from "expo-screen-orientation";
-import { useNavigation, useFocusEffect } from "@react-navigation/native";
+import {
+  useNavigation,
+  useFocusEffect,
+  useIsFocused,
+} from "@react-navigation/native";
 import { MaterialIcons, FontAwesome } from "@expo/vector-icons";
 import { firebase } from "../../firebaseConfig";
 import { showMessage } from "react-native-flash-message";
@@ -32,6 +36,7 @@ export default function VideoPlayerScreen({ route }) {
   const [uploading, setUploading] = useState(false);
   const [trainerId, setTrainerId] = useState(null);
   const [trainerEmail, setTrainerEmail] = useState(null);
+  const isFocused = useIsFocused();
 
   useFocusEffect(
     React.useCallback(() => {
@@ -57,6 +62,7 @@ export default function VideoPlayerScreen({ route }) {
   const handleSubmitUpload = async () => {
     setModalVisible(false);
     setUploading(true); // Start loading indicator
+    const userId = firebase.auth().currentUser.uid;
     const thumbnailUri = await generateThumbnail(videoUri);
     const thumbnailUrl = await uploadThumbnail(thumbnailUri);
     const videoUrl = await uploadVideo(videoUri);
@@ -148,15 +154,17 @@ export default function VideoPlayerScreen({ route }) {
         onYes={handleSubmitUpload}
         trainerEmail={trainerEmail}
       />
-      <CustomVideoPlayer
-        videoUri={videoUri}
-        onPlaybackStatusUpdate={(status) => {
-          if (status.didJustFinish && !status.isLooping) {
-            videoPlayerRef.current.pauseAsync();
-          }
-        }}
-        videoPlayerRef={videoPlayerRef}
-      />
+      {isFocused && (
+        <CustomVideoPlayer
+          videoUri={videoUri}
+          onPlaybackStatusUpdate={(status) => {
+            if (status.didJustFinish && !status.isLooping) {
+              videoPlayerRef.current.pauseAsync();
+            }
+          }}
+          videoPlayerRef={videoPlayerRef}
+        />
+      )}
     </View>
   );
 }

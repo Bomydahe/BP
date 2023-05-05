@@ -37,6 +37,7 @@ import UploadPromptModal from "../modals/UploadPromptModal";
 import { showMessage } from "react-native-flash-message";
 import * as Notifications from "expo-notifications";
 import ConfirmDeleteModal from "../modals/ConfirmDeleteModal";
+import { isEmpty } from "lodash";
 
 export default function MyVideos(props) {
   const [status, setStatus] = React.useState({});
@@ -222,15 +223,6 @@ export default function MyVideos(props) {
     setConfirmDeleteVisible(false);
   }
 
-  async function handleLogout() {
-    try {
-      await firebase.auth().signOut();
-      navigate("LoginScreen");
-    } catch (error) {
-      console.error("Error signing out:", error);
-    }
-  }
-
   const renderItem = ({ item }) => (
     <>
       <TouchableHighlight
@@ -264,6 +256,14 @@ export default function MyVideos(props) {
     confirmDeleteVideo();
   }
 
+  function EmptyListComponent() {
+    return (
+      <View style={styles.emptyListContainer}>
+        <Text style={styles.emptyListText}>No videos have been added yet.</Text>
+      </View>
+    );
+  }
+
   return (
     <>
       <SafeAreaView>
@@ -293,6 +293,7 @@ export default function MyVideos(props) {
                   horizontal={true}
                   style={styles.flatlist}
                   showsHorizontalScrollIndicator={false}
+                  ListEmptyComponent={EmptyListComponent}
                 />
               </View>
             ))}
@@ -366,7 +367,6 @@ export default function MyVideos(props) {
         navigate={navigate}
         addCategory={showAddCategoryModal}
         categories={categories}
-        handleLogout={handleLogout}
       />
     </>
   );
@@ -458,5 +458,17 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: "bold",
     color: "rgba(255, 255, 255, 1)",
+  },
+
+  emptyListContainer: {
+    alignItems: "center",
+    justifyContent: "center",
+    width: "100%",
+    height: 160,
+  },
+  emptyListText: {
+    fontSize: 16,
+    color: "grey",
+    fontStyle: "italic",
   },
 });

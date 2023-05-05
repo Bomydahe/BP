@@ -1,8 +1,8 @@
 {
   "expo": {
-    "name": "video_attempt",
+    "name": "motionmatch",
     "slug": "motionmatch",
-    "version": "1.0.7",
+    "version": "1.0.9",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",

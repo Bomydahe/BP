@@ -2,10 +2,8 @@ NOTIFICATIONS (high prio)
 zmena kategorie videa niekde
 
 Bugs: 
-  > cerveny cudlik
+  > upozornenia
 
 cleanup of code | commenting
-
-expo eas app distribution
 
 (BP hierarchy tree)
