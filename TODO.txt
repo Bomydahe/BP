@@ -1,9 +1,6 @@
-NOTIFICATIONS (high prio)
-zmena kategorie videa niekde
+TODO:
+  > NOTIFICATIONS (high prio)
+  > zmena kategorie videa niekde
 
 Bugs: 
-  > upozornenia
-
-cleanup of code | commenting
-
-(BP hierarchy tree)
+  >

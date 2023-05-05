@@ -1,3 +1,19 @@
+/*
+  * Author: Rastislav Duránik (xduran03)
+  * File: TrainerHomeScreen.js
+  * Brief: 
+      This component allows users to edit videos 
+      by drawing on a snapshot of the video. It 
+      utilizes Expo FileSystem for temporary file 
+      management, React Native PanResponder for handling 
+      touch events, and React Native SVG for drawing on 
+      the snapshot. Users can change the color and width 
+      of their drawings, and undo previous actions. Once 
+      the user is finished editing, the component saves the 
+      overlay data to Firestore, along with its timestamp 
+      and dimensions, and displays a success message. 
+*/
+
 import React, { useState, useEffect, useLayoutEffect, useRef } from "react";
 import {
   View,

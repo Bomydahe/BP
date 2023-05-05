@@ -4,7 +4,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 const useStoredData = (key, initialValue) => {
   const [data, setData] = useState(initialValue);
 
-  /* fetching & storing data(categories, videos) */
+  /* Fetching & storing data(categories, videos) */
   useEffect(() => {
     //clearData();
     loadData();
@@ -14,6 +14,7 @@ const useStoredData = (key, initialValue) => {
     storeData(data);
   }, [data]);
 
+  // Clears asynch storage of device
   /* clear asyncstorage data
   const clearData = async () => {
     try {

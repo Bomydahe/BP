@@ -10,7 +10,7 @@ import Compare from "./components/screens/CompareScreen";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import { MenuProvider } from "react-native-popup-menu";
 import CategoryScreen from "./components/screens/CategoryScreen";
-import VideoPlayerScreen from "./components/screens/VideoPlayerScreen";
+import DefaultVideoPlayer from "./components/videoPlayers/DefaultVideoPlayer";
 import ComparedVideoPlayer from "./components/videoPlayers/ComparedVideoPlayer";
 import LoginScreen from "./components/screens/LoginScreen";
 import TrainerHomeScreen from "./components/screens/TrainerHomeScreen";
@@ -111,7 +111,7 @@ export default function App() {
           <Stack.Screen name="Compare" component={CompareScreen} />
           <Stack.Screen
             name="VideoPlayer"
-            component={VideoPlayerScreen}
+            component={DefaultVideoPlayer}
             options={{
               title: "Video Player",
               headerStyle: {

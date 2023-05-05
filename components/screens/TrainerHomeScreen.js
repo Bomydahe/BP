@@ -1,3 +1,16 @@
+/*
+  * Author: Rastislav Duránik (xduran03)
+  * File: TrainerHomeScreen.js
+  * Brief: 
+      This component displays a list of clients for trainers. 
+      It fetches client data from a Firebase backend and presents 
+      the clients with their email and profile images. The component 
+      allows trainers to search for clients by their email, filtering 
+      the displayed list accordingly. Additionally, the component handles 
+      the logout process and navigates back to the LoginScreen when the user 
+      logs out. 
+*/
+
 import React, { useState, useEffect } from "react";
 import {
   StyleSheet,
@@ -26,6 +39,7 @@ import {
 const { width } = Dimensions.get("window");
 
 export default function TrainerHomeScreen() {
+  // State variables
   const [clients, setClients] = useState([]);
   const [filteredClients, setFilteredClients] = useState([]);
   const [searchInput, setSearchInput] = useState("");
@@ -35,6 +49,7 @@ export default function TrainerHomeScreen() {
   const [dataLoaded, setDataLoaded] = useState(false);
   const [showSearchInput, setShowSearchInput] = useState(false);
 
+  // Fetch data
   const fetchData = async () => {
     setDataLoaded(false);
     const currentUser = firebase.auth().currentUser;
@@ -53,10 +68,12 @@ export default function TrainerHomeScreen() {
     console.log("Clients:", loadedClients);
   };
 
+  // Update filteredClients when clients change
   useEffect(() => {
     setFilteredClients(clients);
   }, [clients]);
 
+  // Filter clients based on search input
   const filterClients = (searchText) => {
     setSearchInput(searchText);
 
@@ -70,17 +87,20 @@ export default function TrainerHomeScreen() {
     }
   };
 
+  // Clear search input and reset filtered clients
   const clearSearchInput = () => {
     setSearchInput("");
     setFilteredClients(clients);
   };
 
+  // Hide search input and reset filtered clients
   const hideSearchInput = () => {
     setShowSearchInput(false);
     setSearchInput("");
     setFilteredClients(clients);
   };
 
+  // Set up the navigation header
   useEffect(() => {
     navigation.setOptions({
       headerBackTitleVisible: false,
@@ -172,6 +192,7 @@ export default function TrainerHomeScreen() {
     };
   }, []);
 
+  // Handle logout
   const handleLogout = async () => {
     try {
       await firebase.auth().signOut();
@@ -184,6 +205,7 @@ export default function TrainerHomeScreen() {
     }
   };
 
+  // Fetch data from firebase
   async function getUserIDsByTrainer(trainerID) {
     try {
       const firestore = firebase.firestore();
@@ -251,6 +273,7 @@ export default function TrainerHomeScreen() {
     }
   }
 
+  // Fetch clients from Firebase that belong to traines
   const loadClients = async (currentUserID) => {
     try {
       const userIDs = await getUserIDsByTrainer(currentUserID);
@@ -279,6 +302,7 @@ export default function TrainerHomeScreen() {
       return [];
     }
   };
+  // Render client item
   const renderItem = ({ item, index }) => (
     <TouchableOpacity
       style={styles.clientContainer}
@@ -301,6 +325,7 @@ export default function TrainerHomeScreen() {
     </TouchableOpacity>
   );
 
+  // Return the main component
   return (
     <TouchableWithoutFeedback
       onPress={() => {

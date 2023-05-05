@@ -1,3 +1,18 @@
+/*
+  * Author: Rastislav Duránik (xduran03)
+  * File: CompareScreen.js
+  * Brief: 
+      This component allows users to select and compare 
+      two videos side by side. Users can choose videos either 
+      from their device's storage or from predefined categories. 
+      The selected videos are displayed on the screen using a custom 
+      video player component. Users can remove videos from the comparison 
+      and add new ones. Additionally, there is a tooltip for explaining 
+      the "Synchronize" functionality. When both videos are selected, 
+      users can press the "Synchronize" button to create a new comparison 
+      video in another screen. 
+*/
+
 import React, {
   useState,
   useLayoutEffect,
@@ -26,9 +41,11 @@ import Tooltip from "react-native-walkthrough-tooltip";
 import { FontAwesome, Ionicons } from "@expo/vector-icons";
 import CustomVideoPlayer from "../videoPlayers/CustomVideoPlayer";
 
+// Get screen dimensions
 const { width, height } = Dimensions.get("window");
 
 export default function Compare(props) {
+  // Declare state variables
   const [video1, setVideo1] = useState(null);
   const [video2, setVideo2] = useState(null);
   const [selectedVideoIndex, setSelectedVideoIndex] = useState(null);
@@ -38,11 +55,11 @@ export default function Compare(props) {
   const [modalStep, setModalStep] = useState("initial");
   const [video1Time, setVideo1Time] = useState(0);
   const [video2Time, setVideo2Time] = useState(0);
+  const [tooltipVisible, setTooltipVisible] = useState(false);
   const video1Ref = useRef(null);
   const video2Ref = useRef(null);
+  // Use navigation for setting up header
   const navigation = useNavigation();
-
-  const [tooltipVisible, setTooltipVisible] = useState(false);
 
   useEffect(() => {
     checkFirstVideo();
@@ -54,6 +71,7 @@ export default function Compare(props) {
     }
   }, [modalVisible]);
 
+  // Check if a video is provided from another screen
   const checkFirstVideo = () => {
     const firstVideo = props.route.params?.firstVideo;
     if (firstVideo) {
@@ -61,6 +79,7 @@ export default function Compare(props) {
     }
   };
 
+  // Update navigation options to show the compare button and tooltip
   const updateNavigationOptions = useCallback(() => {
     navigation.setOptions({
       headerRight: () => (
@@ -111,11 +130,13 @@ export default function Compare(props) {
     });
   }, [navigation, handleCompare, video1, video2, tooltipVisible]);
 
+  // Close the video selection modal
   const handleModalClose = () => {
     setModalVisible(false);
     setModalStep("initial");
   };
 
+  // Handle the comparison of two videos
   const handleCompare = useCallback(async () => {
     const video1Status = await video1Ref.current.getStatusAsync();
     const video2Status = await video2Ref.current.getStatusAsync();
@@ -132,6 +153,7 @@ export default function Compare(props) {
     updateNavigationOptions();
   }, [updateNavigationOptions, video1, video2]);
 
+  // Render a category item in the category list
   const renderCategoryItem = ({ item }) => (
     <TouchableOpacity
       onPress={() => handleCategorySelection(item)}
@@ -141,11 +163,13 @@ export default function Compare(props) {
     </TouchableOpacity>
   );
 
+  // Handle category selection and change modal step
   const handleCategorySelection = (category) => {
     setSelectedCategory(category);
     setModalStep("selectVideo");
   };
 
+  // Pick a video from the device's storage
   async function pickVideoFromStorage() {
     const { status } = await MediaLibrary.requestPermissionsAsync();
 
@@ -170,6 +194,7 @@ export default function Compare(props) {
     }
   }
 
+  // Remove a video from the compare screen
   const handleRemoveVideo = (videoIndex) => {
     if (videoIndex === 1) {
       setVideo1(null);
@@ -179,6 +204,7 @@ export default function Compare(props) {
     setModalStep("initial");
   };
 
+  // Render a video item in the video list
   const renderVideoItem = ({ item }) => {
     return (
       <TouchableOpacity onPress={() => handleVideoSelection(item.url)}>
@@ -187,6 +213,7 @@ export default function Compare(props) {
     );
   };
 
+  // Handle video selection and close the modal
   const handleVideoSelection = (url) => {
     if (selectedVideoIndex === 1) {
       setVideo1(url);
@@ -197,6 +224,7 @@ export default function Compare(props) {
     setModalStep("initial");
   };
 
+  // Render the content inside the modal based on the current step
   const renderModalContent = () => {
     switch (modalStep) {
       case "initial":
@@ -270,6 +298,7 @@ export default function Compare(props) {
     }
   };
 
+  // Main component render
   return (
     <View style={styles.container}>
       <View style={styles.videoWrapper}>

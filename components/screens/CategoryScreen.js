@@ -1,3 +1,14 @@
+/*
+  * Author: Rastislav Duránik (xduran03)
+  * File: CategoryScreen.js
+  * Brief: 
+      This component is responsible for displaying a specific video category 
+      and its related options. The component receives the category 
+      name and ID from the navigation parameters and sets the header 
+      title accordingly. A menu with options to edit or delete the category 
+      is also displayed.
+*/
+
 import React, { useLayoutEffect } from "react";
 import { View, Text, StyleSheet } from "react-native";
 import Category from "../Category";
@@ -13,6 +24,7 @@ import { EventRegister } from "react-native-event-listeners";
 const CategoryScreen = ({ route, navigation }) => {
   const { categoryName, categoryId } = route.params;
 
+  // Sets up header title and menu options for the CategoryScreen
   useLayoutEffect(() => {
     navigation.setOptions({
       headerTitle: categoryName,

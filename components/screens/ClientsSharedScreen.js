@@ -1,3 +1,18 @@
+/*
+  * Author: Rastislav Duránik (xduran03)
+  * File: ClientsSharedScreen.js
+  * Brief: 
+      This component displays shared videos with a client, 
+      categorizing them into "New videos" and "Handled videos" 
+      based on their booleanVar value. The component receives 
+      all videos as a prop and creates categories by filtering them 
+      accordingly. The navigation title is updated to display the 
+      client's email. It also provides a "Show All" option to navigate 
+      to a detailed view of each category. While loading the videos, 
+      the component displays a loading indicator, and if no videos 
+      are available, it displays an empty list message.
+*/
+
 import React, { useState, useEffect } from "react";
 import {
   View,
@@ -17,6 +32,7 @@ import { firebase } from "../../firebaseConfig";
 import { isEmpty } from "lodash";
 
 export default function ClientsSharedScreen(props) {
+  // Initialize state variables
   const [status, setStatus] = useState({});
   const { navigate } = useNavigation();
   const [allVideos, setAllVideos] = useState(props.route.params.videos);
@@ -37,11 +53,13 @@ export default function ClientsSharedScreen(props) {
     setIsLoading(false);
   };
 
+  // Fetch videos when the component mounts or allVideos changes.
   useEffect(() => {
     setIsLoading(true);
     fetchVideos();
   }, [allVideos]);
 
+  // Updating the navigation title
   useFocusEffect(
     React.useCallback(() => {
       props.navigation.setOptions({
@@ -50,6 +68,7 @@ export default function ClientsSharedScreen(props) {
     }, [props.navigation, props.route.params.clientName])
   );
 
+  // Updating a video's boolean value that checks whether video is handled
   async function updateVideoBooleanValue(videoName, newValue) {
     console.log(
       `Trying to update video ${videoName} booleanVar to ${newValue}`
@@ -78,6 +97,7 @@ export default function ClientsSharedScreen(props) {
     }
   }
 
+  // Renders a single video item
   const renderItem = ({ item }) => (
     <>
       <TouchableOpacity
@@ -100,6 +120,7 @@ export default function ClientsSharedScreen(props) {
     </>
   );
 
+  // Displays when there are no videos
   function EmptyListComponent() {
     return (
       <View style={styles.emptyListContainer}>
@@ -108,6 +129,7 @@ export default function ClientsSharedScreen(props) {
     );
   }
 
+  // Rendering of the component, displaying a loading indicator or the list of categorized videos
   return (
     <SafeAreaView>
       <ScrollView>

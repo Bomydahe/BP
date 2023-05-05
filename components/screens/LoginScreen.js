@@ -1,3 +1,19 @@
+/*
+  * Author: Rastislav Duránik (xduran03)
+  * File: LoginScreen.js
+  * Brief: 
+      This component allows users to input their email 
+      and password for logging in or registering an account. 
+      Users can toggle between the login and registration 
+      forms, and the registration form allows them to choose 
+      a role (either "user" or "trainer"). The component 
+      also includes password visibility toggles for both the 
+      password and repeat password fields. It uses Firebase 
+      for authentication and stores user information in Firestore. 
+      Upon successful login or registration, users are navigated 
+      to the appropriate screen based on their role.
+*/
+
 import React, { useState } from "react";
 import {
   StyleSheet,
@@ -15,6 +31,7 @@ import { firebase } from "../../firebaseConfig";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 
 export default function LoginScreen() {
+  // State variables for user input, user role, loading and password visibility
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [repeatPassword, setRepeatPassword] = useState("");
@@ -25,14 +42,17 @@ export default function LoginScreen() {
   const [showPassword, setShowPassword] = useState(false);
   const [showRepeatPassword, setShowRepeatPassword] = useState(false);
 
+  // Toggle password visibility in the TextInput component
   const togglePasswordVisibility = () => {
     setShowPassword(!showPassword);
   };
 
+  // Toggle repeat password visibility in the TextInput component
   const toggleRepeatPasswordVisibility = () => {
     setShowRepeatPassword(!showRepeatPassword);
   };
 
+  // Handle the login process
   const handleLogin = async () => {
     setLoading(true);
     try {
@@ -81,6 +101,7 @@ export default function LoginScreen() {
     setLoading(false);
   };
 
+  // Handle the registration process
   const handleRegister = async () => {
     setLoading(true);
 
@@ -142,6 +163,7 @@ export default function LoginScreen() {
     setLoading(false);
   };
 
+  // Render the LoginScreen component
   return (
     <View style={styles.container}>
       {loading ? (
