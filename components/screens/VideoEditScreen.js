@@ -44,17 +44,15 @@ export default function VideoEditScreen({ route, navigation }) {
 
   // This function handles going back to the previous screen and deletes the temporary snapshot file if it exists
   const handleGoBack = async () => {
-    const handleGoBack = async () => {
-      if (snapshotUri) {
-        try {
-          await FileSystem.deleteAsync(snapshotUri, { idempotent: true });
-          console.log("Temporary snapshot file deleted:", snapshotUri);
-        } catch (error) {
-          console.error("Error deleting temporary snapshot file:", error);
-        }
+    if (snapshotUri) {
+      try {
+        await FileSystem.deleteAsync(snapshotUri, { idempotent: true });
+        console.log("Temporary snapshot file deleted:", snapshotUri);
+      } catch (error) {
+        console.error("Error deleting temporary snapshot file:", error);
       }
-      navigation.goBack();
-    };
+    }
+    navigation.goBack();
   };
 
   // Handles pan gestures on the drawing area, updating the current path when the user moves their finger.
