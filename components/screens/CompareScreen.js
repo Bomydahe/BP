@@ -33,6 +33,7 @@ import {
   Modal,
   Button,
   Platform,
+  Alert,
 } from "react-native";
 import * as MediaLibrary from "expo-media-library";
 import * as ImagePicker from "expo-image-picker";
@@ -180,14 +181,30 @@ export default function Compare(props) {
       });
 
       if (!chosenVideo.canceled) {
-        const selectedVideo = chosenVideo.assets[0].uri;
-        if (selectedVideoIndex === 1) {
-          setVideo1(selectedVideo);
+        const selectedVideo = chosenVideo.assets[0];
+
+        const maxVideoSize = 7 * 1024 * 1024; // 7MB in bytes
+        const videoFileSize = await fetch(selectedVideo.uri)
+          .then((response) => response.blob())
+          .then((blob) => blob.size);
+
+        if (videoFileSize > maxVideoSize) {
+          Alert.alert(
+            "Video Size Limit Exceeded",
+            "Please select a video with a size of 7MB or less.",
+            [{ text: "OK", onPress: () => {} }],
+            { cancelable: true }
+          );
         } else {
-          setVideo2(selectedVideo);
+          const selectedVideo = chosenVideo.assets[0].uri;
+          if (selectedVideoIndex === 1) {
+            setVideo1(selectedVideo);
+          } else {
+            setVideo2(selectedVideo);
+          }
+          setModalStep("initial");
+          setModalVisible(false);
         }
-        setModalStep("initial");
-        setModalVisible(false);
       }
     } else {
       console.log("Permission not granted");

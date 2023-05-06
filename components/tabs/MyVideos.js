@@ -179,17 +179,31 @@ export default function MyVideos(props) {
     if (status === "granted") {
       let chosenVideo = await ImagePicker.launchImageLibraryAsync({
         mediaTypes: ImagePicker.MediaTypeOptions.Videos,
-        //allowsEditing: true,
         quality: 1,
       });
 
       if (!chosenVideo.canceled) {
         const selectedVideo = chosenVideo.assets[0];
-        if (categories.length === 1) {
-          const categoryId = categories[0].id;
-          handleAddVideo(selectedVideo.uri, categoryId);
+
+        const maxVideoSize = 7 * 1024 * 1024; // 7MB in bytes
+        const videoFileSize = await fetch(selectedVideo.uri)
+          .then((response) => response.blob())
+          .then((blob) => blob.size);
+
+        if (videoFileSize <= maxVideoSize) {
+          if (categories.length === 1) {
+            const categoryId = categories[0].id;
+            handleAddVideo(selectedVideo.uri, categoryId);
+          } else {
+            showModal(selectedVideo.uri);
+          }
         } else {
-          showModal(selectedVideo.uri);
+          Alert.alert(
+            "Video Size Limit Exceeded",
+            "Please select a video with a size of 7MB or less.",
+            [{ text: "OK", onPress: () => {} }],
+            { cancelable: true }
+          );
         }
       }
     } else {
