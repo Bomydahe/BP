@@ -1,3 +1,18 @@
+/*
+  * Author: Rastislav Duránik (xduran03)
+  * File: VideoSelectionModal.js
+  * Brief: 
+      The VideoSelectionModal component is a React Native modal 
+      that provides users with options to select a video source. 
+      It has two buttons: "From Categories" and "From Device Storage".
+      The first button navigates the user to the categories page while 
+      the second button allows the user to select a video from their 
+      device's storage. The modal appears as an overlay on top of the 
+      current view when it is visible.
+*/
+
+
+
 import React from "react";
 import { View, Text, TouchableOpacity, StyleSheet, Modal } from "react-native";
 
