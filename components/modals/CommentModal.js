@@ -1,3 +1,20 @@
+/*
+  * Author: Rastislav Duránik (xduran03)
+  * File: CategoryEditModal.js
+  * Brief: 
+      CommentModal" is a React Native functional component that 
+      displays a modal for adding comments. It takes props such as
+      "modalVisible", "setModalVisible", and "onSubmit". The modal 
+      includes a text input field, "Submit" and "Cancel" buttons, and
+      a title. Users can input comments, submit them by pressing the
+      "Submit" button, or cancel by pressing the "Cancel" button. The 
+      component updates the state of "inputValue" whenever users type in 
+      the input field. The component uses the "StyleSheet" API to style 
+      the modal's appearance, including its background color, border radius,
+      and text alignment.
+*/
+
+
 import React from "react";
 import {
   View,
