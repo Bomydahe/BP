@@ -1,6 +1,6 @@
 /*
   * Author: Rastislav Duránik (xduran03)
-  * File: CategoryEditModal.js
+  * File: CommentModal.js
   * Brief: 
       CommentModal" is a React Native functional component that 
       displays a modal for adding comments. It takes props such as
