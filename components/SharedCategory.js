@@ -1,3 +1,22 @@
+/*
+  * Author: Rastislav Duránik (xduran03)
+  * File: SharedCategory.js
+  * Brief:      
+     Component written in JavaScript that displays 
+     a grid of videos with thumbnails. It uses the
+     Expo-av package to play videos and the React 
+     Native framework for mobile app development.
+     The component takes in a list of videos and
+     their metadata as props, and renders them in
+     a FlatList with a numColumns layout. The useFocusEffect
+     hook is used to update the navigation options when the
+     component is focused, and the renderItem function is 
+     used to render each video thumbnail. Clicking on a
+     thumbnail navigates to a video player screen. The 
+     styles object defines the styling for the component.
+*/
+
+
 import React from "react";
 import { Video } from "expo-av";
 import {
