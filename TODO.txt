@@ -1,6 +1,0 @@
-TODO:
-  > NOTIFICATIONS (high prio)
-  > zmena kategorie videa niekde
-
-Bugs: 
-  >
