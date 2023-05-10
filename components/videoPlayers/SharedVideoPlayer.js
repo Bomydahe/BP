@@ -1,3 +1,18 @@
+/*
+  * Author: Rastislav Duránik (xduran03)
+  * File: SharedVideoPlayer.js
+  * Brief: 
+     Component displays a video player with playback
+     controls, comments, and overlays. It uses various
+     libraries such as expo-av, react-native-svg, and 
+     @react-native-community/slider to implement the 
+     functionality. The component also handles locking 
+     and unlocking the screen orientation, displaying message
+     modals on top of the video, and scaling SVG path data to 
+     fit the video size.
+*/
+
+
 import React, { useEffect, useState, useRef } from "react";
 import {
   View,
