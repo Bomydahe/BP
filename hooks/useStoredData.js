@@ -1,3 +1,18 @@
+/*
+  * Author: Rastislav Duránik (xduran03)
+  * File: useStoredData.js
+  * Brief:      
+     This is a custom hook in JavaScript that uses 
+     AsyncStorage to fetch and store data in a device's
+     storage with a specific key and initial value. 
+     The hook includes two useEffect hooks to retrieve 
+     and store the data, a loadData function to retrieve 
+     the data, and a storeData function to store the data.
+     It returns an array with the current data state variable
+     and the setData function used to update the data.
+*/
+
+
 import { useState, useEffect } from "react";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
