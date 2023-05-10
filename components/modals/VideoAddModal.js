@@ -1,3 +1,24 @@
+/*
+  * Author: Rastislav Duránik (xduran03)
+  * File: VideoAddModal.js
+  * Brief: 
+      Component allows the user to select a category 
+      from a list of categories. It receives the following 
+      props: modalVisible, a boolean that determines if the modal is
+      visible or not; setModalVisible, a function that sets the 
+      modalVisible prop to either true or false; categories, an 
+      array of objects representing the available categories; 
+      handleAddVideo, a function that handles the addition of a 
+      video with a selected category to the database; and 
+      selectedVideoUri, a string representing the URI of the 
+      video to be added. The component displays a list
+      of category buttons, each with the category name as its 
+      label. When a category is selected, the handleAddVideo
+      function is called with the selectedVideoUri and the
+      selected category's ID.
+*/
+
+
 import React from "react";
 import { View, Text, Pressable, Modal, StyleSheet } from "react-native";
 
