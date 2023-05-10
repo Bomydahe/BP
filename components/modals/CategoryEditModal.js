@@ -1,3 +1,15 @@
+/*
+  * Author: Rastislav Duránik (xduran03)
+  * File: CategoryEditModal.js
+  * Brief: 
+      The "CategoryEditModal" is a React Native functional component 
+      used to display a modal for adding or editing a category. It takes
+      props such as "modalVisible", "categories", and "addCategory". 
+      It renders a modal with a title, text input field, and a "Save"
+      button. When the button is pressed, it either adds a new category 
+      or edits an existing one.
+*/
+
 import React, { useState, useEffect } from "react";
 import {
   View,
