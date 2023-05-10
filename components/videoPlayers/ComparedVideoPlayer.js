@@ -1,3 +1,19 @@
+/*
+  * Author: Rastislav Duránik (xduran03)
+  * File: ComparedVideoPlayer.js
+  * Brief: 
+     Component renders two video players side by side, 
+     with the ability to control their playback positions 
+     independently. The component uses the expo-av library 
+     for video playback and the expo-screen-orientation library 
+     to manage screen orientation. The CustomVideoPlayer component
+     is used to render each video player and accepts several props
+     to customize its behavior. Two useEffect hooks are used to set 
+     the initial playback positions of the videos and to lock the 
+     screen orientation to landscape mode.
+*/
+
+
 import React, { useEffect, useRef } from "react";
 import { View, StyleSheet } from "react-native";
 import { Video } from "expo-av";
