@@ -1,3 +1,17 @@
+/*
+  * Author: Rastislav Duránik (xduran03)
+  * File: useStoredData.js
+  * Brief:      
+     This is a custom hook in JavaScript that uses AsyncStorage
+     to manage video comparisons. It includes functions to load, 
+     save, and delete video comparisons from AsyncStorage, as well 
+     as a function to generate video thumbnails using the expo-video-thumbnails 
+     module. The hook returns an object containing the videoComparisons state
+     variable and functions to manage it, including setVideoComparisons, 
+     loadVideoComparisons, saveVideoComparisons, generateThumbnail, and
+     confirmDeleteVideo.
+*/
+
 import { useState, useEffect } from "react";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import * as VideoThumbnails from "expo-video-thumbnails";
