@@ -1,3 +1,21 @@
+/*
+  * Author: Rastislav Duránik (xduran03)
+  * File: SharedVideos.js
+  * Brief: 
+     Component displays a list of videos and allows users 
+     to delete them. It also has a "Select Trainer" button 
+     that opens a modal where the user can select a trainer.
+     The component fetches all videos from Firebase Storage 
+     and filters them based on the user's ID. It also retrieves 
+     the user's trainer email from Firestore and displays it on
+     the screen. The component uses various React Native components, 
+     such as FlatList, SafeAreaView, TouchableOpacity, Image, 
+     TextInput, and Modal. It also uses the AntDesign icon
+     library and the React Navigation and React Native Gesture
+     Handler libraries.
+*/
+
+
 import React, { useState, useEffect } from "react";
 import {
   View,
