@@ -1,3 +1,19 @@
+/*
+  * Author: Rastislav Duránik (xduran03)
+  * File: TrainerSelectModal.js
+  * Brief: 
+      "TrainerSelectModal" is a React Native functional component 
+      that displays a modal for selecting a trainer. It takes props 
+      such as "modalVisible", "toggleModal", "trainers", "filteredTrainers",
+      and "handleTrainerSelect". The modal includes a search bar to filter 
+      trainers, a list of filtered trainers, and a "Close" button. The component
+      updates the state of "searchText" to filter trainers based on the entered
+      text. The selected trainer is highlighted in green and displayed at the top 
+      of the list. The component uses the "StyleSheet" API to style the modal's 
+      appearance, including its background color, border radius, and text alignment.
+*/
+
+
 import React from "react";
 import {
   View,
