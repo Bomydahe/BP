@@ -1,3 +1,18 @@
+/*
+  * Author: Rastislav Duránik (xduran03)
+  * File: UploadPromptModal.js
+  * Brief: 
+      Component which displays a modal with a prompt asking the user
+      if they want to share a video with a specific trainer. The modal
+      has two buttons: "Yes" and "No". When the "Yes" button is pressed,
+      the onYes callback function is called. When the "No" button is pressed,
+      the modal is closed via the onClose callback function. The trainer's email
+      is displayed in the modal's text via the trainerEmail prop. The component
+      uses React Native's Modal and TouchableOpacity components for the modal 
+      and buttons, respectively, and applies custom styles using the StyleSheet API.
+*/
+
+
 import React from "react";
 import { View, Text, TouchableOpacity, Modal, StyleSheet } from "react-native";
 
