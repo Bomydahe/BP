@@ -1,3 +1,22 @@
+/*
+  * Author: Rastislav Duránik (xduran03)
+  * File: TrainerVideoPlayer.js
+  * Brief: 
+     Component displays a video player for a 
+     given video file URI. It also allows users 
+     to add comments and edit the video at 
+     specific points. The component uses various 
+     libraries, such as Expo Screen Orientation, 
+     React Navigation, Firebase, and React Native 
+     View Shot. It consists of a main function 
+     TrainerVideoPlayer that uses several hooks, 
+     such as useState, useEffect, useCallback, and 
+     useRef. It also includes a child component 
+     CustomVideoPlayer, which handles the actual 
+     video playback.
+*/
+
+
 import React, { useState, useEffect, useCallback, useRef } from "react";
 import { View, StyleSheet, TouchableOpacity, Alert, Image } from "react-native";
 import * as ScreenOrientation from "expo-screen-orientation";
