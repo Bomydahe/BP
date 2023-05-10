@@ -1,3 +1,17 @@
+/*
+  * Author: Rastislav Duránik (xduran03)
+  * File: CustomVideoPlayer.js
+  * Brief: 
+     Componentdisplays a video player with various controls
+     such as play/pause, seek bar, playback rate control, and
+     navigation controls. It also supports syncing two video
+     players to play in parallel. The component uses Expo's Video
+     API for playing the video and the MaterialIcons component for 
+     displaying icons. The component can be customized to hide or show 
+     certain controls based on the app's requirements.
+*/
+
+
 import React, { useState, useEffect } from "react";
 import {
   View,
