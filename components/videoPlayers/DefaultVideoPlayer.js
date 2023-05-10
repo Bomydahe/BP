@@ -1,3 +1,21 @@
+/*
+  * Author: Rastislav Duránik (xduran03)
+  * File: DefaultVideoPlayer.js
+  * Brief: 
+     Component displays a video player and allows the 
+     user to share the video with their chosen trainer. 
+     It uses several libraries and hooks such as 
+     react-navigation, react-native-vector-icons, and 
+     expo-screen-orientation. The component also includes
+     functions for generating a thumbnail of the video, 
+     uploading the video and thumbnail to Firebase, and 
+     saving metadata. The UI includes header buttons for 
+     sharing the video and comparing it with another video, as 
+     well as an activity indicator to show when the video is 
+     being uploaded.
+*/
+
+
 import React, { useState, useEffect, useCallback, useRef } from "react";
 import {
   View,
