@@ -1,3 +1,19 @@
+/*
+  * Author: Rastislav Duránik (xduran03)
+  * File: ConfirmDeleteModal.js
+  * Brief: 
+      "ConfirmDeleteModal" is a React Native functional 
+      component that displays a modal for confirming the deletion
+      of a video. It takes props such as "visible", "onClose", and
+      "onConfirm". The modal displays a message asking the user to 
+      confirm the deletion of the video and includes "Cancel" and "Delete"
+      buttons. The component updates the state of "addition" to display
+      an additional message if provided. The component uses the "StyleSheet"
+      API to style the modal's appearance, including its background color, 
+      border radius, and text alignment.
+*/
+
+
 import React from "react";
 import { View, Text, TouchableOpacity, Modal, StyleSheet } from "react-native";
 
