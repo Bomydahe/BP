@@ -1,3 +1,20 @@
+/*
+  * Author: Rastislav Duránik (xduran03)
+  * File: Myvideos.js
+  * Brief: 
+      Component displays a list of videos that the user has uploaded. 
+      It allows the user to add videos, remove videos, edit categories, 
+      and share videos with a trainer. The component uses several 
+      external libraries, including Expo, Firebase, and lodash. The 
+      component contains state variables to keep track of the videos 
+      and categories, as well as several functions to handle user actions. 
+      The UI is implemented using various React Native components such 
+      as View, FlatList, ScrollView, Text, Image, Pressable, TouchableOpacity, 
+      SafeAreaView, ActivityIndicator, and Alert.
+*/
+
+
+
 import React, { useState, useEffect } from "react";
 import { useFocusEffect } from "@react-navigation/native";
 import * as MediaLibrary from "expo-media-library";
